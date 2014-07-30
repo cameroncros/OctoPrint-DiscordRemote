@@ -9,16 +9,10 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import com.cross.beaglesight.BowConfig.KnownPosition;
+
 public class PositionCalculator
 {
-	class KnownPosition {
-		double Distance;
-		double Position;
-		KnownPosition(double d, double p) {
-			Distance=d;
-			Position=p;
-		}
-	}
 	
 	Map<Double,KnownPosition> positionArray = null;
 	RealVector polynomial;
@@ -28,19 +22,19 @@ public class PositionCalculator
 		positionArray = new HashMap<Double,KnownPosition>();
 	}
 	
-	Boolean addPosition(double distance, double position) 
+	void setPositions(Map<Double,KnownPosition> pos) 
 	{
-		if (positionArray.containsKey(distance)) {
-			return false;
-		}
-		positionArray.put(distance, new KnownPosition(distance, position));
-		return true;
+		positionArray = pos;
+		calcPolynomial();
 	}
 	
 	double calcPosition(double distance) {
+		if (size < 3) {
+			return Double.NaN;
+		}
 		double [] val = new double[size];
-		for (int j = size-1; j >= 0; j--) {
-			val[size-j]=Math.pow(distance, j);
+		for (int j = 0; j < size; j++) {
+			val[j]=Math.pow(distance, size-j-1);
 		}
 		RealVector a = new ArrayRealVector(val);
 		return a.dotProduct(polynomial);
@@ -48,25 +42,35 @@ public class PositionCalculator
 	}
 	
 	void calcPolynomial() {
+		try {
 		size = positionArray.size();
+		if (size < 3) {
+			return;
+		}
 		double [][] values = new double[size][size];
 		double [] rhs = new double[size];
 		
 		int i = 0;
 		for (KnownPosition kp : positionArray.values()) {
 			rhs[i]=kp.Position;
-			for (int j = size-1; j >= 0; j--) {
-				values[i][size-j]=Math.pow(kp.Distance, j);
+			for (int j = 0; j < size; j++) {
+				values[i][j]=Math.pow(kp.Distance, size-j-1);
 			}
+			i++;
 		}
 		
 		RealMatrix a = new Array2DRowRealMatrix(values);
-        System.out.println("a matrix: " + a);
+			//Log.e("BeagleSight","a matrix: " + a);
         DecompositionSolver solver = new LUDecomposition(a).getSolver();
 
         RealVector b = new ArrayRealVector(rhs);
         polynomial = solver.solve(b);
-		
+		//Log.i("BeagleSight", polynomial.toString());
+		}
+
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		/*
 		double [][] values = {{1, 1, 2}, {2, 4, -3}, {3, 6, -5}};
         double [] rhs = { 9, 1, 0 };
