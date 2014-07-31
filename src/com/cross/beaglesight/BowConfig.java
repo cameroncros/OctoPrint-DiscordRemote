@@ -1,5 +1,6 @@
 package com.cross.beaglesight;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class BowConfig {
@@ -17,7 +18,9 @@ public class BowConfig {
 	}
 
 	BowConfig() {
-		
+		positionArray = new HashMap<Double, KnownPosition>();
+		bowname="";
+		bowdescription="";
 	}
 	
 	void setName(String name) {
@@ -36,7 +39,7 @@ public class BowConfig {
 	}
 	
 	void clearPositions() {
-		positionArray = null;
+		positionArray.clear();
 	}
 	
 	void addPosition(double distance, double position) 
@@ -46,5 +49,10 @@ public class BowConfig {
 	
 	Map<Double,KnownPosition> getPositions() {
 		return positionArray;
+	}
+
+	public void save() {
+		// TODO Auto-generated method stub
+		
 	}
 }
