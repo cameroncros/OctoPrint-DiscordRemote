@@ -1,28 +1,33 @@
 package com.cross.beaglesight;
 
 import android.app.*;
-import android.content.Intent;
 import android.os.*;
 import android.view.*;
 import android.widget.*;
+import android.widget.TableLayout.LayoutParams;
 import android.text.*;
+
 import com.cross.beaglesight.PositionCalculator;
 import java.text.*;
 
 public class MainActivity extends Activity
 {
-	BowManager bm = BowManager.getInstance();
-	DecimalFormat df = new DecimalFormat("#.##");
-	PositionCalculator pc = bm.getPositionCalculator(bm.getCurrentPostion());
+	BowManager bm = null;
+	DecimalFormat df = null, hn = null;
+	PositionCalculator pc = null;
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
 	{
+    	bm = BowManager.getInstance();
+    	df = new DecimalFormat("#.##");
+    	hn = new DecimalFormat("#");
+    	pc = bm.getPositionCalculator(bm.getCurrentPostion());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        calculateIncrements(pc);
         
-		
+        calculateIncrements(pc);
+        		
 		EditText et = (EditText)findViewById(R.id.calcDistance);
 		et.addTextChangedListener(new TextWatcher() {
 			public void afterTextChanged(Editable s) {
@@ -57,50 +62,39 @@ public class MainActivity extends Activity
 	
 	private void calculateIncrements(PositionCalculator pc) {
 		Double pos;
-		TextView tv;
-		tv=(TextView)findViewById(R.id.meter10);
-		pos = pc.calcPosition(10);
-		tv.setText(df.format(pos));
+		TableLayout tl = (TableLayout)findViewById(R.id.mainTable);
+			
 		
-		tv=(TextView)findViewById(R.id.meter20);
-		pos = pc.calcPosition(20);
-		tv.setText(df.format(pos));
+		Double[] sampleDistances = {10.0, 15.0, 18.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0};
+		if(tl.getChildCount() > 0) {
+		    tl.removeAllViews(); 
+		}
+
 		
-		tv=(TextView)findViewById(R.id.meter30);
-		pos = pc.calcPosition(30);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter40);
-		pos = pc.calcPosition(40);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter50);
-		pos = pc.calcPosition(50);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter60);
-		pos = pc.calcPosition(60);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter70);
-		pos = pc.calcPosition(70);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter80);
-		pos = pc.calcPosition(80);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter90);
-		pos = pc.calcPosition(90);
-		tv.setText(df.format(pos));
-		
-		tv=(TextView)findViewById(R.id.meter100);
-		pos = pc.calcPosition(100);
-		tv.setText(df.format(pos));
+		for (Double val : sampleDistances) {
+			pos = pc.calcPosition(val);
+			TableRow tr = new TableRow(this);
+			tr.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1));
+			
+			EditText et = new EditText(this);
+			et.setEnabled(false);
+			et.setGravity(Gravity.RIGHT);
+			et.setText(df.format(pos));
+			
+			TextView tv = new TextView(this);
+			tv.setLabelFor(et.getId());
+			tv.setTextAppearance(this, android.R.style.TextAppearance_DeviceDefault_Medium);
+			tv.setText(hn.format(val)+":");
+			
+			tr.addView(tv);
+			tr.addView(et);
+			tl.addView(tr);
+			tl.invalidate();
+		}
 	}
 	
-	public void addNewBow() {
-		Intent intent = new Intent(this, AddNewBowActivity.class);
-		startActivity(intent);
-	}
+//	public void addNewBow() {
+//		Intent intent = new Intent(this, AddNewBowActivity.class);
+//		startActivity(intent);
+//	}
 }
