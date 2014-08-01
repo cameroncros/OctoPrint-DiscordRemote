@@ -16,9 +16,6 @@ import java.text.*;
 
 public class MainActivity extends Activity
 {
-//    private String[] mPlanetTitles;
-//    private DrawerLayout mDrawerLayout;
-    private TableLayout mDrawerList;
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
 	
@@ -32,7 +29,6 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        mDrawerList = (TableLayout) findViewById(R.id.left_drawer);
         
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
