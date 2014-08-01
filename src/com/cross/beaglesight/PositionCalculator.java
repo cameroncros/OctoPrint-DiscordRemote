@@ -9,26 +9,28 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import android.util.Log;
+
 import com.cross.beaglesight.BowConfig.KnownPosition;
 
 public class PositionCalculator
 {
-	
-	Map<Double,KnownPosition> positionArray = null;
+
+	Map<String,KnownPosition> positionArray = null;
 	RealVector polynomial;
 	int size;
-	
+
 	PositionCalculator() {
-		positionArray = new HashMap<Double,KnownPosition>();
+		positionArray = new HashMap<String,KnownPosition>();
 	}
-	
-	void setPositions(Map<Double,KnownPosition> pos) 
+
+	void setPositions(Map<String,KnownPosition> pos) 
 	{
 		positionArray = pos;
 		calcPolynomial();
 	}
-	
-	double calcPosition(double distance) {
+
+	public double calcPosition(double distance) {
 		if (size < 3) {
 			return Double.NaN;
 		}
@@ -38,64 +40,50 @@ public class PositionCalculator
 		}
 		RealVector a = new ArrayRealVector(val);
 		return a.dotProduct(polynomial);
-		
+
 	}
-	
+
 	void calcPolynomial() {
 		try {
-		size = positionArray.size();
-		if (size < 3) {
-			return;
-		}
-		double [][] values = new double[size][size];
-		double [] rhs = new double[size];
-		
-		int i = 0;
-		for (KnownPosition kp : positionArray.values()) {
-			rhs[i]=kp.Position;
-			for (int j = 0; j < size; j++) {
-				values[i][j]=Math.pow(kp.Distance, size-j-1);
+			size = positionArray.size();
+			if (size < 3) {
+				return;
 			}
-			i++;
-		}
-		
-		RealMatrix a = new Array2DRowRealMatrix(values);
-			//Log.e("BeagleSight","a matrix: " + a);
-        DecompositionSolver solver = new LUDecomposition(a).getSolver();
+			double [][] values = new double[size][size];
+			double [] rhs = new double[size];
 
-        RealVector b = new ArrayRealVector(rhs);
-        polynomial = solver.solve(b);
-		//Log.i("BeagleSight", polynomial.toString());
+			int i = 0;
+			for (KnownPosition kp : positionArray.values()) {
+				rhs[i]=Double.valueOf(kp.Position);
+				for (int j = 0; j < size; j++) {
+					values[i][j]=Math.pow(Double.valueOf(kp.Distance), size-j-1);
+				}
+				i++;
+			}
+
+			RealMatrix a = new Array2DRowRealMatrix(values);
+			//Log.e("BeagleSight","a matrix: " + a);
+			DecompositionSolver solver = new LUDecomposition(a).getSolver();
+
+			RealVector b = new ArrayRealVector(rhs);
+			polynomial = solver.solve(b);
+			Log.i("BeagleSight", polynomial.toString());
 		}
 
 		catch (Exception e) {
-			e.printStackTrace();
+			Log.e("Beagle", e.getMessage());
 		}
-		/*
-		double [][] values = {{1, 1, 2}, {2, 4, -3}, {3, 6, -5}};
-        double [] rhs = { 9, 1, 0 };
-
-        RealMatrix a = new Array2DRowRealMatrix(values);
-        System.out.println("a matrix: " + a);
-        DecompositionSolver solver = new LUDecomposition(a).getSolver();
-
-        RealVector b = new ArrayRealVector(rhs);
-        RealVector x = solver.solve(b);
-        System.out.println("solution x: " + x);;
-        RealVector residual = a.operate(x).subtract(b);
-        double rnorm = residual.getLInfNorm();
-        System.out.println("residual: " + rnorm);
-		*/
+		
 	}
-	
+
 	int precision() {
 		switch (positionArray.size()) {
-			case 0:
-			case 1:
-			case 2:
-				return 0;
-			default:
-				return positionArray.size()-2;
+		case 0:
+		case 1:
+		case 2:
+			return 0;
+		default:
+			return positionArray.size()-2;
 		}
 	}
 }

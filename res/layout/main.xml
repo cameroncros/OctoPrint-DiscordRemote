@@ -1,87 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <LinearLayout
+    <!-- Main View -->
+
+    <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:layout_height="fill_parent" >
 
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="@string/calculate_"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:orientation="vertical" >
 
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <TableRow
-                android:id="@+id/tableRow1"
+            <TextView
+                android:id="@+id/textView3"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/calculate_"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TableLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content" >
 
-                <TextView
-                    android:id="@+id/textView1"
+                <TableRow
+                    android:id="@+id/tableRow1"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/distance_"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/calcDistance" />
+                    android:layout_height="wrap_content" >
 
-                <EditText
-                    android:id="@+id/calcDistance"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:inputType="number" />
-            </TableRow>
+                    <TextView
+                        android:id="@+id/textView1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:labelFor="@+id/calcDistance"
+                        android:text="@string/distance_"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <TableRow
-                android:id="@+id/tableRow2"
+                    <EditText
+                        android:id="@+id/calcDistance"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:inputType="number" />
+                </TableRow>
+
+                <TableRow
+                    android:id="@+id/tableRow2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:labelFor="@+id/calcPosition"
+                        android:text="@string/position_"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                    <EditText
+                        android:id="@+id/calcPosition"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:inputType="numberSigned" />
+                </TableRow>
+            </TableLayout>
+
+            <TextView
+                android:id="@+id/textView4"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content"
+                android:text="@string/table_"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/position_"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:labelFor="@+id/calcPosition" />
+            <TableLayout
+                android:id="@+id/mainTable"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:stretchColumns="1" >
+            </TableLayout>
+        </LinearLayout>
+    </ScrollView>
+    <!-- The navigation drawer -->
 
-                <EditText
-                    android:id="@+id/calcPosition"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:inputType="numberSigned" />
-            </TableRow>
-        </TableLayout>
+   <TableLayout
+        android:id="@+id/left_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        >
+        
 
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/table_"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+    </TableLayout>
 
-        <TableLayout
-            android:id="@+id/mainTable"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:stretchColumns="1" >
-
-            
-        </TableLayout>
-    </LinearLayout>
-
-</ScrollView>
+</android.support.v4.widget.DrawerLayout>

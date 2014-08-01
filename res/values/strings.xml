@@ -1,27 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">BeagleSight</string>
+
+    <string name="app_name">BeagleSight</string>
     
     <string name="calculate_">Calculate:</string>
     <string name="position_">Position:</string>
     <string name="distance_">Distance:</string>
     
     <string name="table_">Table:</string>
-    <string name="_10_">10:</string>
-    <string name="_20_">20:</string>
-    <string name="_30_">30:</string>
-    <string name="_40_">40:</string>
-    <string name="_50_">50:</string>
-    <string name="_60_">60:</string>
-    <string name="_70_">70:</string>
-    <string name="_80_">80:</string>
-    <string name="_90_">90:</string>
-    <string name="_100_">100:</string>
     <string name="add">Add</string>
     <string name="description">Description</string>
     <string name="name">Name</string>
     <string name="sight_settings_">Sight Settings:</string>
     <string name="add_distance">Add Distance</string>
     <string name="save">Save</string>
+    <string name="drawer_open">Open Draw</string>
+    <string name="drawer_close">Close Draw</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    
 
 </resources>
