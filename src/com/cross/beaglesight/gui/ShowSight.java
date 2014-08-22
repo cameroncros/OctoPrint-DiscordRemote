@@ -32,6 +32,12 @@ public class ShowSight extends FragmentActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.showsight);
+
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
 		Bundle bundle = getIntent().getExtras();
 		bowname = bundle.getString("bowname");
 		setTitle(bowname);
@@ -43,7 +49,7 @@ public class ShowSight extends FragmentActivity
 		pc = bm.getPositionCalculator(bowname);
 		textListenerSetup();
 		calculateIncrements();
-	}
+	};
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
