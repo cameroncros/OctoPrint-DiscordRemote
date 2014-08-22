@@ -100,6 +100,7 @@ public class AddActivity extends Activity {
 		}
 
 		Button del = new Button(this);
+		del.setBackground(this.getResources().getDrawable(R.drawable.ic_action_cancel));
 		del.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				deletePair(v);
