@@ -31,7 +31,6 @@ public class BowManager
 {
 	private static volatile BowManager instance = null;
 	Context cont = null;
-	String currentBow = null;	
 	Map<String, BowConfig> bowList = null;
 
 	Set<String> getBowNames() {
@@ -127,23 +126,6 @@ public class BowManager
 		PositionCalculator pc = new PositionCalculator();
 		pc.setPositions(bowList.get(bowName).getPositions());
 		return pc;
-	}
-	
-	void setCurrentBow(String bowname) {
-		if (bowList.containsKey(bowname)) {
-			currentBow = bowname;
-		}
-	}
-
-	public String getCurrentBow() {
-		if (bowList.size() == 0) {
-			currentBow = null;
-		}
-		else
-		if (currentBow == null || bowList.containsKey(currentBow) == false) {
-			currentBow = (String) bowList.keySet().toArray()[0];
-		}
-		return currentBow;
 	}
 
 	public static BowManager getInstance() {

@@ -102,7 +102,7 @@ public class ShowSight extends FragmentActivity
 		et.addTextChangedListener(new TextWatcher() {
 			public void afterTextChanged(Editable s) {
 				BowManager bm = BowManager.getInstance();
-				pc = bm.getPositionCalculator(bm.getCurrentBow());
+				pc = bm.getPositionCalculator(bowname);
 				Double pos;
 				EditText et = (EditText)findViewById(R.id.calcDistance);
 				TextView tv = (TextView)findViewById(R.id.calcPosition);
