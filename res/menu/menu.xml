@@ -1,6 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     
     <item android:id="@+id/action_add"
-        android:title="@string/add" android:visible="true"/>
+        android:title="@string/add" 
+        android:visible="true"
+        android:onClick="addNewBow"/>
     
 </menu>

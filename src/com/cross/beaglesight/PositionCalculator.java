@@ -11,20 +11,18 @@ import org.apache.commons.math3.linear.RealVector;
 
 import android.util.Log;
 
-import com.cross.beaglesight.BowConfig.KnownPosition;
-
 public class PositionCalculator
 {
 
-	Map<String,KnownPosition> positionArray = null;
+	Map<String,String> positionArray = null;
 	RealVector polynomial;
 	int size;
 
 	PositionCalculator() {
-		positionArray = new HashMap<String,KnownPosition>();
+		positionArray = new HashMap<String,String>();
 	}
 
-	void setPositions(Map<String,KnownPosition> pos) 
+	void setPositions(Map<String,String> pos) 
 	{
 		positionArray = pos;
 		calcPolynomial();
@@ -53,10 +51,11 @@ public class PositionCalculator
 			double [] rhs = new double[size];
 
 			int i = 0;
-			for (KnownPosition kp : positionArray.values()) {
-				rhs[i]=Double.valueOf(kp.Position);
+			for (String distance : positionArray.keySet()) {
+				String position = positionArray.get(distance);
+				rhs[i]=Double.valueOf(position);
 				for (int j = 0; j < size; j++) {
-					values[i][j]=Math.pow(Double.valueOf(kp.Distance), size-j-1);
+					values[i][j]=Math.pow(Double.valueOf(distance), size-j-1);
 				}
 				i++;
 			}

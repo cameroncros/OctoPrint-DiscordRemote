@@ -5,6 +5,8 @@
     <string name="calculate_">Calculate:</string>
     <string name="position_">Position:</string>
     <string name="distance_">Distance:</string>
+    <string name="position">Position</string>
+    <string name="distance">Distance</string>
     
     <string name="table_">Table:</string>
     <string name="add">Add</string>
@@ -17,6 +19,7 @@
     <string name="drawer_close">Close Draw</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
+    <string name="share">Share</string>
     
 
 </resources>

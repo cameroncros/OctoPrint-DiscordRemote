@@ -1,6 +1,7 @@
 package com.cross.beaglesight;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,12 +23,14 @@ import android.util.Xml;
 
 
 import com.cross.beaglesight.PositionCalculator;
+import com.cross.beaglesight.gui.MainActivity;
 
 
 
 public class BowManager
 {
 	private static volatile BowManager instance = null;
+	Context cont = null;
 	String currentBow = null;	
 	Map<String, BowConfig> bowList = null;
 
@@ -48,7 +51,7 @@ public class BowManager
 //		bowList.put(bc.getName(), bc);
 	}
 
-	public void loadBows(Context cont) {
+	public void loadBows() {
 		bowList.clear();
 		FileInputStream fileIS;
 		try {
@@ -83,13 +86,17 @@ public class BowManager
             }
             
 		}
+		catch (FileNotFoundException f) {
+			saveBows();
+			loadBows();
+		}
 		catch (Exception e) {
 			Log.e("BeagleSight", e.getMessage());
 		}
 
 	}
 
-	void saveBows(Context cont) {
+	void saveBows() {
 		FileOutputStream fileOS;
 		try {
 			fileOS = cont.openFileOutput("bows.xml", Context.MODE_PRIVATE);
@@ -118,11 +125,6 @@ public class BowManager
 			return null;
 		}
 		PositionCalculator pc = new PositionCalculator();
-		//		pc.addPosition(18, 95);
-		//		pc.addPosition(20, 95);
-		//		pc.addPosition(30, 91);
-		//		pc.addPosition(40, 83);
-		//		pc.addPosition(50, 73);
 		pc.setPositions(bowList.get(bowName).getPositions());
 		return pc;
 	}
@@ -157,6 +159,30 @@ public class BowManager
 
 	public Set<String> getBowList() {
 		return bowList.keySet();
+	}
+
+	public void saveNewBowConfig(BowConfig bc) {
+		bowList.put(bc.getName(), bc);
+		this.saveBows();
+	}
+
+	public void setContext(MainActivity mainActivity) {
+		cont = mainActivity;		
+	}
+
+	public void deleteBow(String bowname) {
+		bowList.remove(bowname);
+		saveBows();
+		loadBows();
+		// TODO Auto-generated method stub
+		
+	}
+
+	public BowConfig getBow(String bowname) throws NullPointerException {
+		if (bowname == null) {
+			throw new NullPointerException();
+		}
+		return bowList.get(bowname);
 	}
 
 }

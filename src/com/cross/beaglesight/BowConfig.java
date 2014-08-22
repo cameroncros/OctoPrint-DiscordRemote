@@ -7,37 +7,29 @@ import java.util.Map;
 import org.xmlpull.v1.XmlSerializer;
 
 public class BowConfig {
-	public String bowname;
-	public String bowdescription;
-	public Map<String, KnownPosition> positionArray;
-	
-	class KnownPosition {
-		String Distance;
-		String Position;
-		KnownPosition(String d, String p) {
-			Distance=d;
-			Position=p;
-		}
-	}
+	private String bowname;
+	private String bowdescription;
+	private Map<String, String> positionArray;
 
-	BowConfig() {
-		positionArray = new HashMap<String, KnownPosition>();
+
+	public BowConfig() {
+		positionArray = new HashMap<String, String>();
 		bowname="";
 		bowdescription="";
 	}
 	
-	void setName(String name) {
+	public void setName(String name) {
 		bowname = name;
 	}
 	
-	void setDescription(String description) {
+	public void setDescription(String description) {
 		bowdescription = description;
 	}
 	
-	String getName() {
+	public String getName() {
 		return bowname;
 	}
-	String getDescription() {
+	public String getDescription() {
 		return bowdescription;
 	}
 	
@@ -45,12 +37,12 @@ public class BowConfig {
 		positionArray.clear();
 	}
 	
-	void addPosition(String distance, String position) 
+	public void addPosition(String distance, String position) 
 	{
-		positionArray.put(distance, new KnownPosition(distance, position));
+		positionArray.put(distance, position);
 	}
 	
-	Map<String,KnownPosition> getPositions() {
+	public Map<String,String> getPositions() {
 		return positionArray;
 	}
 
@@ -62,9 +54,9 @@ public class BowConfig {
 		serializer.startTag(null, "description");
 		serializer.text(bowdescription);
 		serializer.endTag(null, "description");
-		for (KnownPosition kp : positionArray.values()) {
+		for (String distance : positionArray.keySet()) {
 			serializer.startTag(null, "position");
-			serializer.text(kp.Distance+","+kp.Position);
+			serializer.text(distance+","+positionArray.get(distance));
 			serializer.endTag(null, "position");
 		}
 		serializer.endTag(null, "bow");
