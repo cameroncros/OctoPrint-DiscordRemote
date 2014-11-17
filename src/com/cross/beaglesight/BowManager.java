@@ -123,7 +123,7 @@ public class BowManager
 		if (bowName == null) {
 			return null;
 		}
-		PositionCalculator pc = new PositionCalculator();
+		PositionCalculator pc = new PolynomialCalculator();
 		pc.setPositions(bowList.get(bowName).getPositions());
 		return pc;
 	}
