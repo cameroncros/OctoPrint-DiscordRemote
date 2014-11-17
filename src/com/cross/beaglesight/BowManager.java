@@ -79,6 +79,9 @@ public class BowManager
             			String parts[] = values.split(",");
             			bc.addPosition(parts[0], parts[1]);
             			break;
+            		case "method":
+            			bc.setMethod(nd.getTextContent());
+            			break;
             		}
             	}
             	bowList.put(bc.getName(), bc);
@@ -123,7 +126,17 @@ public class BowManager
 		if (bowName == null) {
 			return null;
 		}
-		PositionCalculator pc = new PolynomialCalculator();
+		PositionCalculator pc = null;
+		switch (bowList.get(bowName).getMethod()) {
+		
+		case "Polynomial":
+			pc = new PolynomialCalculator();
+			break;
+		default:
+		case "BestFitQuadratic":
+			pc = new LineOfBestFitCalculator(3);
+			break;
+		}
 		pc.setPositions(bowList.get(bowName).getPositions());
 		return pc;
 	}

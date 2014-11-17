@@ -10,12 +10,14 @@ public class BowConfig {
 	private String bowname;
 	private String bowdescription;
 	private Map<String, String> positionArray;
+	private String method;
 
 
 	public BowConfig() {
 		positionArray = new HashMap<String, String>();
 		bowname="";
 		bowdescription="";
+		method="";
 	}
 	
 	public void setName(String name) {
@@ -64,5 +66,15 @@ public class BowConfig {
 		
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void setMethod(String methodType) {
+		// TODO Auto-generated method stub
+		method = methodType;
+	}
+
+	public String getMethod() {
+		// TODO Auto-generated method stub
+		return method;
 	}
 }

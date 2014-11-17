@@ -19,12 +19,12 @@ public class PolynomialCalculator extends PositionCalculator
 	int size;
 
 	PolynomialCalculator() {
-		positionArray = new HashMap<String,String>();
+		positionArray = new HashMap<Double,Double>();
 	}
 
 	public void setPositions(Map<String,String> pos) 
 	{
-		positionArray = pos;
+		super.setPositions(pos);
 		calcPolynomial();
 	}
 
@@ -51,11 +51,11 @@ public class PolynomialCalculator extends PositionCalculator
 			double [] rhs = new double[size];
 
 			int i = 0;
-			for (String distance : positionArray.keySet()) {
-				String position = positionArray.get(distance);
-				rhs[i]=Double.valueOf(position);
+			for (Double distance : positionArray.keySet()) {
+				double position = positionArray.get(distance);
+				rhs[i]=position;
 				for (int j = 0; j < size; j++) {
-					values[i][j]=Math.pow(Double.valueOf(distance), size-j-1);
+					values[i][j]=Math.pow(distance, size-j-1);
 				}
 				i++;
 			}

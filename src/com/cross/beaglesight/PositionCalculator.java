@@ -4,9 +4,16 @@ import java.util.Map;
 
 public abstract class PositionCalculator
 {
-	Map<String,String> positionArray = null;
+	Map<Double,Double> positionArray = null;
 	
-	abstract void setPositions(Map<String,String> pos);
+	void setPositions(Map<String,String> pos) {
+		positionArray.clear();
+		for (String key : pos.keySet()) {
+			double x = Double.valueOf(key);
+			double y = Double.valueOf(pos.get(key));
+			positionArray.put(x, y);
+		}
+	}
 	public abstract double calcPosition(double distance);
 	public int precision() {
 		switch (positionArray.size()) {
