@@ -24,14 +24,16 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/description"
-            android:inputType="textMultiLine" />
+            android:inputType="textMultiLine"
+            android:textColorHint="@color/text_secondary" />
 
         <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/sight_settings_"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:textSize="18sp"/>
+        
 
         <TableLayout
             android:id="@+id/addTable"
@@ -50,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="addEmptyPair"
-            android:text="@+string/add_distance" />
+            android:text="@+string/add_distance"/>"
 
         <Button
             android:id="@+id/button1"

@@ -4,5 +4,4 @@
         android:title="@string/add" 
         android:visible="true"
         android:onClick="addNewBow"/>
-    
 </menu>

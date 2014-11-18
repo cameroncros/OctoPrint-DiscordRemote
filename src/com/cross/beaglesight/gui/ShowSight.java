@@ -86,7 +86,7 @@ public class ShowSight extends FragmentActivity
 
 			TextView tv = new TextView(this);
 			tv.setLabelFor(et.getId());
-			tv.setTextAppearance(this, android.R.style.TextAppearance_DeviceDefault_Medium);
+			tv.setTextSize(18);
 			tv.setText(hn.format(val)+":");
 
 			tr.addView(tv);
