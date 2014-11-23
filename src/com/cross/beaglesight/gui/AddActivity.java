@@ -8,18 +8,25 @@ import com.cross.beaglesight.R;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 
 public class AddActivity extends Activity {
+	int methodChoice;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -27,6 +34,31 @@ public class AddActivity extends Activity {
 		setContentView(R.layout.add);
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
+
+
+		Spinner spinner = (Spinner) findViewById(R.id.types_spinner);
+		// Create an ArrayAdapter using the string array and a default spinner layout
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.choices_array, android.R.layout.simple_spinner_item);
+		// Specify the layout to use when the list of choices appears
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		// Apply the adapter to the spinner
+		spinner.setAdapter(adapter);
+		spinner.setOnItemSelectedListener(
+			new OnItemSelectedListener() {
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view, int position,
+						long id) {
+					methodChoice = position;
+
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {
+
+				}
+			});
+
 		try {
 			Bundle bundle = getIntent().getExtras();
 			String bowname = bundle.getString("bowname");
@@ -45,6 +77,9 @@ public class AddActivity extends Activity {
 		name.setText(bc.getName());
 		EditText des = (EditText)findViewById(R.id.addDescription);
 		des.setText(bc.getDescription());
+		
+		Spinner sp = (Spinner)findViewById(R.id.types_spinner);
+		sp.setSelection(bc.getMethod());
 
 
 
@@ -70,9 +105,9 @@ public class AddActivity extends Activity {
 	void resetPairs() {
 		TableLayout tl = (TableLayout)findViewById(R.id.addTable);
 		tl.removeAllViews();
-		addPair(null, null);
-		addPair(null, null);
-		addPair(null, null);
+		addPair("20", null);
+		addPair("30", null);
+		addPair("40", null);
 	}
 
 	public boolean addEmptyPair(View bt) {
@@ -138,6 +173,8 @@ public class AddActivity extends Activity {
 
 		TableLayout tl = (TableLayout)findViewById(R.id.addTable);
 
+		bc.setMethod(methodChoice);
+
 		//TODO:
 		for (int i = 0; i < tl.getChildCount(); i++) {
 			TableRow tr = (TableRow)tl.getChildAt(i);
@@ -171,7 +208,7 @@ public class AddActivity extends Activity {
 		finish();
 		return false;
 	}
-	
+
 	public boolean onOptionsItemSelected(MenuItem item){
 		switch (item.getItemId()) {
 		case android.R.id.home:
@@ -180,4 +217,6 @@ public class AddActivity extends Activity {
 		}
 		return false;
 	}
+
+
 }
