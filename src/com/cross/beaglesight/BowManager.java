@@ -1,5 +1,6 @@
 package com.cross.beaglesight;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -22,6 +23,9 @@ import android.util.Xml;
 
 
 
+
+
+
 import com.cross.beaglesight.PositionCalculator;
 import com.cross.beaglesight.gui.MainActivity;
 
@@ -32,93 +36,33 @@ public class BowManager
 	private static volatile BowManager instance = null;
 	Context cont = null;
 	Map<String, BowConfig> bowList = null;
-
+	File folder = null;
+	
 	Set<String> getBowNames() {
 		return bowList.keySet();
 	}
 
 	BowManager() {
 		bowList = new HashMap<String, BowConfig>();
-//		BowConfig bc = new BowConfig();
-//		bc.setName("G5-Midas");
-//		bc.setDescription("This is my G5 bow with the cheap midas sight and vegas optic");
-//		bc.addPosition("18", "95");
-//		bc.addPosition("20", "95");
-//		bc.addPosition("30", "91");
-//		bc.addPosition("40", "83");
-//		bc.addPosition("50", "73");
-//		bowList.put(bc.getName(), bc);
 	}
 
 	public void loadBows() {
 		bowList.clear();
-		FileInputStream fileIS;
-		try {
-			fileIS = cont.openFileInput("bows.xml");
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = factory.newDocumentBuilder();
-			InputSource inputSource = new InputSource(fileIS);
-            Document document = db.parse(inputSource);
-            
-            NodeList nodelist = document.getElementsByTagName("bow");
-            for (int i = 0; i < nodelist.getLength(); i++) {
-            	BowConfig bc = new BowConfig();
-            	Node e = nodelist.item(i);
-            	NodeList children = e.getChildNodes();
-            	for (int j = 0; j < children.getLength(); j++) {
-            		Node nd = children.item(j);
-            		switch (nd.getNodeName()) {
-            		case "name":
-            			bc.setName(nd.getTextContent());
-            			break;
-            		case "description":
-            			bc.setDescription(nd.getTextContent());
-            			break;
-            		case "position":
-            			String values = nd.getTextContent();
-            			String parts[] = values.split(",");
-            			bc.addPosition(parts[0], parts[1]);
-            			break;
-            		case "method":
-            			bc.setMethod(nd.getTextContent());
-            			break;
-            		}
-            	}
-            	bowList.put(bc.getName(), bc);
-            }
-            
-		}
-		catch (FileNotFoundException f) {
-			saveBows();
-			loadBows();
-		}
-		catch (Exception e) {
-			Log.e("BeagleSight", e.getMessage());
-		}
-
+		File[] listOfFiles = folder.listFiles();
+		for (File fl : listOfFiles) {
+			BowConfig bc = new BowConfig();
+			bc.load(fl.getAbsolutePath(), cont);
+			bowList.put(bc.getName(), bc);
+		}		
 	}
 
 	void saveBows() {
-		FileOutputStream fileOS;
-		try {
-			fileOS = cont.openFileOutput("bows.xml", Context.MODE_PRIVATE);
-			XmlSerializer serializer = Xml.newSerializer();
-			serializer.setOutput(fileOS, "UTF-8");
-			serializer.startDocument(null, Boolean.valueOf(true));
-			serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-			serializer.startTag(null, "root");
-			for (BowConfig bc : bowList.values()) {
-				bc.save(serializer);
-			}
-			serializer.endTag(null,"root");
-			serializer.endDocument();
-			serializer.flush();
-			fileOS.close();
-
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			Log.e("Exception",e.toString());
+		File[] listOfFiles = folder.listFiles();
+		for (File fl : listOfFiles) {
+			fl.delete();
+		}
+		for (BowConfig bc : bowList.values()) {
+			bc.save(folder.getAbsolutePath(), cont);
 		}
 	}
 
@@ -128,13 +72,15 @@ public class BowManager
 		}
 		PositionCalculator pc = null;
 		switch (bowList.get(bowName).getMethod()) {
-		
-		case "Polynomial":
+
+		case 0:
 			pc = new PolynomialCalculator();
 			break;
-		default:
-		case "BestFitQuadratic":
+		case 1:
 			pc = new LineOfBestFitCalculator(3);
+			break;
+		case 2:
+			pc = new LineOfBestFitCalculator(4);
 			break;
 		}
 		pc.setPositions(bowList.get(bowName).getPositions());
@@ -162,7 +108,12 @@ public class BowManager
 	}
 
 	public void setContext(MainActivity mainActivity) {
-		cont = mainActivity;		
+		cont = mainActivity;
+		folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
+		if (!folder.exists() && folder.mkdir()) {
+			Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
+			folder=null;
+		}
 	}
 
 	public void deleteBow(String bowname) {
@@ -170,7 +121,7 @@ public class BowManager
 		saveBows();
 		loadBows();
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public BowConfig getBow(String bowname) throws NullPointerException {
