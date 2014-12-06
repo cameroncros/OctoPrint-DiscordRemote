@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/layer_card_background"
+      android:layout_margin="15dp"
+      android:padding="15dp" >
+
+    <TextView
+        android:id="@+id/bowname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-light"
+        android:gravity="left|center_vertical"
+        android:lines="1"
+        android:textSize="24sp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:paddingBottom="2dp" >
+
+        <TextView
+            android:id="@+id/bowdescription"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_vertical" />
+
+
+    </RelativeLayout>
+
+</LinearLayout>
