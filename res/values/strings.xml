@@ -21,5 +21,10 @@
     <string name="delete">Delete</string>
     <string name="share">Share</string>
     
-
+	<string-array name="choices_array">
+        <item>Polynomial</item>
+        <item>Line of Best Fit 3rd Order</item>
+        <item>Line of Best Fit 4rd Order</item>
+    </string-array>
+        <string name="precision">Precision</string>
 </resources>
