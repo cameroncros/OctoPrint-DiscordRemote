@@ -105,8 +105,6 @@ public class ShowSight extends FragmentActivity
 		Bundle bundle = getIntent().getExtras();
 		bowname = bundle.getString("bowname");
 		setTitle(bowname);
-		ActionBar actionBar = getActionBar();
-		actionBar.setDisplayHomeAsUpEnabled(true);
 		bm = BowManager.getInstance();
 		hn = new DecimalFormat("#");
 		df = new DecimalFormat("#.##");
