@@ -3,15 +3,16 @@ package com.cross.beaglesight.gui;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 
 import com.cross.beaglesight.BowManager;
 import com.cross.beaglesight.R;
+import com.cross.beaglesight.gui.libs.FloatingActionButton;
 
 import java.util.Set;
 
@@ -27,7 +28,19 @@ public class MainActivity extends FragmentActivity
         
         bm = BowManager.getInstance();
         bm.setContext(this);
-        
+
+        FloatingActionButton fabButton = new FloatingActionButton.Builder(this)
+                .withDrawable(getResources().getDrawable(R.drawable.ic_action_new))
+                .withButtonColor(Color.WHITE)
+                .withGravity(Gravity.BOTTOM | Gravity.RIGHT)
+                .withMargins(0, 0, 16, 16)
+                .create();
+        fabButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addNewBow();
+            }
+        });
         fillBowList();   
     }
     
@@ -36,16 +49,7 @@ public class MainActivity extends FragmentActivity
     	super.onStart();
     	fillBowList();  
     };
-    
-    @Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		// TODO: Implement this method
-		MenuInflater inf = getMenuInflater();
-		inf.inflate(R.menu.menu, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
-    
+
     
     
     
@@ -83,7 +87,7 @@ public class MainActivity extends FragmentActivity
 
 
 	
-	public boolean addNewBow(MenuItem item) {
+	public boolean addNewBow() {
 		Intent intent = new Intent(this, AddActivity.class);
 		startActivity(intent);
 		return false;
