@@ -1,16 +1,19 @@
 package com.cross.beaglesight.gui;
 
-import java.util.Set;
-
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.*;
-import android.view.*;
-import android.widget.LinearLayout;
+import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.LinearLayout;
+
 import com.cross.beaglesight.BowManager;
 import com.cross.beaglesight.R;
+
+import java.util.Set;
 
 public class MainActivity extends FragmentActivity
 {
@@ -50,8 +53,8 @@ public class MainActivity extends FragmentActivity
     void fillBowList() {
     	BowManager bm = BowManager.getInstance();
     	bm.loadBows();
-    	
-    	LinearLayout lv = (LinearLayout) findViewById(R.id.bowList);
+
+        LinearLayout lv = (LinearLayout) findViewById(R.id.bowList);
     	lv.removeAllViews(); 
     	FragmentManager fragmentManager = getFragmentManager();
     	

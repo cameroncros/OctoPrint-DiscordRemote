@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/layer_card_background"
-      android:layout_margin="15dp"
-      android:padding="15dp" >
+    <android.support.v7.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view"
+        android:layout_gravity="center"
+        android:layout_height="100dp"
+        card_view:cardCornerRadius="4dp"
+        android:layout_width="match_parent"
+        android:layout_margin="15dp">
+
 
     <TextView
         android:id="@+id/bowname"
@@ -17,10 +20,7 @@
         android:lines="1"
         android:textSize="24sp" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:paddingBottom="2dp" >
+
 
         <TextView
             android:id="@+id/bowdescription"
@@ -30,7 +30,4 @@
             android:fontFamily="sans-serif-light"
             android:gravity="center_vertical" />
 
-
-    </RelativeLayout>
-
-</LinearLayout>
+</android.support.v7.widget.CardView>
