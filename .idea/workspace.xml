@@ -17,12 +17,7 @@
     <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="app: com.cross.beaglesight" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="111843b8-57ae-4509-b0cf-69a5dbf7682e" name="Default" comment="Fixed sight settings so that they are ordered">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/res/drawable-hdpi/ic_action_accept.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/res/drawable-mdpi/ic_action_accept.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/res/drawable-xhdpi/ic_action_accept.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/app/src/main/res/drawable-xxhdpi/ic_action_accept.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/app.iml" afterPath="$PROJECT_DIR$/app/app.iml" />
+    <list default="true" id="111843b8-57ae-4509-b0cf-69a5dbf7682e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="BeagleSight.iws" />
@@ -1806,7 +1801,11 @@
       <created>1417919736171</created>
       <updated>1417919736171</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added accept icon">
+      <created>1417944702965</created>
+      <updated>1417944702965</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TodoView" selected-index="0">
@@ -1880,7 +1879,8 @@
       <TodoPanelSettings />
     </option>
     <MESSAGE value="Fixed sight settings so that they are ordered" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed sight settings so that they are ordered" />
+    <MESSAGE value="Added accept icon" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added accept icon" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
