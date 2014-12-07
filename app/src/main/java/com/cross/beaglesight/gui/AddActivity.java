@@ -1,14 +1,7 @@
 package com.cross.beaglesight.gui;
 
-import java.util.Map;
-
-import com.cross.beaglesight.BowConfig;
-import com.cross.beaglesight.BowManager;
-import com.cross.beaglesight.R;
-
 import android.app.ActionBar;
 import android.app.Activity;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
@@ -23,6 +16,15 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+
+import com.cross.beaglesight.BowConfig;
+import com.cross.beaglesight.BowManager;
+import com.cross.beaglesight.R;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 public class AddActivity extends Activity {
 	int methodChoice;
@@ -87,8 +89,9 @@ public class AddActivity extends Activity {
 		tl.removeAllViews();
 
 		Map<String, String> pos = bc.getPositions();
-
-		for (String distance : pos.keySet()) {
+        List<String> keys = new ArrayList(pos.keySet());
+        java.util.Collections.sort(keys, new SightSort());
+		for (String distance : keys) {
 			String position = pos.get(distance);
 			addPair(distance, position);
 		}
@@ -96,6 +99,19 @@ public class AddActivity extends Activity {
 
 
 	}
+
+    public class SightSort implements Comparator<String> {
+        @Override
+        public int compare(String mdi1, String mdi2) {
+            if (mdi1.length() < mdi2.length()) {
+                return -1;
+            } else if (mdi1.length() > mdi2.length()) {
+                return 1;
+            } else {
+                return mdi1.compareTo(mdi2);
+            }
+        }
+    }
 
 	public void onStart() {
 		super.onStart();
