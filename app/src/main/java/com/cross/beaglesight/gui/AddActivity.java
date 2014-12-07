@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,6 +38,7 @@ public class AddActivity extends Activity {
 		setContentView(R.layout.add);
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
+
 
 
 		Spinner spinner = (Spinner) findViewById(R.id.types_spinner);
@@ -112,10 +115,14 @@ public class AddActivity extends Activity {
             }
         }
     }
-
-	public void onStart() {
-		super.onStart();
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        // TODO: Implement this method
+        MenuInflater inf = getMenuInflater();
+        inf.inflate(R.menu.menu_add, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
 
 	void resetPairs() {
@@ -174,7 +181,7 @@ public class AddActivity extends Activity {
 		return false;
 	}
 
-	public boolean saveBow(View v) {
+	public boolean saveBow() {
 		BowManager bm = BowManager.getInstance();
 		BowConfig bc = new BowConfig();
 		EditText name = (EditText)findViewById(R.id.addName);
@@ -230,9 +237,11 @@ public class AddActivity extends Activity {
 		case android.R.id.home:
 			finish();
 			return true;
+        case R.id.save:
+            saveBow();
+            return true;
+
 		}
 		return false;
 	}
-
-
 }
