@@ -1,5 +1,7 @@
 package com.cross.beaglesight;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class PositionCalculator
@@ -25,4 +27,12 @@ public abstract class PositionCalculator
 			return positionArray.size()-2;
 		}
 	}
+
+    public List<Double> getKnownPositions() {
+        return new ArrayList<Double>(positionArray.values());
+    }
+
+    public List<Double> getKnownDistances() {
+        return new ArrayList<Double>(positionArray.keySet());
+    }
 }

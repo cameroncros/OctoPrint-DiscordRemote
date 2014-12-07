@@ -1,23 +1,33 @@
 package com.cross.beaglesight.gui;
 
-import java.text.DecimalFormat;
-
 import android.app.ActionBar;
 import android.content.Intent;
-import android.os.*;
-import android.view.*;
-import android.widget.EditText;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.TableLayout.LayoutParams;
+import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.TableLayout;
+import android.widget.TableLayout.LayoutParams;
+import android.widget.TableRow;
+import android.widget.TextView;
 
+import com.androidplot.xy.LineAndPointFormatter;
+import com.androidplot.xy.PointLabelFormatter;
+import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.XYPlot;
+import com.androidplot.xy.XYSeries;
 import com.cross.beaglesight.BowManager;
 import com.cross.beaglesight.PositionCalculator;
 import com.cross.beaglesight.R;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ShowSight extends FragmentActivity
 {
@@ -32,10 +42,64 @@ public class ShowSight extends FragmentActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.showsight);
+        // get action bar
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+
 
 	}
-	
-	@Override
+
+    private void drawGraph() {
+        XYPlot plot = (XYPlot) findViewById(R.id.showPlot);
+
+        // Create a couple arrays of y-values to plot:
+        ArrayList<Integer> distances = new ArrayList<Integer>();
+        ArrayList<Double> scopeSettings =  new ArrayList<Double>();
+        for (int i = 0; i < 101; i++) {
+            distances.add(i);
+            scopeSettings.add(pc.calcPosition(i));
+        }
+
+        // Turn the above arrays into XYSeries':
+        XYSeries series1 = new SimpleXYSeries(distances, scopeSettings, "Scope Settings");
+
+        // Create a formatter to use for drawing a series using LineAndPointRenderer
+        // and configure it from xml:
+        LineAndPointFormatter series1Format = new LineAndPointFormatter();
+        series1Format.setPointLabelFormatter(new PointLabelFormatter());
+        series1Format.configure(getApplicationContext(),
+                R.xml.line_point_formatter_with_plf1);
+
+        // add a new series' to the xyplot:
+        plot.addSeries(series1, series1Format);
+
+
+        // Create a couple arrays of y-values to plot:
+        List<Double> distances2 = pc.getKnownDistances();
+        List<Double> scopeSettings2 =  pc.getKnownPositions();
+
+
+        // Turn the above arrays into XYSeries':
+        XYSeries series2 = new SimpleXYSeries(distances2, scopeSettings2, "Known Positions");
+
+        // Create a formatter to use for drawing a series using LineAndPointRenderer
+        // and configure it from xml:
+        LineAndPointFormatter series2Format = new LineAndPointFormatter();
+        series2Format.setPointLabelFormatter(new PointLabelFormatter());
+        series2Format.configure(getApplicationContext(),
+                R.xml.line_point_formatter_with_plf2);
+
+        // add a new series' to the xyplot:
+        plot.addSeries(series2, series2Format);
+
+        // reduce the number of range labels
+        plot.setTicksPerRangeLabel(5);
+        plot.setTicksPerDomainLabel(10);
+        plot.getGraphWidget().setDomainLabelOrientation(-45);
+    }
+
+    @Override
 	protected void onStart() {
 		super.onStart();
 		Bundle bundle = getIntent().getExtras();
@@ -49,6 +113,7 @@ public class ShowSight extends FragmentActivity
 		pc = bm.getPositionCalculator(bowname);
 		textListenerSetup();
 		calculateIncrements();
+        drawGraph();
 	};
 
 	@Override
