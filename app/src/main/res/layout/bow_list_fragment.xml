@@ -7,7 +7,9 @@
         android:layout_height="100dp"
         card_view:cardCornerRadius="4dp"
         android:layout_width="match_parent"
-        android:layout_margin="15dp">
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp">
 
 
     <TextView
