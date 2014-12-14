@@ -142,7 +142,7 @@ public class ShowSight extends FragmentActivity
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
         intent.putExtra(Intent.EXTRA_STREAM, fileUri);
-        intent.setType("text/plain");
+        intent.setType("text/xml");
         startActivity(intent);
     }
 
