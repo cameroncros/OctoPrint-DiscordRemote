@@ -1,0 +1,30 @@
+<resources>
+
+    <string name="app_name">BeagleSight</string>
+    
+    <string name="calculate_">Calculate:</string>
+    <string name="position_">Position:</string>
+    <string name="distance_">Distance:</string>
+    <string name="position">Position</string>
+    <string name="distance">Distance</string>
+    
+    <string name="table_">Table:</string>
+    <string name="add">Add</string>
+    <string name="description">Description</string>
+    <string name="name">Name</string>
+    <string name="sight_settings_">Sight Settings:</string>
+    <string name="add_distance">Add Distance</string>
+    <string name="save">Save</string>
+    <string name="drawer_open">Open Draw</string>
+    <string name="drawer_close">Close Draw</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    
+	<string-array name="choices_array">
+        <item>Polynomial</item>
+        <item>Line of Best Fit 3rd Order</item>
+        <item>Line of Best Fit 4rd Order</item>
+    </string-array>
+        <string name="precision">Precision</string>
+</resources>
