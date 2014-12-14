@@ -1,33 +1,12 @@
 package com.cross.beaglesight;
 
+import android.content.Context;
+import android.util.Log;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xmlpull.v1.XmlSerializer;
-
-import android.content.Context;
-import android.util.Log;
-import android.util.Xml;
-
-
-
-
-
-
-import com.cross.beaglesight.PositionCalculator;
-import com.cross.beaglesight.gui.MainActivity;
 
 
 
@@ -46,7 +25,7 @@ public class BowManager
 		bowList = new HashMap<String, BowConfig>();
 	}
 
-	public void loadBows() {
+	private void loadBows() {
 		bowList.clear();
 		File[] listOfFiles = folder.listFiles();
 		for (File fl : listOfFiles) {
@@ -87,14 +66,19 @@ public class BowManager
 		return pc;
 	}
 
-	public static BowManager getInstance() {
+	public static BowManager getInstance(Context cont) {
 		if (instance == null) {
 			synchronized (BowManager.class) {
 				if (instance == null) {
 					instance = new BowManager();
+                    if (cont != null) {
+                        instance.setContext(cont);
+                        instance.loadBows();
+                    }
 				}
 			}
 		}
+
 		return instance;
 	}
 
@@ -107,13 +91,13 @@ public class BowManager
 		this.saveBows();
 	}
 
-	public void setContext(MainActivity mainActivity) {
-		cont = mainActivity;
-		folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
-		if (!folder.exists() && folder.mkdir()) {
-			Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
-			folder=null;
-		}
+	public void setContext(Context cont) {
+		this.cont = cont;
+        folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
+        if (!folder.exists() && folder.mkdir()) {
+            Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
+            folder=null;
+        }
 	}
 
 	public void deleteBow(String bowname) {

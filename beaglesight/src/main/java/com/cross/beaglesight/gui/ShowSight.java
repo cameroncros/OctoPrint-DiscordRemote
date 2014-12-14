@@ -105,7 +105,7 @@ public class ShowSight extends FragmentActivity
 		Bundle bundle = getIntent().getExtras();
 		bowname = bundle.getString("bowname");
 		setTitle(bowname);
-		bm = BowManager.getInstance();
+		bm = BowManager.getInstance(this.getApplicationContext());
 		hn = new DecimalFormat("#");
 		df = new DecimalFormat("#.##");
 		pc = bm.getPositionCalculator(bowname);
@@ -164,7 +164,7 @@ public class ShowSight extends FragmentActivity
 		EditText et = (EditText)findViewById(R.id.calcDistance);
 		et.addTextChangedListener(new TextWatcher() {
 			public void afterTextChanged(Editable s) {
-				BowManager bm = BowManager.getInstance();
+				BowManager bm = BowManager.getInstance(null);
 				pc = bm.getPositionCalculator(bowname);
 				Double pos;
 				EditText et = (EditText)findViewById(R.id.calcDistance);

@@ -1,9 +1,5 @@
 package com.cross.beaglesight.gui;
 
-import com.cross.beaglesight.BowConfig;
-import com.cross.beaglesight.BowManager;
-import com.cross.beaglesight.R;
-
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +8,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.cross.beaglesight.BowConfig;
+import com.cross.beaglesight.BowManager;
+import com.cross.beaglesight.R;
 
 public class bowlistFragment extends Fragment {
 	String bowname = null;
@@ -27,7 +27,7 @@ public class bowlistFragment extends Fragment {
 			bowname = savedInstanceState.getString("bowname");
 		}
 
-		BowManager bm = BowManager.getInstance();
+		BowManager bm = BowManager.getInstance(null);
 		BowConfig bc = bm.getBow(bowname);
 		TextView tv = (TextView)vw.findViewById(R.id.bowname);
 		tv.setText(bc.getName());

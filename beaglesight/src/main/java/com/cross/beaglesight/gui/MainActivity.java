@@ -2,6 +2,7 @@ package com.cross.beaglesight.gui;
 
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -19,15 +20,16 @@ import java.util.Set;
 public class MainActivity extends FragmentActivity
 {
 	BowManager bm = null;
+    public Context context = null;
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
 	{
+        this.context = getApplicationContext();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        bm = BowManager.getInstance();
-        bm.setContext(this);
+        bm = BowManager.getInstance(this.getApplicationContext());
 
         FloatingActionButton fabButton = new FloatingActionButton.Builder(this)
                 .withDrawable(getResources().getDrawable(R.drawable.ic_action_new))
@@ -55,8 +57,7 @@ public class MainActivity extends FragmentActivity
     
     
     void fillBowList() {
-    	BowManager bm = BowManager.getInstance();
-    	bm.loadBows();
+    	BowManager bm = BowManager.getInstance(this.getApplicationContext());
 
         LinearLayout lv = (LinearLayout) findViewById(R.id.bowList);
     	lv.removeAllViews(); 

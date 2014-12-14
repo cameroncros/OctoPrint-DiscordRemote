@@ -76,7 +76,7 @@ public class AddActivity extends Activity {
 	}
 
 	private void loadBow(String bowname) {
-		BowManager bm = BowManager.getInstance();
+		BowManager bm = BowManager.getInstance(this.getApplicationContext());
 		BowConfig bc = bm.getBow(bowname);
 		EditText name = (EditText)findViewById(R.id.addName);
 		name.setText(bc.getName());
@@ -182,7 +182,7 @@ public class AddActivity extends Activity {
 	}
 
 	public boolean saveBow() {
-		BowManager bm = BowManager.getInstance();
+		BowManager bm = BowManager.getInstance(this.getApplicationContext());
 		BowConfig bc = new BowConfig();
 		EditText name = (EditText)findViewById(R.id.addName);
 		bc.setName(name.getText().toString());
