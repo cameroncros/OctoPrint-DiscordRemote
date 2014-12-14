@@ -24,6 +24,7 @@ import android.util.Xml;
 
 public class BowConfig {
 	private String bowname;
+    private String bowfilepath;
 	private String bowdescription;
 	private Map<String, String> positionArray;
 	private int method;
@@ -50,6 +51,9 @@ public class BowConfig {
 	public String getDescription() {
 		return bowdescription;
 	}
+    public String getPathToFile() {
+        return bowfilepath;
+    }
 
 	void clearPositions() {
 		positionArray.clear();
@@ -100,6 +104,7 @@ public class BowConfig {
 	}
 	
 	public void load(String filename, Context cont) {
+        bowfilepath = filename;
 		FileInputStream fileIS;
 		try {
 			fileIS = new FileInputStream(filename);
