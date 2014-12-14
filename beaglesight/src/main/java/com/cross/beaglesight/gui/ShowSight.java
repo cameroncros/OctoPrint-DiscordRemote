@@ -18,7 +18,7 @@ import android.widget.TableLayout;
 import android.widget.TableLayout.LayoutParams;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.ShareActionProvider;
+
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.SimpleXYSeries;
@@ -125,48 +125,25 @@ public class ShowSight extends FragmentActivity
 		MenuInflater inf = getMenuInflater();
 		inf.inflate(R.menu.show_sight_menu, menu);
 
-
-
-
-
-
-        //Sets the file to be shared
-        setShareIntent(menu);
-
         // Return true to display menu
         return super.onCreateOptionsMenu(menu);
     }
 
-    private void setShareIntent(Menu menu) {
-        // Locate MenuItem with ShareActionProvider
-        MenuItem item = menu.findItem(R.id.menu_item_share);
-        // Fetch and store ShareActionProvider
-        ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
-        if (mShareActionProvider != null) {
 
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/xml");
+    public void shareSettings() {
+        // Build Mumble server URL
+        File requestFile = new File(bm.getBow(bowname).getPathToFile());
+        Context cont = getApplicationContext();
+        Uri fileUri = FileProvider.getUriForFile(
+                cont,
+                "com.cross.beaglesight.fileprovider",
+                requestFile);
 
-            File requestFile = new File(bm.getBow(bowname).getPathToFile());
-            if (requestFile.exists()) {
-                try {
-                    Context cont = getApplicationContext();
-                    Uri fileUri = FileProvider.getUriForFile(
-                            cont,
-                            "com.cross.beaglesight.fileprovider",
-                            requestFile);
-
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            mShareActionProvider.setShareIntent(shareIntent);
-        }
-
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+        intent.setType("text/plain");
+        startActivity(intent);
     }
 
 	private void calculateIncrements() {
@@ -249,6 +226,9 @@ public class ShowSight extends FragmentActivity
 			intent = new Intent(getApplicationContext(), MainActivity.class);
 			startActivityForResult(intent, 0);
 			return true;
+        case R.id.menu_item_share:
+            shareSettings();
+            return true;
 		default:
 			return false;
 
