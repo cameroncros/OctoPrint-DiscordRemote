@@ -1,9 +1,12 @@
 package com.cross.beaglesight.gui;
 
 import android.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.FileProvider;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -15,7 +18,7 @@ import android.widget.TableLayout;
 import android.widget.TableLayout.LayoutParams;
 import android.widget.TableRow;
 import android.widget.TextView;
-
+import android.widget.ShareActionProvider;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.SimpleXYSeries;
@@ -25,6 +28,7 @@ import com.cross.beaglesight.BowManager;
 import com.cross.beaglesight.PositionCalculator;
 import com.cross.beaglesight.R;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,8 +124,50 @@ public class ShowSight extends FragmentActivity
 		// TODO: Implement this method
 		MenuInflater inf = getMenuInflater();
 		inf.inflate(R.menu.show_sight_menu, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
+
+
+
+
+
+
+        //Sets the file to be shared
+        setShareIntent(menu);
+
+        // Return true to display menu
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private void setShareIntent(Menu menu) {
+        // Locate MenuItem with ShareActionProvider
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+        // Fetch and store ShareActionProvider
+        ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
+        if (mShareActionProvider != null) {
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/xml");
+
+            File requestFile = new File(bm.getBow(bowname).getPathToFile());
+            if (requestFile.exists()) {
+                try {
+                    Context cont = getApplicationContext();
+                    Uri fileUri = FileProvider.getUriForFile(
+                            cont,
+                            "com.cross.beaglesight.fileprovider",
+                            requestFile);
+
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            mShareActionProvider.setShareIntent(shareIntent);
+        }
+
+    }
 
 	private void calculateIncrements() {
 		Double pos = 0.0;
