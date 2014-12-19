@@ -1,5 +1,6 @@
 package com.cross.beaglesight;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +8,8 @@ import java.util.Map;
 public abstract class PositionCalculator
 {
 	Map<Double,Double> positionArray = null;
+    static DecimalFormat hn = new DecimalFormat("#");
+    static DecimalFormat df = new DecimalFormat("#.##");
 	
 	void setPositions(Map<String,String> pos) {
 		positionArray.clear();
@@ -34,5 +37,14 @@ public abstract class PositionCalculator
 
     public List<Double> getKnownDistances() {
         return new ArrayList<Double>(positionArray.keySet());
+    }
+
+    public static String getDisplayValue(double val, int numPlaces) {
+        switch (numPlaces) {
+            case 0:
+                return hn.format(val);
+            case 2:
+                return df.format(val);
+        }
     }
 }

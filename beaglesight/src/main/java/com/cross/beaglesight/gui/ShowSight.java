@@ -29,13 +29,11 @@ import com.cross.beaglesight.PositionCalculator;
 import com.cross.beaglesight.R;
 
 import java.io.File;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShowSight extends FragmentActivity
 {
-	DecimalFormat df = null, hn = null;
 	BowManager bm = null;
 	PositionCalculator pc = null;
 
@@ -110,8 +108,6 @@ public class ShowSight extends FragmentActivity
 		bowname = bundle.getString("bowname");
 		setTitle(bowname);
 		bm = BowManager.getInstance(this.getApplicationContext());
-		hn = new DecimalFormat("#");
-		df = new DecimalFormat("#.##");
 		pc = bm.getPositionCalculator(bowname);
 		textListenerSetup();
 		calculateIncrements();
@@ -168,12 +164,12 @@ public class ShowSight extends FragmentActivity
 			EditText et = new EditText(this);
 			et.setEnabled(false);
 			et.setGravity(Gravity.RIGHT);
-			et.setText(df.format(pos));
+			et.setText(PositionCalculator.getDisplayValue(pos, 1));
 
 			TextView tv = new TextView(this);
 			tv.setLabelFor(et.getId());
 			tv.setTextSize(18);
-			tv.setText(hn.format(val)+":");
+			tv.setText(PositionCalculator.getDisplayValue(val,0)+":");
 
 			tr.addView(tv);
 			tr.addView(et);
@@ -195,7 +191,7 @@ public class ShowSight extends FragmentActivity
 				try {
 					Double dist = Double.valueOf(et.getText().toString());
 					pos = pc.calcPosition(dist);
-					tv.setText(df.format(pos));
+					tv.setText(PositionCalculator.getDisplayValue(pos,2));
 				}
 				catch (NumberFormatException e) {
 					tv.setText("");
