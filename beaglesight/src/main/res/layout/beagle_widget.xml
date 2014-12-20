@@ -1,82 +1,104 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:padding="@dimen/widget_margin"
-    tools:showIn="@layout/beagle_widget_info">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
-        android:id="@+id/widgetBowName"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
+    android:padding="4dp"
+    tools:showIn="@layout/beagle_widget_info"
+    >
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_below="@+id/widgetBowName"
-        android:orientation="vertical">
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:orientation="horizontal">
-            <Button
-                android:text="@string/minusCoarse"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageButtonMinusCoarse"/>
+        android:background="#7fff"
+        android:orientation="vertical"
+        android:padding="6dp">
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical"
+                android:background="@color/windowBackground">
             <TextView
-                android:text="@string/distance_"
-                android:textAlignment="textStart"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
-            <TextView
-                android:text="20"
-                android:textAlignment="viewEnd"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/widgetDistance"
-                android:layout_weight="2" />
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Large Text"
+                android:id="@+id/widgetBowName"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/primary_text_default_material_light"
+                android:background="@color/primary"
+                android:padding="8dp"/>
 
-            <Button
-                android:text="@string/plusCoarse"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageButtonPlusCoarse" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button
-                android:text="@string/minusFine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageButtonMinusFine"/>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_below="@+id/widgetBowName"
+                android:orientation="vertical"
+                android:gravity="bottom">
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" android:orientation="horizontal">
+                    <Button
+                        android:text="@string/minusCoarse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/imageButtonMinusCoarse"/>
+                    <TextView
+                        android:text="@string/distance_"
+                        android:textAlignment="textStart"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/primary_text_default_material_light"/>
+                    <TextView
+                        android:text="20"
+                        android:textAlignment="viewEnd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:id="@+id/widgetDistance"
+                        android:layout_weight="2"
+                        android:textColor="@color/primary_text_default_material_light"/>
+
+                    <Button
+                        android:text="@string/plusCoarse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/imageButtonPlusCoarse" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <Button
+                        android:text="@string/minusFine"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/imageButtonMinusFine"/>
 
 
-            <TextView
-                android:textAlignment="textStart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/position_"/>
+                    <TextView
+                        android:textAlignment="textStart"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:text="@string/position_"
+                        android:textColor="@color/primary_text_default_material_light"/>
 
-            <TextView
-                android:textAlignment="viewEnd"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/widgetPosition"
-                android:layout_weight="2" />
+                    <TextView
+                        android:textAlignment="viewEnd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:id="@+id/widgetPosition"
+                        android:layout_weight="2"
+                        android:textColor="@color/primary_text_default_material_light"/>
 
-            <Button
-                android:text="@string/plusFine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageButtonPlusFine"/>
+                    <Button
+                        android:text="@string/plusFine"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/imageButtonPlusFine"/>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>
