@@ -49,8 +49,12 @@ public class BowManager
 		if (bowName == null) {
 			return null;
 		}
+        BowConfig bc = bowList.get(bowName);
+        if (bc == null) {
+            return null;
+        }
 		PositionCalculator pc = null;
-		switch (bowList.get(bowName).getMethod()) {
+		switch (bc.getMethod()) {
 
 		case 0:
 			pc = new PolynomialCalculator();
@@ -62,7 +66,7 @@ public class BowManager
 			pc = new LineOfBestFitCalculator(4);
 			break;
 		}
-		pc.setPositions(bowList.get(bowName).getPositions());
+		pc.setPositions(bc.getPositions());
 		return pc;
 	}
 
