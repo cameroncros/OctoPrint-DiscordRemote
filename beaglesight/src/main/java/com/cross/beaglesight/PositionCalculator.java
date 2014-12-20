@@ -41,10 +41,12 @@ public abstract class PositionCalculator
 
     public static String getDisplayValue(double val, int numPlaces) {
         switch (numPlaces) {
+            default:
             case 0:
                 return hn.format(val);
             case 2:
                 return df.format(val);
+
         }
     }
 }
