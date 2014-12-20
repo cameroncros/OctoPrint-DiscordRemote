@@ -1,13 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_name">BeagleSight</string>
-    
     <string name="calculate_">Calculate:</string>
     <string name="position_">Position:</string>
     <string name="distance_">Distance:</string>
     <string name="position">Position</string>
     <string name="distance">Distance</string>
-    
     <string name="table_">Table:</string>
     <string name="add">Add</string>
     <string name="description">Description</string>
@@ -20,11 +19,21 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="share">Share</string>
-    
-	<string-array name="choices_array">
+
+    <string-array name="choices_array">
         <item>Polynomial</item>
         <item>Line of Best Fit 3rd Order</item>
         <item>Line of Best Fit 4rd Order</item>
     </string-array>
-        <string name="precision">Precision</string>
+
+    <string name="precision">Precision</string>
+    <string name="pickBow">Choose your bow:</string>
+    <string name="add_widget">Add widget</string>
+
+    <string name="plusCoarse">+5</string>
+    <string name="plusFine">+1</string>
+    <string name="minusCoarse">-5</string>
+    <string name="minusFine">-1</string>
+
+
 </resources>

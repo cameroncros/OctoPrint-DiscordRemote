@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cross.beaglesight"
     android:versionCode="1"
@@ -12,32 +13,49 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        
         <activity
-            android:label="@string/app_name"
-            android:name="com.cross.beaglesight.gui.MainActivity" >
-            <intent-filter >
+            android:name=".gui.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:label="@string/app_name"
-            android:name="com.cross.beaglesight.gui.AddActivity">
-            
+        <activity
+            android:name=".gui.AddActivity"
+            android:label="@string/app_name" >
         </activity>
-                <activity android:label="@string/app_name"
-            android:name="com.cross.beaglesight.gui.ShowSight">
-
+        <activity
+            android:name=".gui.ShowSight"
+            android:label="@string/app_name" >
         </activity>
 
-        <provider android:name="android.support.v4.content.FileProvider"
+        <provider
+            android:name="android.support.v4.content.FileProvider"
             android:authorities="com.cross.beaglesight.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+            android:grantUriPermissions="true" >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
         </provider>
+
+        <receiver android:name=".BeagleWidget" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/beagle_widget_info" />
+        </receiver>
+
+        <activity android:name=".BeagleWidgetConfigureActivity" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
