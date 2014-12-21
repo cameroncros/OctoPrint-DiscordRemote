@@ -92,10 +92,9 @@ public class BeagleWidgetConfigureActivity extends Activity {
     // Read the prefix from the SharedPreferences object for this widget.
     // If there is no preference saved, get the default from a resource
     static String loadTitlePref(Context context, int appWidgetId) {
-        return "Cameron G5"; //TODO:
-//        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-//        String titleValue = prefs.getString(PREF_PREFIX_NAME + appWidgetId, context.getString(R.string.app_name));
-//        return titleValue;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+        String titleValue = prefs.getString(PREF_PREFIX_NAME + appWidgetId, context.getString(R.string.app_name));
+        return titleValue;
 
     }
 
@@ -115,6 +114,7 @@ public class BeagleWidgetConfigureActivity extends Activity {
     // Read the prefix from the SharedPreferences object for this widget.
     // If there is no preference saved, get the default from a resource
     static int loadDistancePref(Context context, int appWidgetId) {
+
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
         int titleValue = prefs.getInt(PREF_PREFIX_DIST + appWidgetId, 20);
         return titleValue;

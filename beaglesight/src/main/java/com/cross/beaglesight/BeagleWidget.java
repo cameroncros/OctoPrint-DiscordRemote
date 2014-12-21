@@ -3,9 +3,10 @@ package com.cross.beaglesight;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 
@@ -55,7 +56,18 @@ public class BeagleWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        int appWidgetId = intent.getIntExtra("widgetId", 0);
+        String action = intent.getAction();
+
+        Bundle bundle = intent.getExtras();
+        for (String key : bundle.keySet()) {
+            Object value = bundle.get(key);
+            Log.d("BeagleSight", String.format("%s %s (%s)", key,
+                    value.toString(), value.getClass().getName()));
+        }
+        int appWidgetId = intent.getIntExtra("widgetId", -1);
+        if (appWidgetId == -1) {
+            return;
+        }
         int dist=20;
         //super.onReceive(context, intent);
         switch (intent.getAction()) {
@@ -84,8 +96,6 @@ public class BeagleWidget extends AppWidgetProvider {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
         updateAppWidget(context, appWidgetManager, appWidgetId);
-
-
     }
 
 
@@ -105,6 +115,10 @@ public class BeagleWidget extends AppWidgetProvider {
         BowManager bm = BowManager.getInstance(null);
         PositionCalculator pc = bm.getPositionCalculator(bowname);
 
+        if (pc == null) {
+            return;
+        }
+
         double pos = pc.calcPosition(dist);
 
         views.setTextViewText(R.id.widgetDistance, PositionCalculator.getDisplayValue(dist,0));
@@ -112,7 +126,7 @@ public class BeagleWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.widgetBowName, bowname);
 
         // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(new ComponentName(context, BeagleWidget.class), views);
+        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
     protected static PendingIntent getPendingSelfIntent(Context context, String action, int appWidgetId) {
