@@ -130,6 +130,7 @@ public class BeagleWidget extends AppWidgetProvider {
     }
 
     protected static PendingIntent getPendingSelfIntent(Context context, String action, int appWidgetId) {
+        Log.w("BeagleSight", "Appwidgetid:"+appWidgetId);
         Intent intent = new Intent(context, BeagleWidget.class);
         intent.setAction(action);
         intent.putExtra("widgetId", appWidgetId);

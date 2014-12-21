@@ -6,11 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 
 /**
@@ -93,6 +95,12 @@ public class BeagleWidgetConfigureActivity extends Activity {
     // If there is no preference saved, get the default from a resource
     static String loadTitlePref(Context context, int appWidgetId) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+        Map<String,?> keys = prefs.getAll();
+
+        for(Map.Entry<String,?> entry : keys.entrySet()){
+            Log.d("map values", entry.getKey() + ": " +
+                    entry.getValue().toString());
+        }
         String titleValue = prefs.getString(PREF_PREFIX_NAME + appWidgetId, context.getString(R.string.app_name));
         return titleValue;
 
