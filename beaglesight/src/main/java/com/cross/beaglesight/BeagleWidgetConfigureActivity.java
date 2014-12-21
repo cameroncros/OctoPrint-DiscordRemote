@@ -98,7 +98,7 @@ public class BeagleWidgetConfigureActivity extends Activity {
         Map<String,?> keys = prefs.getAll();
 
         for(Map.Entry<String,?> entry : keys.entrySet()){
-            Log.d("map values", entry.getKey() + ": " +
+            Log.d("BeagleSight map values", entry.getKey() + ": " +
                     entry.getValue().toString());
         }
         String titleValue = prefs.getString(PREF_PREFIX_NAME + appWidgetId, context.getString(R.string.app_name));

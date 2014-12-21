@@ -1,16 +1,8 @@
 package com.cross.beaglesight;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import android.content.Context;
+import android.util.Log;
+import android.util.Xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -18,9 +10,15 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xmlpull.v1.XmlSerializer;
 
-import android.content.Context;
-import android.util.Log;
-import android.util.Xml;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class BowConfig {
 	private String bowname;
@@ -85,7 +83,11 @@ public class BowConfig {
 			serializer.startTag(null, "description");
 			serializer.text(bowdescription);
 			serializer.endTag(null, "description");
-			for (String distance : positionArray.keySet()) {
+            serializer.startTag(null, "method");
+            serializer.text(Integer.toString(method));
+            serializer.endTag(null, "method");
+
+            for (String distance : positionArray.keySet()) {
 				serializer.startTag(null, "position");
 				serializer.text(distance+","+positionArray.get(distance));
 				serializer.endTag(null, "position");
