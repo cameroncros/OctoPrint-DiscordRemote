@@ -2,7 +2,7 @@
  * https://gist.github.com/Jogan/9def6110edf3247825c9
  */
 
-package  com.cross.beaglesight.gui.libs;
+package com.cross.beaglesight.libs;
  
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;

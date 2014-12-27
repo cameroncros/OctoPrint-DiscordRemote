@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesight.widget;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+
+import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ import java.util.Map;
 public class BeagleWidgetConfigureActivity extends Activity {
 
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private static final String PREFS_NAME = "com.cross.beaglesight.BeagleWidget";
+    private static final String PREFS_NAME = "com.cross.beaglesight.widget.BeagleWidget";
     private static final String PREF_PREFIX_NAME = "appwidgetname_";
     private static final String PREF_PREFIX_DIST = "appwidgetdist_";
 

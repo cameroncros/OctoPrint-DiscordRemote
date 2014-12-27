@@ -20,7 +20,7 @@ import android.widget.LinearLayout;
 
 import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesight.R;
-import com.cross.beaglesight.gui.libs.FloatingActionButton;
+import com.cross.beaglesight.libs.FloatingActionButton;
 
 import java.io.File;
 import java.util.Set;
