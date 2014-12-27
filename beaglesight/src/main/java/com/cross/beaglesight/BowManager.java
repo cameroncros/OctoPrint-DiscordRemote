@@ -29,11 +29,15 @@ public class BowManager
 		bowList.clear();
 		File[] listOfFiles = folder.listFiles();
 		for (File fl : listOfFiles) {
-			BowConfig bc = new BowConfig();
-			bc.load(fl.getAbsolutePath(), cont);
-			bowList.put(bc.getName(), bc);
+            importBow(fl);
 		}		
 	}
+
+    public void importBow(File fl) {
+        BowConfig bc = new BowConfig();
+        bc.load(fl, cont);
+        bowList.put(bc.getName(), bc);
+    }
 
 	void saveBows() {
 		File[] listOfFiles = folder.listFiles();

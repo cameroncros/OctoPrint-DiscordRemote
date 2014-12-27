@@ -105,11 +105,11 @@ public class BowConfig {
 
 	}
 	
-	public void load(String filename, Context cont) {
-        bowfilepath = filename;
+	public void load(File file, Context cont) {
+        bowfilepath = file.getAbsolutePath();
 		FileInputStream fileIS;
 		try {
-			fileIS = new FileInputStream(filename);
+			fileIS = new FileInputStream(file);
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = factory.newDocumentBuilder();
 			InputSource inputSource = new InputSource(fileIS);
