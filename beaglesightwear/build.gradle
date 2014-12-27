@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 21
+    compileSdkVersion 20
     buildToolsVersion "21.1.1"
 
     defaultConfig {
@@ -21,7 +21,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.google.android.support:wearable:+'
     compile 'com.google.android.gms:play-services-wearable:+'
+    compile project(':beaglesightlibs')
 }

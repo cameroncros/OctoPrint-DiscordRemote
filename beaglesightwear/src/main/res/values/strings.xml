@@ -2,7 +2,12 @@
 <resources>
 
     <string name="app_name">BeagleSightWear</string>
-    <string name="hello_round">Hello Round World!</string>
-    <string name="hello_square">Hello Square World!</string>
+    <string name="plusCoarse">+5</string>
+    <string name="plusFine">+1</string>
+    <string name="minusCoarse">-5</string>
+    <string name="minusFine">-1</string>
+    <string name="position_">Position:</string>
+    <string name="distance_">Distance:</string>
+    <string name="default_dist">20</string>
 
 </resources>
