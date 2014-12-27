@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightlibs;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

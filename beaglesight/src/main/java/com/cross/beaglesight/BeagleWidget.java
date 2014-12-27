@@ -9,6 +9,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.cross.beaglesightlibs.BowManager;
+import com.cross.beaglesightlibs.PositionCalculator;
+
 
 /**
  * Implementation of App Widget functionality.

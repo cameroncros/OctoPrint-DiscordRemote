@@ -18,7 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.cross.beaglesight.BowManager;
+import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesight.R;
 import com.cross.beaglesight.gui.libs.FloatingActionButton;
 

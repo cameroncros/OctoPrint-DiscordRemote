@@ -24,8 +24,8 @@ import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 import com.androidplot.xy.XYSeries;
-import com.cross.beaglesight.BowManager;
-import com.cross.beaglesight.PositionCalculator;
+import com.cross.beaglesightlibs.BowManager;
+import com.cross.beaglesightlibs.PositionCalculator;
 import com.cross.beaglesight.R;
 
 import java.io.File;

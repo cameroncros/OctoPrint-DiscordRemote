@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import com.cross.beaglesightlibs.BowManager;
 
 import java.util.ArrayList;
 import java.util.Map;

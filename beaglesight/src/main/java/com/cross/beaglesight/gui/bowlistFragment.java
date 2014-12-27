@@ -9,8 +9,8 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.cross.beaglesight.BowConfig;
-import com.cross.beaglesight.BowManager;
+import com.cross.beaglesightlibs.BowConfig;
+import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesight.R;
 
 public class bowlistFragment extends Fragment {

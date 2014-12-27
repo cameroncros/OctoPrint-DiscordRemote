@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightlibs;
 
 import android.content.Context;
 import android.util.Log;

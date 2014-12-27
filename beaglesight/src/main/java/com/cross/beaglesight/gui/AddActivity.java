@@ -19,8 +19,8 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 
-import com.cross.beaglesight.BowConfig;
-import com.cross.beaglesight.BowManager;
+import com.cross.beaglesightlibs.BowConfig;
+import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesight.R;
 
 import java.util.ArrayList;
