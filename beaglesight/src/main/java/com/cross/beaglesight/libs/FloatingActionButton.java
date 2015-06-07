@@ -3,7 +3,7 @@
  */
 
 package com.cross.beaglesight.libs;
- 
+
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;

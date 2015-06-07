@@ -21,6 +21,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
 }
 
 dependencies {
@@ -30,4 +34,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:21+'
     compile 'com.androidplot:androidplot-core:0.6.1'
     compile project(':beaglesightlibs')
+    compile 'Teleport:teleportlib:0.1.4'
+    compile 'com.google.android.gms:play-services-wearable:+'
+    wearApp project(':beaglesightwear')
 }

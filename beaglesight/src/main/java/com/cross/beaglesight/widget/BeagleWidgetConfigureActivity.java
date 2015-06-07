@@ -24,7 +24,7 @@ import java.util.Map;
 public class BeagleWidgetConfigureActivity extends Activity {
 
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private static final String PREFS_NAME = "com.cross.beaglesight.widget.BeagleWidget";
+    private static final String PREFS_NAME = "com.cross.beaglesight.gui.beaglesight.widget.BeagleWidget";
     private static final String PREF_PREFIX_NAME = "appwidgetname_";
     private static final String PREF_PREFIX_DIST = "appwidgetdist_";
 

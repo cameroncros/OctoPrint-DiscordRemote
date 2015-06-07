@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 import android.util.Xml;
 
+import com.cross.beaglesightlibs.ProtoConfig.Config;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -162,4 +164,22 @@ public class BowConfig {
 		// TODO Auto-generated method stub
 		return method;
 	}
+    
+    @Override
+    public String toString() {
+        Config.Builder cgbuilder = com.cross.beaglesightlibs.ProtoConfig.Config.newBuilder()
+                .setBowdescription(bowdescription)
+                .setBowname(bowname)
+				.setMethod(method);
+
+        for (String distance : positionArray.keySet()) {
+            Config.Position pos = Config.Position.newBuilder()
+                    .setDistance(distance)
+                    .setPosvalue(positionArray.get(distance))
+                    .build();
+            cgbuilder.addPositionArray(pos);
+        }
+        Config pc = cgbuilder.build();
+        return pc.toString();
+    }
 }

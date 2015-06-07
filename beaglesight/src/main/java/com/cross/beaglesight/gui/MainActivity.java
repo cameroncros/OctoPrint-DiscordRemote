@@ -18,9 +18,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesight.R;
 import com.cross.beaglesight.libs.FloatingActionButton;
+import com.cross.beaglesightlibs.BowManager;
 
 import java.io.File;
 import java.util.Set;

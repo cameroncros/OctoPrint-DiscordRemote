@@ -19,9 +19,10 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 
+import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
-import com.cross.beaglesight.R;
+import com.mariux.teleport.lib.TeleportClient;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 public class AddActivity extends Activity {
 	int methodChoice;
+	private TeleportClient mTeleportClient;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -39,7 +41,7 @@ public class AddActivity extends Activity {
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 
-
+        mTeleportClient = new TeleportClient(this);
 
 		Spinner spinner = (Spinner) findViewById(R.id.types_spinner);
 		// Create an ArrayAdapter using the string array and a default spinner layout
@@ -135,6 +137,8 @@ public class AddActivity extends Activity {
 
 	public boolean addEmptyPair(View bt) {
 		addPair(null, null);
+
+        mTeleportClient.syncByteArray("hello","asdfasdf".getBytes());
 		return false;
 	}
 
@@ -227,7 +231,9 @@ public class AddActivity extends Activity {
 		}
 
 		bm.saveNewBowConfig(bc);
-
+        String protoString = bc.toString();
+        //mTeleportClient.syncString(bc.getFileName(), protoString);
+		mTeleportClient.syncByteArray("hello", protoString.getBytes());
 		finish();
 		return false;
 	}
@@ -244,4 +250,16 @@ public class AddActivity extends Activity {
 		}
 		return false;
 	}
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mTeleportClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mTeleportClient.disconnect();
+    }
 }

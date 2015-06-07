@@ -1,4 +1,4 @@
-package com.example.beaglesightwear;
+package com.cross.beaglesightwear;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.wearable.view.CardFragment;
 import android.support.wearable.view.FragmentGridPagerAdapter;
 
+import com.cross.beaglesight.gui.ShowBowFragment;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.util.ArrayList;
