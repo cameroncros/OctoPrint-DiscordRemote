@@ -112,7 +112,7 @@ public class ShowSight extends FragmentActivity
 		textListenerSetup();
 		calculateIncrements();
         drawGraph();
-	};
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)

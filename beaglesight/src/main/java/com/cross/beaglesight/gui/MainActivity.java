@@ -28,9 +28,9 @@ import java.util.Set;
 public class MainActivity extends FragmentActivity
 {
     private static final int FILE_SELECT_CODE = 0;
-
-	BowManager bm = null;
     public Context context = null;
+    BowManager bm = null;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -70,8 +70,8 @@ public class MainActivity extends FragmentActivity
     @Override
 	protected void onStart() {
     	super.onStart();
-    	fillBowList();  
-    };
+    	fillBowList();
+    }
 
     
     

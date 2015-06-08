@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.cross.beaglesight.gui.R;
 import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesightlibs.PositionCalculator;
 
@@ -17,12 +16,11 @@ import com.cross.beaglesightlibs.PositionCalculator;
  */
 
 public class ShowBowFragment extends Fragment implements View.OnClickListener {
+    private static final int Fine = 1;
+    private static final int Coarse = 5;
     View view = null;
     String bowName = null;
     double distance = 20;
-
-    private static final int Fine = 1;
-    private static final int Coarse = 5;
 
     @Override
     public void setArguments(Bundle args) {
@@ -49,6 +47,9 @@ public class ShowBowFragment extends Fragment implements View.OnClickListener {
         bt = (Button)view.findViewById(R.id.imageButtonPlusFine);
         bt.setOnClickListener(this);
 
+        TextView tv = (TextView) view.findViewById(R.id.bowName);
+        tv.setText(bowName);
+
 
 
         return view;
@@ -70,6 +71,10 @@ public class ShowBowFragment extends Fragment implements View.OnClickListener {
                 distance += Fine;
                 break;
         }
+        updateValues();
+    }
+
+    private void updateValues() {
         BowManager bm = BowManager.getInstance(getActivity().getApplicationContext());
         PositionCalculator pc = bm.getPositionCalculator(bowName);
         double position = pc.calcPosition(distance);

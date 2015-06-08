@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.support.wearable.view.CardFragment;
 import android.support.wearable.view.FragmentGridPagerAdapter;
 
-import com.cross.beaglesight.gui.ShowBowFragment;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.util.ArrayList;
@@ -28,8 +27,8 @@ import java.util.Set;
  * Created by cameron on 29/12/14.
  */
 public class SampleGridPagerAdapter extends FragmentGridPagerAdapter {
-    BowManager bm;
     private final Context mContext;
+    BowManager bm;
     int length;
     int height;
 
@@ -71,7 +70,7 @@ public class SampleGridPagerAdapter extends FragmentGridPagerAdapter {
     @Override
     public int getColumnCount(int rowNum)
     {
-        return 3;
+        return 3; //forget the reason for this
     }
 
     @Override

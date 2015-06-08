@@ -94,8 +94,8 @@ public class AddActivity extends Activity {
 		tl.removeAllViews();
 
 		Map<String, String> pos = bc.getPositions();
-        List<String> keys = new ArrayList(pos.keySet());
-        java.util.Collections.sort(keys, new SightSort());
+		List<String> keys = new ArrayList<String>(pos.keySet());
+		java.util.Collections.sort(keys, new SightSort());
 		for (String distance : keys) {
 			String position = pos.get(distance);
 			addPair(distance, position);
@@ -105,18 +105,6 @@ public class AddActivity extends Activity {
 
 	}
 
-    public class SightSort implements Comparator<String> {
-        @Override
-        public int compare(String mdi1, String mdi2) {
-            if (mdi1.length() < mdi2.length()) {
-                return -1;
-            } else if (mdi1.length() > mdi2.length()) {
-                return 1;
-            } else {
-                return mdi1.compareTo(mdi2);
-            }
-        }
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -125,7 +113,6 @@ public class AddActivity extends Activity {
         inf.inflate(R.menu.menu_add, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
 
 	void resetPairs() {
 		TableLayout tl = (TableLayout)findViewById(R.id.addTable);
@@ -137,8 +124,6 @@ public class AddActivity extends Activity {
 
 	public boolean addEmptyPair(View bt) {
 		addPair(null, null);
-
-        mTeleportClient.syncByteArray("hello","asdfasdf".getBytes());
 		return false;
 	}
 
@@ -231,9 +216,7 @@ public class AddActivity extends Activity {
 		}
 
 		bm.saveNewBowConfig(bc);
-        String protoString = bc.toString();
-        //mTeleportClient.syncString(bc.getFileName(), protoString);
-		mTeleportClient.syncByteArray("hello", protoString.getBytes());
+		mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
 		finish();
 		return false;
 	}
@@ -251,15 +234,28 @@ public class AddActivity extends Activity {
 		return false;
 	}
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mTeleportClient.connect();
-    }
+	@Override
+	protected void onStart() {
+		super.onStart();
+		mTeleportClient.connect();
+	}
 
     @Override
     protected void onStop() {
         super.onStop();
         mTeleportClient.disconnect();
-    }
+	}
+
+	public class SightSort implements Comparator<String> {
+		@Override
+		public int compare(String mdi1, String mdi2) {
+			if (mdi1.length() < mdi2.length()) {
+				return -1;
+			} else if (mdi1.length() > mdi2.length()) {
+				return 1;
+			} else {
+				return mdi1.compareTo(mdi2);
+			}
+		}
+	}
 }

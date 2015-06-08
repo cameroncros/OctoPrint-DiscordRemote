@@ -2,7 +2,11 @@ package com.cross.beaglesightwear;
 
 import android.util.Log;
 
+import com.cross.beaglesightlibs.BowConfig;
+import com.cross.beaglesightlibs.BowManager;
+import com.cross.beaglesightlibs.ProtoConfig.Config;
 import com.google.android.gms.wearable.DataMap;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.mariux.teleport.lib.TeleportService;
 
 public class ListenService extends TeleportService {
@@ -11,7 +15,7 @@ public class ListenService extends TeleportService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.w("Teleport", "Teleport service penis");
+        Log.w("Teleport", "Teleport service started");
         //The quick way is to use setOnGetMessageTask, and set a new task
         setOnSyncDataItemTask(new StartActivityTask());
     }
@@ -22,8 +26,16 @@ public class ListenService extends TeleportService {
         @Override
         protected void onPostExecute(DataMap dataMap) {
             for (String key : dataMap.keySet()) {
-                String string = dataMap.getByteArray(key).toString();
-                Log.w("Teleport", key + " = " + string);
+                byte[] string = dataMap.getByteArray(key);
+                try {
+                    Config conf = Config.parseFrom(string);
+                    BowConfig bc = new BowConfig(conf);
+                    BowManager bm = BowManager.getInstance(getApplicationContext());
+                    bm.saveNewBowConfig(bc);
+                } catch (InvalidProtocolBufferException e) {
+                    Log.w("Teleport", "could not parse: " + string.toString());
+                }
+                Log.w("Teleport", key + " = " + string.toString());
             }
             setOnSyncDataItemTask(new StartActivityTask());
         }

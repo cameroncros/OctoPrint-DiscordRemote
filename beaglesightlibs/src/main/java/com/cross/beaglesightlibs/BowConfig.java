@@ -37,20 +37,33 @@ public class BowConfig {
 		method=0;
 	}
 
+	public BowConfig(Config conf) {
+		bowname = conf.getBowname();
+		bowdescription = conf.getBowdescription();
+		method = conf.getMethod();
+		positionArray = new HashMap<String, String>();
+		for (int i = 0; i < conf.getPositionArrayCount(); i++) {
+			Config.Position pos = conf.getPositionArray(i);
+			positionArray.put(pos.getDistance(), pos.getPosvalue());
+		}
+	}
+
+	public String getName() {
+		return bowname;
+	}
+
 	public void setName(String name) {
 		bowname = name;
+	}
+
+	public String getDescription() {
+		return bowdescription;
 	}
 
 	public void setDescription(String description) {
 		bowdescription = description;
 	}
 
-	public String getName() {
-		return bowname;
-	}
-	public String getDescription() {
-		return bowdescription;
-	}
     public String getPathToFile() {
         return bowfilepath;
     }
@@ -155,19 +168,18 @@ public class BowConfig {
 		return bowname.replaceAll(" ", "_").concat(".xml");
 	}
 
+	public int getMethod() {
+		// TODO Auto-generated method stub
+		return method;
+	}
+
 	public void setMethod(int methodType) {
 		// TODO Auto-generated method stub
 		method = methodType;
 	}
 
-	public int getMethod() {
-		// TODO Auto-generated method stub
-		return method;
-	}
-    
-    @Override
-    public String toString() {
-        Config.Builder cgbuilder = com.cross.beaglesightlibs.ProtoConfig.Config.newBuilder()
+	public byte[] toByteArray() {
+		Config.Builder cgbuilder = com.cross.beaglesightlibs.ProtoConfig.Config.newBuilder()
                 .setBowdescription(bowdescription)
                 .setBowname(bowname)
 				.setMethod(method);
@@ -180,6 +192,6 @@ public class BowConfig {
             cgbuilder.addPositionArray(pos);
         }
         Config pc = cgbuilder.build();
-        return pc.toString();
-    }
+		return pc.toByteArray();
+	}
 }
