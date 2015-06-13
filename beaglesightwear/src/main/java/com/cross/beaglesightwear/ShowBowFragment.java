@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesightlibs.PositionCalculator;
 
+import java.text.DecimalFormat;
+
 /**
  * Created by cameron on 30/12/14.
  */
@@ -21,6 +23,8 @@ public class ShowBowFragment extends Fragment implements View.OnClickListener {
     View view = null;
     String bowName = null;
     double distance = 20;
+    static DecimalFormat df = new DecimalFormat("#.##");
+    static DecimalFormat single = new DecimalFormat("#");
 
     @Override
     public void setArguments(Bundle args) {
@@ -78,8 +82,8 @@ public class ShowBowFragment extends Fragment implements View.OnClickListener {
         PositionCalculator pc = bm.getPositionCalculator(bowName);
         double position = pc.calcPosition(distance);
         TextView tv = (TextView)view.findViewById(R.id.widgetDistance);
-        tv.setText(Double.toString(distance));
+        tv.setText(single.format(distance));
         tv = (TextView)view.findViewById(R.id.widgetPosition);
-        tv.setText(Double.toString(position));
+        tv.setText(df.format(position));
     }
 }
