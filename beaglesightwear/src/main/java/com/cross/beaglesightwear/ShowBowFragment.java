@@ -50,8 +50,7 @@ public class ShowBowFragment extends Fragment implements View.OnClickListener {
         TextView tv = (TextView) view.findViewById(R.id.bowName);
         tv.setText(bowName);
 
-
-
+        updateValues();
         return view;
     }
 

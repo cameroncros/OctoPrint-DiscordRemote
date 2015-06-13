@@ -70,7 +70,7 @@ public class SampleGridPagerAdapter extends FragmentGridPagerAdapter {
     @Override
     public int getColumnCount(int rowNum)
     {
-        return 3; //forget the reason for this
+        return 1; //forget the reason for this
     }
 
     @Override
@@ -83,12 +83,6 @@ public class SampleGridPagerAdapter extends FragmentGridPagerAdapter {
             Paint p = new Paint();
             // Clear previous image.
             c.drawRect(0, 0, 200, 200, p);
-            p.setAntiAlias(true);
-            p.setTypeface(Typeface.DEFAULT);
-            p.setTextSize(64);
-            p.setColor(Color.LTGRAY);
-            p.setTextAlign(Paint.Align.CENTER);
-            c.drawText(column+ "-" + row, 100, 100, p);
             drawable = new BitmapDrawable(mContext.getResources(), bm);
             mBackgrounds.put(pt, drawable);
         }
