@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">BeagleSightWear</string>
     <string name="plusCoarse">+5</string>
     <string name="plusFine">+1</string>
@@ -9,5 +7,4 @@
     <string name="position_">Position:</string>
     <string name="distance_">Distance:</string>
     <string name="default_dist">20</string>
-
 </resources>

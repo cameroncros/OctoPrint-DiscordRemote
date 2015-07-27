@@ -672,11 +672,7 @@ public final class ProtoConfig {
             
             return false;
           }
-          if (!hasPosvalue()) {
-            
-            return false;
-          }
-          return true;
+          return hasPosvalue();
         }
 
         public Builder mergeFrom(

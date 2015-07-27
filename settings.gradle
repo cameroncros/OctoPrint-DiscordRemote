@@ -1,2 +1,1 @@
-include ':beaglesight', ':beaglesightlibs'
-include ':beaglesightwear'
+include ':beaglesight', ':beaglesightlibs', ':beaglesightwear'
