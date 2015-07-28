@@ -12,4 +12,6 @@ allprojects {
     repositories {
         jcenter()
     }
+    project.ext.set("versionCode", 2)
+    project.ext.set("versionName", "0.0.1")
 }

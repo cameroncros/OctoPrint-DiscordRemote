@@ -9,8 +9,8 @@ android {
         applicationId "com.cross.beaglesight"
         minSdkVersion 21
         targetSdkVersion 21
-        versionCode 1
-        versionName "1.0"
+        versionCode project.versionCode
+        versionName project.versionName
     }
     buildTypes {
         release {
