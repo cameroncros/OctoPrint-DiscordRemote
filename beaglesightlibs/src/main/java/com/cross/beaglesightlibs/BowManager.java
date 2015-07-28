@@ -27,10 +27,12 @@ public class BowManager
 
 	private void loadBows() {
 		bowList.clear();
-		File[] listOfFiles = folder.listFiles();
-		for (File fl : listOfFiles) {
-            importBow(fl);
-		}		
+		if (folder != null) {
+			File[] listOfFiles = folder.listFiles();
+			for (File fl : listOfFiles) {
+				importBow(fl);
+			}
+		}
 	}
 
     public void importBow(File fl) {
