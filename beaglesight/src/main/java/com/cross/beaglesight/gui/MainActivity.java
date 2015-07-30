@@ -24,6 +24,7 @@ import com.cross.beaglesightlibs.BowManager;
 
 import java.io.File;
 import java.util.Set;
+import java.util.Vector;
 
 public class MainActivity extends FragmentActivity
 {
@@ -86,7 +87,7 @@ public class MainActivity extends FragmentActivity
     	
     	
 
-		Set<String> bows = bm.getBowList();
+		Vector<String> bows = bm.getBowList();
 
 		for (String bowname : bows) {
 			 

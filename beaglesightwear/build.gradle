@@ -22,8 +22,8 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.android.support:wearable:1.2.0'
-    compile 'com.google.android.gms:play-services-wearable:7.5.0'
+    compile 'com.google.android.support:wearable:+'
+    compile 'com.google.android.gms:play-services-wearable:+'
     compile project(':beaglesightlibs')
     compile 'Teleport:teleportlib:0.1.4'
 }

@@ -7,7 +7,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.Vector;
 
 
 public class BowManager
@@ -92,8 +92,8 @@ public class BowManager
 		return instance;
 	}
 
-	public Set<String> getBowList() {
-		return bowList.keySet();
+	public Vector<String> getBowList() {
+		return new Vector<String>(bowList.keySet());
 	}
 
 	public void saveNewBowConfig(BowConfig bc) {
