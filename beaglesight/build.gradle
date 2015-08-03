@@ -39,4 +39,5 @@ dependencies {
     compile 'Teleport:teleportlib:0.1.4'
     compile 'com.google.android.gms:play-services-wearable:+'
     wearApp project(':beaglesightwear')
+    compile 'ch.acra:acra:4.6.2'
 }
