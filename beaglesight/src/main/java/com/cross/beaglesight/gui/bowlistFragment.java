@@ -10,13 +10,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.cross.beaglesight.R;
-import com.cross.beaglesightlibs.BowConfig;
-import com.cross.beaglesightlibs.BowManager;
 
 
 public class bowlistFragment extends Fragment {
 	String bowname = null;
-
+    String bowdescription = null;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -28,12 +26,14 @@ public class bowlistFragment extends Fragment {
 			bowname = savedInstanceState.getString("bowname");
 		}
 
-		BowManager bm = BowManager.getInstance(null);
-		BowConfig bc = bm.getBow(bowname);
+        if (bowdescription == null) {
+            bowdescription = savedInstanceState.getString("bowdescription");
+        }
+
 		TextView tv = (TextView)vw.findViewById(R.id.bowname);
-		tv.setText(bc.getName());
+		tv.setText(bowname);
 		tv = (TextView)vw.findViewById(R.id.bowdescription);
-		tv.setText(bc.getDescription());
+		tv.setText(bowdescription);
 
 		vw.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -50,11 +50,13 @@ public class bowlistFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("bowname", bowname);
+        outState.putString("bowdescription", bowdescription);
     }
 
 
-	public void setText(String bowname) {
+	public void setText(String bowname, String bowdescription) {
 		this.bowname = bowname;
+        this.bowdescription = bowdescription;
 
 	}
 }

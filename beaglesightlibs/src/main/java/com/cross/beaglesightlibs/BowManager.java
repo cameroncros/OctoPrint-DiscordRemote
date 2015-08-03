@@ -1,7 +1,10 @@
 package com.cross.beaglesightlibs;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Log;
+
+import com.mariux.teleport.lib.TeleportClient;
 
 import java.io.File;
 import java.util.HashMap;
@@ -16,13 +19,17 @@ public class BowManager
 	Context cont = null;
 	Map<String, BowConfig> bowList = null;
 	File folder = null;
-	
+	private TeleportClient mTeleportClient;
+
+
+
 	Set<String> getBowNames() {
 		return bowList.keySet();
 	}
 
-	BowManager() {
+	BowManager(Context cont) {
 		bowList = new HashMap<String, BowConfig>();
+		setContext(cont);
 	}
 
 	private void loadBows() {
@@ -39,6 +46,7 @@ public class BowManager
         BowConfig bc = new BowConfig();
         bc.load(fl, cont);
         bowList.put(bc.getName(), bc);
+		saveBows();
     }
 
 	void saveBows() {
@@ -48,6 +56,11 @@ public class BowManager
 		}
 		for (BowConfig bc : bowList.values()) {
 			bc.save(folder.getAbsolutePath(), cont);
+			if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH))
+			{
+				mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
+
+			};
 		}
 	}
 
@@ -77,17 +90,12 @@ public class BowManager
 	}
 
 	public static BowManager getInstance(Context cont) {
-		if (instance == null) {
 			synchronized (BowManager.class) {
-				if (instance == null) {
-					instance = new BowManager();
-                    if (cont != null) {
-                        instance.setContext(cont);
-                        instance.loadBows();
-                    }
+				if (instance == null && cont != null) {
+					instance = new BowManager(cont);
+					instance.loadBows();
 				}
 			}
-		}
 
 		return instance;
 	}
@@ -101,13 +109,15 @@ public class BowManager
 		this.saveBows();
 	}
 
-	public void setContext(Context cont) {
+	private void setContext(Context cont) {
 		this.cont = cont;
         folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
         if (!folder.exists() && folder.mkdir()) {
             Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
             folder=null;
         }
+		mTeleportClient = new TeleportClient(cont);
+		mTeleportClient.connect();
 	}
 
 	public void deleteBow(String bowname) {

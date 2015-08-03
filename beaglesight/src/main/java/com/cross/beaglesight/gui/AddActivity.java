@@ -31,7 +31,6 @@ import java.util.Map;
 
 public class AddActivity extends Activity {
 	int methodChoice;
-	private TeleportClient mTeleportClient;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -41,7 +40,6 @@ public class AddActivity extends Activity {
 		ActionBar actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 
-        mTeleportClient = new TeleportClient(this);
 
 		Spinner spinner = (Spinner) findViewById(R.id.types_spinner);
 		// Create an ArrayAdapter using the string array and a default spinner layout
@@ -216,7 +214,6 @@ public class AddActivity extends Activity {
 		}
 
 		bm.saveNewBowConfig(bc);
-		mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
 		finish();
 		return false;
 	}
@@ -232,18 +229,6 @@ public class AddActivity extends Activity {
 
 		}
 		return false;
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		mTeleportClient.connect();
-	}
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mTeleportClient.disconnect();
 	}
 
 	public class SightSort implements Comparator<String> {

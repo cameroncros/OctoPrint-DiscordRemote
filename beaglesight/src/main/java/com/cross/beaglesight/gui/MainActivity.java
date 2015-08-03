@@ -25,7 +25,6 @@ import com.cross.beaglesightlibs.BowManager;
 import java.io.File;
 import java.util.Set;
 import java.util.Vector;
-
 public class MainActivity extends FragmentActivity
 {
     private static final int FILE_SELECT_CODE = 0;
@@ -38,6 +37,7 @@ public class MainActivity extends FragmentActivity
 	{
         this.context = getApplicationContext();
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.main);
         
         bm = BowManager.getInstance(this.getApplicationContext());
@@ -56,7 +56,8 @@ public class MainActivity extends FragmentActivity
                 addNewBow();
             }
         });
-        fillBowList();   
+        fillBowList();
+
     }
 
     @Override
@@ -96,7 +97,7 @@ public class MainActivity extends FragmentActivity
            
             fragmentTransaction.add(R.id.bowList, hello, bowname);
             fragmentTransaction.commit();
-            hello.setText(bowname);
+            hello.setText(bowname, bm.getBow(bowname).getDescription());
 		
 		}
 

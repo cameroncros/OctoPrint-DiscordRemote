@@ -181,9 +181,9 @@ public class ShowSight extends FragmentActivity
 
 	private void textListenerSetup() {
 		EditText et = (EditText)findViewById(R.id.calcDistance);
+		ShowSight ss = this;
 		et.addTextChangedListener(new TextWatcher() {
 			public void afterTextChanged(Editable s) {
-				BowManager bm = BowManager.getInstance(null);
 				pc = bm.getPositionCalculator(bowname);
 				Double pos;
 				EditText et = (EditText)findViewById(R.id.calcDistance);
@@ -219,8 +219,7 @@ public class ShowSight extends FragmentActivity
 		//case R.id.menu_share:
 		case R.id.menu_delete:
 			bm.deleteBow(bowname);
-			intent = new Intent(getApplicationContext(), MainActivity.class);
-			startActivityForResult(intent, 0);
+			finish();
 			return true;
         case R.id.menu_item_share:
             shareSettings();

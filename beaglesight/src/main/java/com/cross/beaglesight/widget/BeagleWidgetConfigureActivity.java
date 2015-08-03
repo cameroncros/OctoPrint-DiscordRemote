@@ -59,7 +59,7 @@ public class BeagleWidgetConfigureActivity extends Activity {
 
         Spinner spinner = (Spinner) findViewById(R.id.bowListSpinner);
         // Create an ArrayAdapter using the string array and a default spinner layout
-        BowManager bm = BowManager.getInstance(this);
+        BowManager bm = BowManager.getInstance(getApplicationContext());
         ArrayList<String> bows = new ArrayList<String>(bm.getBowList());
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, bows);
         // Apply the adapter to the spinner
