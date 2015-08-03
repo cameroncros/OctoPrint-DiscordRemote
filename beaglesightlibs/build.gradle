@@ -26,4 +26,6 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'org.apache.commons:commons-math3:3+'
     compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
+    compile 'com.google.android.gms:play-services-wearable:+'
+    compile 'Teleport:teleportlib:0.1.4'
 }
