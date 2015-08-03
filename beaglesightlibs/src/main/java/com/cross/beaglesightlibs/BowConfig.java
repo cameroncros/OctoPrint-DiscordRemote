@@ -10,17 +10,20 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class BowConfig {
 	private String bowname;
@@ -85,7 +88,7 @@ public class BowConfig {
 		FileOutputStream fileOS;
 		try {
 			String filename = path+File.separator+getFileName();
-			fileOS = new FileOutputStream(filename,true);
+			fileOS = new FileOutputStream(filename,false);
 			XmlSerializer serializer = Xml.newSerializer();
 			serializer.setOutput(fileOS, "UTF-8");
 			serializer.startDocument(null, Boolean.valueOf(true));
@@ -120,23 +123,22 @@ public class BowConfig {
 
 	}
 	
-	public void load(File file, Context cont) {
+	public void load(File file) throws IOException, ParserConfigurationException, SAXException {
         bowfilepath = file.getAbsolutePath();
 		FileInputStream fileIS;
-		try {
-			fileIS = new FileInputStream(file);
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = factory.newDocumentBuilder();
-			InputSource inputSource = new InputSource(fileIS);
-			Document document = db.parse(inputSource);
+		fileIS = new FileInputStream(file);
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = factory.newDocumentBuilder();
+		InputSource inputSource = new InputSource(fileIS);
+		Document document = db.parse(inputSource);
 
-			NodeList nodelist = document.getElementsByTagName("bow");
-			for (int i = 0; i < nodelist.getLength(); i++) {
-				Node e = nodelist.item(i);
-				NodeList children = e.getChildNodes();
-				for (int j = 0; j < children.getLength(); j++) {
-					Node nd = children.item(j);
-					switch (nd.getNodeName()) {
+		NodeList nodelist = document.getElementsByTagName("bow");
+		for (int i = 0; i < nodelist.getLength(); i++) {
+			Node e = nodelist.item(i);
+			NodeList children = e.getChildNodes();
+			for (int j = 0; j < children.getLength(); j++) {
+				Node nd = children.item(j);
+				switch (nd.getNodeName()) {
 					case "name":
 						setName(nd.getTextContent());
 						break;
@@ -151,16 +153,8 @@ public class BowConfig {
 					case "method":
 						setMethod(Integer.parseInt(nd.getTextContent()));
 						break;
-					}
 				}
 			}
-
-		}
-		catch (FileNotFoundException f) {
-			Log.e("BeagleSight", f.getMessage());
-		}
-		catch (Exception e) {
-			Log.e("BeagleSight", e.getMessage());
 		}
 	}
 	

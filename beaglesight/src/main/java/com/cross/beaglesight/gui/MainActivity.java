@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 
 import com.cross.beaglesight.R;
 import com.cross.beaglesight.libs.FloatingActionButton;
+import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.io.File;
@@ -135,7 +136,11 @@ public class MainActivity extends FragmentActivity
                     // Get the path
 
                     File fname = new File(getRealPathFromURI(uri));
-                    bm.importBow(fname);
+                    BowConfig bc = bm.importBow(fname);
+                    if (bc != null) {
+                        bm.saveBowConfig(bc);
+                        //todo add message if it fails to load
+                    }
                     // Get the file instance
                     // File file = new File(path);
                     // Initiate the upload

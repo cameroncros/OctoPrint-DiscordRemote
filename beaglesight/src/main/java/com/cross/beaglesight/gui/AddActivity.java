@@ -22,7 +22,6 @@ import android.widget.TableRow;
 import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
-import com.mariux.teleport.lib.TeleportClient;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -213,7 +212,7 @@ public class AddActivity extends Activity {
 
 		}
 
-		bm.saveNewBowConfig(bc);
+		bm.saveBowConfig(bc);
 		finish();
 		return false;
 	}

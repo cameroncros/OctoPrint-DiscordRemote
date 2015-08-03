@@ -37,31 +37,23 @@ public class BowManager
 		if (folder != null) {
 			File[] listOfFiles = folder.listFiles();
 			for (File fl : listOfFiles) {
-				importBow(fl);
+				BowConfig bc = importBow(fl);
+				if (bc != null) {
+					bowList.put(bc.getName(), bc);
+				}
 			}
 		}
 	}
 
-    public void importBow(File fl) {
-        BowConfig bc = new BowConfig();
-        bc.load(fl, cont);
-        bowList.put(bc.getName(), bc);
-		saveBows();
-    }
-
-	void saveBows() {
-		File[] listOfFiles = folder.listFiles();
-		for (File fl : listOfFiles) {
-			fl.delete();
+    public BowConfig importBow(File fl) {
+		try {
+			BowConfig bc = new BowConfig();
+			bc.load(fl);
+			return bc;
+		} catch (Exception e) {
+			Log.e("BeagleSight", e.getMessage());
 		}
-		for (BowConfig bc : bowList.values()) {
-			bc.save(folder.getAbsolutePath(), cont);
-			if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH))
-			{
-				mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
-
-			};
-		}
+		return null;
 	}
 
 	public PositionCalculator getPositionCalculator(String bowName) {
@@ -104,15 +96,20 @@ public class BowManager
 		return new Vector<String>(bowList.keySet());
 	}
 
-	public void saveNewBowConfig(BowConfig bc) {
+	public void saveBowConfig(BowConfig bc) {
 		bowList.put(bc.getName(), bc);
-		this.saveBows();
+		bc.save(folder.getAbsolutePath(), cont);
+		Log.w("BowManager","saved "+bc.getFileName());
+		if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH))
+		{
+			mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
+		};
 	}
 
 	private void setContext(Context cont) {
 		this.cont = cont;
         folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
-        if (!folder.exists() && folder.mkdir()) {
+        if (!folder.exists() && !folder.mkdir()) {
             Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
             folder=null;
         }
@@ -121,9 +118,10 @@ public class BowManager
 	}
 
 	public void deleteBow(String bowname) {
+		File file = new File(getBow(bowname).getPathToFile());
+		file.delete();
+		Log.w("BowManager", "deleted "+file.getAbsolutePath());
 		bowList.remove(bowname);
-		saveBows();
-		loadBows();
 		// TODO Auto-generated method stub
 
 	}

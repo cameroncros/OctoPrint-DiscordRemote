@@ -34,7 +34,7 @@ public class ListenService  extends TeleportService {
                     ProtoConfig.Config conf = ProtoConfig.Config.parseFrom(string);
                     BowConfig bc = new BowConfig(conf);
                     BowManager bm = BowManager.getInstance(getApplicationContext());
-                    bm.saveNewBowConfig(bc);
+                    bm.saveBowConfig(bc);
                 } catch (InvalidProtocolBufferException e) {
                     Log.w("Teleport", "could not parse: " + string.toString());
                 }

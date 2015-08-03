@@ -62,12 +62,6 @@ public class BeagleWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        Bundle bundle = intent.getExtras();
-        for (String key : bundle.keySet()) {
-            Object value = bundle.get(key);
-            Log.d("BeagleSight", String.format("%s %s (%s)", key,
-                    value.toString(), value.getClass().getName()));
-        }
         int appWidgetId = intent.getIntExtra("widgetId", -1);
         if (appWidgetId == -1) {
             return;
