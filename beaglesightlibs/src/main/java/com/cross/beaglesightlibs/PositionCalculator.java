@@ -14,9 +14,15 @@ public abstract class PositionCalculator
 	void setPositions(Map<String,String> pos) {
 		positionArray.clear();
 		for (String key : pos.keySet()) {
-			double x = Double.valueOf(key);
-			double y = Double.valueOf(pos.get(key));
-			positionArray.put(x, y);
+			try {
+				double x = Double.valueOf(key);
+				double y = Double.valueOf(pos.get(key));
+
+				positionArray.put(x, y);
+			}
+			catch (NumberFormatException e) {
+				//Invalid numbers in save file, dont need to do anything but ignore them
+			}
 		}
 	}
 	public abstract double calcPosition(double distance);

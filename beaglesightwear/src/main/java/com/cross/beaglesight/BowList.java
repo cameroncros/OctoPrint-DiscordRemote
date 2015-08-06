@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.wearable.view.WearableListView;
+import android.widget.Toast;
 
 import com.cross.beaglesightlibs.BowManager;
 import java.util.Vector;
@@ -18,8 +19,18 @@ public class BowList extends Activity implements WearableListView.ClickListener 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        populateBowList();
+    }
+
+    private void populateBowList() {
         bm = BowManager.getInstance(this);
         bowList = bm.getBowList();
+
+        if (bowList.size() == 0) {
+            Toast.makeText(getApplicationContext(), "Open phone app and add some sight settings first",
+                    Toast.LENGTH_LONG).show();
+            finish();
+        }
 
 
         setContentView(R.layout.activity_bow_list);

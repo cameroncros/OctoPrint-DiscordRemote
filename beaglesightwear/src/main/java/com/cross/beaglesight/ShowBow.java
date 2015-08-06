@@ -20,12 +20,18 @@ public class ShowBow extends Activity implements View.OnClickListener {
     double distance = 20;
     static DecimalFormat df = new DecimalFormat("#.##");
     static DecimalFormat single = new DecimalFormat("#");
+    PositionCalculator pc = null;
 
     @Override
     protected void onStart() {
         super.onStart();
         Bundle bundle = getIntent().getExtras();
         bowName = bundle.getString("bowname");
+        BowManager bm = BowManager.getInstance(this);
+        PositionCalculator pc = bm.getPositionCalculator(bowName);
+        if (pc == null) {
+            finish();
+        }
     }
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -74,8 +80,6 @@ public class ShowBow extends Activity implements View.OnClickListener {
     }
 
     private void updateValues() {
-        BowManager bm = BowManager.getInstance(this);
-        PositionCalculator pc = bm.getPositionCalculator(bowName);
         double position = pc.calcPosition(distance);
         TextView tv = (TextView)findViewById(R.id.widgetDistance);
         tv.setText(single.format(distance));
