@@ -1,22 +1,21 @@
 package com.cross.beaglesight.gui;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import com.cross.beaglesight.R;
 import com.cross.beaglesight.libs.FloatingActionButton;
@@ -24,25 +23,39 @@ import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.io.File;
-import java.util.Set;
-import java.util.Vector;
-public class MainActivity extends FragmentActivity
-{
+
+public class BowList extends Activity {
     private static final int FILE_SELECT_CODE = 0;
-    public Context context = null;
     BowManager bm = null;
 
-    /** Called when the activity is first created. */
+    private RecyclerView mRecyclerView;
+    private BowListAdapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
-    public void onCreate(Bundle savedInstanceState)
-	{
-        this.context = getApplicationContext();
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.main);
-        
+        setContentView(R.layout.bowlist);
+
         bm = BowManager.getInstance(this.getApplicationContext());
 
+        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+
+        mAdapter = new BowListAdapter(this, bm.getBowList());
+        mRecyclerView.setAdapter(mAdapter);
 
 
         FloatingActionButton fabButton = new FloatingActionButton.Builder(this)
@@ -57,68 +70,31 @@ public class MainActivity extends FragmentActivity
                 addNewBow();
             }
         });
-        fillBowList();
 
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    protected void onStart() {
+        super.onStart();
+        mAdapter.setData(bm.getBowList());
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
         // TODO: Implement this method
         MenuInflater inf = getMenuInflater();
         inf.inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
-    
-    @Override
-	protected void onStart() {
-    	super.onStart();
-    	fillBowList();
+
+    public boolean addNewBow() {
+        Intent intent = new Intent(this, AddActivity.class);
+        startActivity(intent);
+        return false;
     }
 
-    
-    
-    
-    
-    void fillBowList() {
-    	BowManager bm = BowManager.getInstance(this.getApplicationContext());
-
-        LinearLayout lv = (LinearLayout) findViewById(R.id.bowList);
-    	lv.removeAllViews(); 
-    	FragmentManager fragmentManager = getFragmentManager();
-    	
-    	
-
-		Vector<String> bows = bm.getBowList();
-
-		for (String bowname : bows) {
-			 
-			FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            bowlistFragment hello = new bowlistFragment();
-           
-            fragmentTransaction.add(R.id.bowList, hello, bowname);
-            fragmentTransaction.commit();
-            hello.setText(bowname, bm.getBow(bowname).getDescription());
-		
-		}
-
-		lv.invalidate();
-	
-	}
-    
-
-	
-	
-
-
-	
-	public boolean addNewBow() {
-		Intent intent = new Intent(this, AddActivity.class);
-		startActivity(intent);
-		return false;
-	}
-
-    public boolean importBow( MenuItem menuItem ) {
+    public boolean importBow(MenuItem menuItem) {
         Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
         fileIntent.setType("file/*"); // intent type to filter application based on your requirement
         startActivityForResult(fileIntent, FILE_SELECT_CODE);

@@ -11,7 +11,6 @@ import java.util.Vector;
 
 
 public class BowList extends Activity implements WearableListView.ClickListener {
-
     private WearableListView mListView;
     private BowManager bm;
     private Vector<String> bowList;
