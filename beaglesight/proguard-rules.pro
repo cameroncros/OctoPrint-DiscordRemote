@@ -16,3 +16,6 @@
 #   public *;
 #}
 -dontwarn org.apache.commons.**
+-keepattributes SourceFile,LineNumberTable
+-keepattributes *Annotation*
+-keep class org.acra.** { *; }
