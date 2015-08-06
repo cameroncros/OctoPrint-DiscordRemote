@@ -102,7 +102,7 @@ public class BowManager
 		Log.w("BowManager","saved "+bc.getFileName());
 		if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH))
 		{
-			mTeleportClient.syncByteArray(bc.getFileName(), bc.toByteArray());
+			mTeleportClient.syncByteArray(bc.getName(), bc.toByteArray());
 		};
 	}
 
@@ -118,11 +118,19 @@ public class BowManager
 	}
 
 	public void deleteBow(String bowname) {
-		File file = new File(getBow(bowname).getPathToFile());
-		file.delete();
-		Log.w("BowManager", "deleted "+file.getAbsolutePath());
-		bowList.remove(bowname);
-		// TODO Auto-generated method stub
+		try {
+			File file = new File(getBow(bowname).getPathToFile());
+			file.delete();
+			Log.w("BowManager", "deleted " + file.getAbsolutePath());
+
+			if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH)) {
+				mTeleportClient.syncByteArray(bowname, null);
+			}
+			bowList.remove(bowname);
+		}
+		catch (NullPointerException e) {
+			//do nothing
+		}
 
 	}
 

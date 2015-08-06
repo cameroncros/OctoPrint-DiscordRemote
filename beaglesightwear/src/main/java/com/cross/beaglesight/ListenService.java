@@ -30,15 +30,22 @@ public class ListenService  extends TeleportService {
         protected void onPostExecute(DataMap dataMap) {
             for (String key : dataMap.keySet()) {
                 byte[] string = dataMap.getByteArray(key);
-                try {
-                    ProtoConfig.Config conf = ProtoConfig.Config.parseFrom(string);
-                    BowConfig bc = new BowConfig(conf);
+                if (string == null) {
                     BowManager bm = BowManager.getInstance(getApplicationContext());
-                    bm.saveBowConfig(bc);
-                } catch (InvalidProtocolBufferException e) {
-                    Log.w("Teleport", "could not parse: " + string.toString());
+                    bm.deleteBow(key);
+                    Log.w("Teleport", key + " = null");
+                } else {
+                    try {
+                        ProtoConfig.Config conf = ProtoConfig.Config.parseFrom(string);
+                        BowConfig bc = new BowConfig(conf);
+                        BowManager bm = BowManager.getInstance(getApplicationContext());
+                        bm.saveBowConfig(bc);
+                    } catch (InvalidProtocolBufferException e) {
+                        Log.w("Teleport", "could not parse: " + string.toString());
+                    }
+                    Log.w("Teleport", key + " = " + string.toString());
                 }
-                Log.w("Teleport", key + " = " + string.toString());
+
             }
             setOnSyncDataItemTask(new StartActivityTask());
         }
