@@ -106,9 +106,11 @@ public class BowConfig {
             serializer.endTag(null, "method");
 
             for (String distance : positionArray.keySet()) {
-				serializer.startTag(null, "position");
-				serializer.text(distance+","+positionArray.get(distance));
-				serializer.endTag(null, "position");
+				if (distance != "" && positionArray.get(distance) != "") {
+					serializer.startTag(null, "position");
+					serializer.text(distance + "," + positionArray.get(distance));
+					serializer.endTag(null, "position");
+				}
 			}
 			serializer.endTag(null, "bow");
 			serializer.endDocument();

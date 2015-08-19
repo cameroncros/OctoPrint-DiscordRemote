@@ -81,6 +81,13 @@ public class BowList extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mAdapter.setData(bm.getBowList());
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // TODO: Implement this method
         MenuInflater inf = getMenuInflater();
