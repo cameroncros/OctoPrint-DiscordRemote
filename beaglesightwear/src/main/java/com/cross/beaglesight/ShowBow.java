@@ -23,8 +23,10 @@ public class ShowBow extends Activity implements View.OnClickListener {
     PositionCalculator pc = null;
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    public void onCreate(Bundle savedInstanceState) {
+        sb = this;
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_show_bow);
         Bundle bundle = getIntent().getExtras();
         bowName = bundle.getString("bowname");
         BowManager bm = BowManager.getInstance(this);
@@ -32,12 +34,6 @@ public class ShowBow extends Activity implements View.OnClickListener {
         if (pc == null) {
             finish();
         }
-    }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        sb = this;
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_show_bow);
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
