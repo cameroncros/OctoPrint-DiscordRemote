@@ -30,7 +30,7 @@ public class ShowBow extends Activity implements View.OnClickListener {
         Bundle bundle = getIntent().getExtras();
         bowName = bundle.getString("bowname");
         BowManager bm = BowManager.getInstance(this);
-        PositionCalculator pc = bm.getPositionCalculator(bowName);
+        pc = bm.getPositionCalculator(bowName);
         if (pc == null) {
             finish();
         }
