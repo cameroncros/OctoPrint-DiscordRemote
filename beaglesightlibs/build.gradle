@@ -1,12 +1,12 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 20
-    buildToolsVersion "21.1.1"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 21
+        targetSdkVersion 25
         versionCode project.versionCode
         versionName project.versionName
     }
@@ -27,5 +27,5 @@ dependencies {
     compile 'org.apache.commons:commons-math3:3+'
     compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
     compile 'com.google.android.gms:play-services-wearable:+'
-    compile 'Teleport:teleportlib:0.1.4'
+    compile 'com.mariux.teleport.lib:teleportlib:0.1.9'
 }
