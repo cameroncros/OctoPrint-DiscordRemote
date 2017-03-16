@@ -34,33 +34,34 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal">
 
-            <TextView
-                android:text="@string/distance_"
-                android:textAlignment="textStart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary_text_default_material_light"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
-            <TextView
-                android:text="@string/default_dist"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/widgetDistance"
-                android:layout_weight="2"
-                android:textColor="@color/primary_text_default_material_light"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
-        </LinearLayout>
+                <TextView
+                    android:text="@string/distance_"
+                    android:textAlignment="textStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/primary_text_default_material_light"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/>
+                <TextView
+                    android:textAlignment="viewEnd"
+                    android:text="@string/default_dist"
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:id="@+id/widgetDistance"
+                    android:layout_weight="2"
+                    android:textColor="@color/primary_text_default_material_light"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/>
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:orientation="horizontal">
-            <TextView
-                android:textAlignment="textStart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/position_"
-                android:textColor="@color/primary_text_default_material_light"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" android:orientation="horizontal">
+                <TextView
+                    android:textAlignment="textStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/position_"
+                    android:textColor="@color/primary_text_default_material_light"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/>
 
             <TextView
                 android:textAlignment="viewEnd"
@@ -69,49 +70,59 @@
                 android:id="@+id/widgetPosition"
                 android:layout_weight="2"
                 android:textColor="@color/primary_text_default_material_light"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="NaN"
+                />
 
 
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="bottom">
+
+                <Button
+                    android:text="@string/minusCoarse"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/imageButtonMinusCoarse"
+                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
+                    android:textAppearance="@style/TextAppearance.WearDiag"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:text="@string/minusFine"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/imageButtonMinusFine"
+                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
+                    android:textAppearance="@style/TextAppearance.WearDiag"
+                    android:padding="0dp" />
+
+                <Button
+                    android:text="@string/plusFine"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/imageButtonPlusFine"
+                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
+                    android:textAppearance="@style/TextAppearance.WearDiag"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:text="@string/plusCoarse"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_weight="1"
+                    android:id="@+id/imageButtonPlusCoarse"
+                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
+                    android:textAppearance="@style/TextAppearance.WearDiag"
+                    android:padding="0dp" />
+            </LinearLayout>
         </LinearLayout>
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom">
-
-            <Button
-                android:text="@string/minusCoarse"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/imageButtonMinusCoarse"
-                style="?android:attr/borderlessButtonStyle"/>
-
-            <Button
-                android:text="@string/minusFine"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/imageButtonMinusFine"
-                style="?android:attr/borderlessButtonStyle"/>
-
-            <Button
-                android:text="@string/plusFine"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/imageButtonPlusFine"
-                style="?android:attr/borderlessButtonStyle" />
-
-            <Button
-                android:text="@string/plusCoarse"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:id="@+id/imageButtonPlusCoarse"
-                style="?android:attr/borderlessButtonStyle"/>
-        </LinearLayout>
-    </LinearLayout>
     </FrameLayout>
 
 </android.support.wearable.view.BoxInsetLayout>
