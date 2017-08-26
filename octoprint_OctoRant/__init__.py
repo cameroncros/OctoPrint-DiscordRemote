@@ -1,25 +1,37 @@
 # coding=utf-8
 from __future__ import absolute_import
-
-### (Don't forget to remove me)
-# This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
-# as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
-# defining your plugin as a template plugin, settings and asset plugin. Feel free to add or remove mixins
-# as necessary.
-#
-# Take a look at the documentation on what other plugin mixins are available.
+from .discord import Webhook,Attachment,Field
 
 import octoprint.plugin
 
-class OctorantPlugin(octoprint.plugin.SettingsPlugin,
+class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
+					 octoprint.plugin.StartupPlugin,
+					 octoprint.plugin.SettingsPlugin,
                      octoprint.plugin.AssetPlugin,
                      octoprint.plugin.TemplatePlugin):
+
+
+	## Init
+	def __init__(self):
+		self.url = ""
+		self.username = ""
+		self.avatar = ""
+
+	def on_after_startup(self):
+		self._logger.info("Octorant is started !")
+		payload = Webhook(self.url,"Octorant is started!")
+		payload.post()
+
 
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
 		return dict(
 			# put your plugin's default settings here
+			url="",
+			username="",
+			avatar="",
+
 		)
 
 	##~~ AssetPlugin mixin
@@ -55,7 +67,33 @@ class OctorantPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
+	##~~ EventHandlerPlugin hook
 
+	def on_event(self, event, payload):
+		self._logger.info("OCTORANT - RECIEVED EVENT {} / {}".format(event, payload))
+		content = ""
+		if event == "Startup":
+			content = "Hello! I just woke up!"
+		elif event == "Shutdown":
+			content = "Going to bed now! See you later!"
+		elif event == "PrinterStateChanged":
+			if payload["state_id"] == "OPERATIONAL":
+				content = "I saw your printer. I'm ready to rock!"
+			elif payload["state_id"] == "ERROR":
+				content = "Uh-oh. Something bad happened, it seems your printer is gone :("
+			elif payload["state_id"] == "UNKNOWN":
+				content = "Hmmm... Where's your printer?"
+		elif event == "PrintStarted":
+			content = "I've just started working on this file : {}!".format(payload["name"])
+		elif event == "PrintDone":
+			content = "Yeah! I just finished this gem! What do you think?"
+		else:
+			content = ""
+
+		if content != "":
+			call = Webhook(self.url,content)
+			call.post()		
+		
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
