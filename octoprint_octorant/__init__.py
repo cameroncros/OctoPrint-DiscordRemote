@@ -14,7 +14,90 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
                      octoprint.plugin.TemplatePlugin,
 					 octoprint.plugin.ProgressPlugin):
 
-
+	def __init__(self):
+		# Events definition here (better for intellisense in IDE)
+		# referenced in the settings too.
+		self.events = {
+			"startup" : {
+				"name" : "Octoprint Startup",
+				"enabled" : True,
+				"with_snapshot": False,
+				"message" : ":alarm_clock: I just woke up! What are we gonna print today?"
+			},
+			"shutdown" : {
+				"name" : "Octoprint Shutdown",
+				"enabled" : True,
+				"with_snapshot": False,
+				"message" : ":zzz: Going to bed now!"
+			},
+			"printer_state_operational":{
+				"name" : "Printer state : operational",
+				"enabled" : True,
+				"with_snapshot": False,
+				"message" : ":white_check_mark: Your printer is operational."
+			},
+			"printer_state_error":{
+				"name" : "Printer state : error",
+				"enabled" : True,
+				"with_snapshot": False,
+				"message" : ":warning: Your printer is in an erroneous state."
+			},
+			"printer_state_unknown":{
+				"name" : "Printer state : unknown",
+				"enabled" : True,
+				"with_snapshot": False,
+				"message" : ":grey_question: Your printer is in an unknown state."
+			},
+			"printing_started":{
+				"name" : "Priting process : started",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":printer: I've started printing {file}"
+			},
+			"printing_paused":{
+				"name" : "Priting process : paused",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":pause_button: The printing was paused."
+			},
+			"printing_resumed":{
+				"name" : "Priting process : resumed",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":play_button: The printing was resumed."
+			},
+			"printing_cancelled":{
+				"name" : "Priting process : cancelled",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":octagonal_sign: The printing was stopped."
+			},
+			"printing_done":{
+				"name" : "Priting process : done",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":thumbsup: Printing is done! Took ~{time} seconds"
+			},
+			"printing_failed":{
+				"name" : "Priting process : failed",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":thumbsdown: Printing has failed! :("
+			},
+			"printing_progress":{
+				"name" : "Priting progress",
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : ":loudspeaker: Printing is at {progress}%",
+				"step" : 10
+			},
+			"test":{ # Not a real message, but we will treat it as one
+				"enabled" : True,
+				"with_snapshot": True,
+				"message" : "Hello hello! If you see this message, it means that the settings are correct!"
+			},
+		}
+		
 	def on_after_startup(self):
 		self._logger.info("Octorant is started ! url : {}".format(self._settings.get(["url"])))
 
@@ -26,70 +109,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			'url': "test_url",
 			'username': "",
 			'avatar': "",
-			'include_snapshot' : True,
-			'events' : {
-				"startup" : {
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ":alarm_clock: I just woke up! What are we gonna print today?"
-				},
-				"shutdown" : {
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ":zzz: Going to bed now!"
-				},
-				"printer_state_operational":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printer_state_error":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printer_state_unknown":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_started":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_paused":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_resumed":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_cancelled":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_done":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : ""
-				},
-				"printing_progress":{
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : "",
-					"step" : 10
-				},
-				"test":{ # Not a real message, but we will treat it as one
-					"enabled" : True,
-					"with_snapshot": False,
-					"message" : "Hello hello! If you see this message, it means that the settings are correct!"
-				},
-			}
+			'events' : self.events
 		}
 
 	# Restricts some paths to some roles only
@@ -142,46 +162,37 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	##~~ EventHandlerPlugin hook
 
 	def on_event(self, event, payload):
-		self._logger.info("OCTORANT - RECIEVED EVENT {} / {}".format(event, payload))
-		content = ""
-		needSnapshot = False
+		
 		if event == "Startup":
-			content = ":alarm_clock: Hello! I just woke up!"
-		elif event == "Shutdown":
-			content = ":zzz: Going to bed now! See you later!"
-		elif event == "PrinterStateChanged":
+			return self.notify_event("startup")
+		
+		if event == "Shutdown":
+			return self.notify_event("shutdown")
+		
+		if event == "PrinterStateChanged":
 			if payload["state_id"] == "OPERATIONAL":
-				content = ":ok: I saw your printer. I'm ready to rock!"
+				return self.notify_event("printer_state_operational")
 			elif payload["state_id"] == "ERROR":
-				content = ":sos: Uh-oh. Something bad happened, it seems your printer is gone :("
+				return self.notify_event("printer_state_error")
 			elif payload["state_id"] == "UNKNOWN":
-				content = ":question: Hmmm... Where's your printer?"
-		elif event == "PrintStarted":
-			content = "I've just started working on this file : {}!".format(payload["name"])
-			needSnapshot = True
-		elif event == "PrintDone":
-			content = ":ballot_box_with_check: Yeah! I just finished this gem! What do you think?"
-			needSnapshot = True
-		else:
-			content = ""
+				return self.notify_event("printer_state_unknown")
+		
+		if event == "PrintStarted":
+			return self.notify_event("printing_started",payload)	
+		if event == "PrintPaused":
+			return self.notify_event("printing_paused",payload)
+		if event == "PrintResumed":
+			return self.notify_event("printing_resumed",payload)
+		if event == "PrintCancelled":
+			return self.notify_event("printing_cancelled",payload)
 
-		if content != "" and "http" in self._settings.get(['url']):
-			attached = None
-
-			if self._settings.get_boolean(["include_snapshot"]) \
-				and "http" in self._settings.global_get(["webcam","snapshot"]):
-				snapshot = requests.get(self._settings.global_get(["webcam","snapshot"]))
-				attached = {'file': ("snapshot.jpg", snapshot.content)}
+		if event == "PrintDone":
+			return self.notify_event("printing_done", payload)
 	
-			call = Hook( \
-				  self._settings.get(['url']) \
-				, content \
-				, self._settings.get(['username']) \
-				, self._settings.get(['avatar']),attached)
-			call.post()		
+		return True
 
 	def on_print_progress(self,location,path,progress):
-		return True
+		self.notify_event("printing_progress",{"progress": progress})
 
 	def on_settings_save(self, data):
 		old_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
@@ -189,20 +200,49 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		new_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
 	
 		if(old_bot_settings != new_bot_settings):
-			#TODO : send a test message to check new settings
-			self._logger.info("Settings have changed. Send a test message ?")
-			return True
-
+			self._logger.info("Settings have changed. Send a test message...")
+			self.notify_event("test")
 
 
 	def notify_event(self,eventID,data={}):
-		#TODO: handle eventID
-		return True
+		if(eventID not in self.events):
+			self._logger.error("Tried to notifiy on inexistant eventID : ", eventID)
+			return False
+		
+		tmpConfig = self._settings.get(["events", eventID])
+
+		if tmpConfig["enabled"] != True:
+			self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
+			return False
+
+		# Special case for progress eventID : we check for progress and stepss
+		if eventID == 'printing_progress' and data["progress"] % tmpConfig["step"] != 0 :
+			return False			
+
+		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
 
 
 	def send_message(self,message,withSnapshot=False):
-		#TODO: call creation and snapshot get
-		return True
+
+		# return false if no URL is provided
+		if "http" not in self._settings.get(["url"]):
+			return False
+		
+		# Get snapshot if asked for
+		snapshot = None
+		if 	withSnapshot and "http" in self._settings.global_get(["webcam","snapshot"]) :
+			snapshotCall = requests.get(self._settings.global_get(["webcam","snapshot"]))
+			if snapshotCall :
+				snapshot = {'file': ("snapshot.jpg", snapshotCall.content)}
+
+		discordCall = Hook(
+			self._settings.get(["url"]),
+			message,
+			self._settings.get(["username"]),
+			self._settings.get(['avatar']),
+			snapshot
+		)		
+		return discordCall.post()
 		
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
