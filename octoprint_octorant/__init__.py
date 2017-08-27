@@ -22,13 +22,82 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
-		return dict(
-			# put your plugin's default settings here
-			url="test_url",
-			username="",
-			avatar="",
-			include_snapshot=True
-		)
+		return {
+			'url': "test_url",
+			'username': "",
+			'avatar': "",
+			'include_snapshot' : True,
+			'events' : {
+				"startup" : {
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ":alarm_clock: I just woke up! What are we gonna print today?"
+				},
+				"shutdown" : {
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ":zzz: Going to bed now!"
+				},
+				"printer_state_operational":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printer_state_error":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printer_state_unknown":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_started":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_paused":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_resumed":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_cancelled":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_done":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : ""
+				},
+				"printing_progress":{
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : "",
+					"step" : 10
+				},
+				"test":{ # Not a real message, but we will treat it as one
+					"enabled" : True,
+					"with_snapshot": False,
+					"message" : "Hello hello! If you see this message, it means that the settings are correct!"
+				},
+			}
+		}
+
+	# Restricts some paths to some roles only
+	def get_settings_restricted_paths(self):
+		# settings.events.tests is a false message, so we should never see it as configurable.
+		# settings.url, username and avatar are admin only.
+		return dict(never=[["events","test"]],
+					admin=[["url"],["username"],["avatar"]])
 
 	##~~ AssetPlugin mixin
 
@@ -123,6 +192,17 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			#TODO : send a test message to check new settings
 			self._logger.info("Settings have changed. Send a test message ?")
 			return True
+
+
+
+	def notify_event(self,eventID,data={}):
+		#TODO: handle eventID
+		return True
+
+
+	def send_message(self,message,withSnapshot=False):
+		#TODO: call creation and snapshot get
+		return True
 		
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
