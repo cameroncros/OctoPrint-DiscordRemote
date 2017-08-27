@@ -18,11 +18,11 @@ babel_pack --locale=<locale> [ --author=<author> ]
     with each new release of your plugin and have to depend on contributors for.
 
 If you want to bundle translations with your plugin, create a new folder
-`octoprint_OctoRant/translations`. When that folder exists,
+`octoprint_octorant/translations`. When that folder exists,
 an additional command becomes available:
 
 babel_bundle --locale=<locale>
-    Moves the translation for locale `<locale>` to octoprint_OctoRant/translations,
+    Moves the translation for locale `<locale>` to octoprint_octorant/translations,
     effectively bundling it with your plugin. This is interesting for languages
     you can guarantee to keep up to date yourself with each new release of your
     plugin.

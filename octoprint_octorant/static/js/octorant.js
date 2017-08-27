@@ -20,9 +20,9 @@ $(function() {
         OctorantViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ /* "loginStateViewModel", "settingsViewModel" */ ],
+        [ "loginStateViewModel", "settingsViewModel" ],
 
-        // e.g. #settings_plugin_OctoRant, #tab_plugin_OctoRant, ...
+        // e.g. #settings_plugin_octorant, #tab_plugin_octorant, ...
         [ /* ... */ ]
     ]);
 });

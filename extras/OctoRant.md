@@ -1,7 +1,7 @@
 ---
 layout: plugin
 
-id: OctoRant
+id: octorant
 title: OctoPrint-Octorant
 description: Discord plugin for OctoPrint
 author: Benjamin Chanudet
@@ -86,4 +86,4 @@ compatibility:
 ---
 
 **TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/OctoRant/
+http://plugins.octoprint.org/plugin/octorant/

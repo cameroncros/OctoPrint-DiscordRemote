@@ -1,26 +1,22 @@
 # coding=utf-8
 from __future__ import absolute_import
-from .discord import Webhook,Attachment,Field
+from .discord2 import Hook
 
+import json
 import octoprint.plugin
+import octoprint.settings
+import requests
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
 					 octoprint.plugin.SettingsPlugin,
                      octoprint.plugin.AssetPlugin,
-                     octoprint.plugin.TemplatePlugin):
+                     octoprint.plugin.TemplatePlugin,
+					 octoprint.plugin.ProgressPlugin):
 
-
-	## Init
-	def __init__(self):
-		self.url = ""
-		self.username = ""
-		self.avatar = ""
 
 	def on_after_startup(self):
-		self._logger.info("Octorant is started !")
-		payload = Webhook(self.url,"Octorant is started!")
-		payload.post()
+		self._logger.info("Octorant is started ! url : {}".format(self._settings.get(["url"])))
 
 
 	##~~ SettingsPlugin mixin
@@ -28,10 +24,10 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	def get_settings_defaults(self):
 		return dict(
 			# put your plugin's default settings here
-			url="",
+			url="test_url",
 			username="",
 			avatar="",
-
+			include_snapshot=True
 		)
 
 	##~~ AssetPlugin mixin
@@ -40,10 +36,17 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/OctoRant.js"],
-			css=["css/OctoRant.css"],
-			less=["less/OctoRant.less"]
+			js=["js/octorant.js"],
+			css=["css/octorant.css"],
+			less=["less/octorant.less"]
 		)
+
+
+	##~~ TemplatePlugin mixin
+	def get_template_configs(self):
+		return [
+			dict(type="settings", custom_bindings=False)
+		]
 
 	##~~ Softwareupdate hook
 
@@ -52,7 +55,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		# Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
 		# for details.
 		return dict(
-			OctoRant=dict(
+			octorant=dict(
 				displayName="Octorant Plugin",
 				displayVersion=self._plugin_version,
 
@@ -72,32 +75,59 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	def on_event(self, event, payload):
 		self._logger.info("OCTORANT - RECIEVED EVENT {} / {}".format(event, payload))
 		content = ""
+		needSnapshot = False
 		if event == "Startup":
-			content = "Hello! I just woke up!"
+			content = ":alarm_clock: Hello! I just woke up!"
 		elif event == "Shutdown":
-			content = "Going to bed now! See you later!"
+			content = ":zzz: Going to bed now! See you later!"
 		elif event == "PrinterStateChanged":
 			if payload["state_id"] == "OPERATIONAL":
-				content = "I saw your printer. I'm ready to rock!"
+				content = ":ok: I saw your printer. I'm ready to rock!"
 			elif payload["state_id"] == "ERROR":
-				content = "Uh-oh. Something bad happened, it seems your printer is gone :("
+				content = ":sos: Uh-oh. Something bad happened, it seems your printer is gone :("
 			elif payload["state_id"] == "UNKNOWN":
-				content = "Hmmm... Where's your printer?"
+				content = ":question: Hmmm... Where's your printer?"
 		elif event == "PrintStarted":
 			content = "I've just started working on this file : {}!".format(payload["name"])
+			needSnapshot = True
 		elif event == "PrintDone":
-			content = "Yeah! I just finished this gem! What do you think?"
+			content = ":ballot_box_with_check: Yeah! I just finished this gem! What do you think?"
+			needSnapshot = True
 		else:
 			content = ""
 
-		if content != "":
-			call = Webhook(self.url,content)
+		if content != "" and "http" in self._settings.get(['url']):
+			attached = None
+
+			if self._settings.get_boolean(["include_snapshot"]) \
+				and "http" in self._settings.global_get(["webcam","snapshot"]):
+				snapshot = requests.get(self._settings.global_get(["webcam","snapshot"]))
+				attached = {'file': ("snapshot.jpg", snapshot.content)}
+	
+			call = Hook( \
+				  self._settings.get(['url']) \
+				, content \
+				, self._settings.get(['username']) \
+				, self._settings.get(['avatar']),attached)
 			call.post()		
+
+	def on_print_progress(self,location,path,progress):
+		return True
+
+	def on_settings_save(self, data):
+		old_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
+		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+		new_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
+	
+		if(old_bot_settings != new_bot_settings):
+			#TODO : send a test message to check new settings
+			self._logger.info("Settings have changed. Send a test message ?")
+			return True
 		
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Octorant Plugin"
+__plugin_name__ = "OctoRant"
 
 def __plugin_load__():
 	global __plugin_implementation__
