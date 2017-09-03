@@ -1,5 +1,7 @@
 #coding: utf-8
 
+# Simple module to send messages through a Discord WebHook
+
 import json
 import requests
 
@@ -28,4 +30,4 @@ class Hook():
         if resp:
             return True
         else:
-            raise Exception("Error on post : " + str(resp))
+            return False

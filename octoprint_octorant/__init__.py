@@ -99,14 +99,14 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		}
 		
 	def on_after_startup(self):
-		self._logger.info("Octorant is started ! url : {}".format(self._settings.get(["url"])))
+		self._logger.info("Octorant is started !")
 
 
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
 		return {
-			'url': "test_url",
+			'url': "",
 			'username': "",
 			'avatar': "",
 			'events' : self.events
@@ -195,9 +195,17 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		self.notify_event("printing_progress",{"progress": progress})
 
 	def on_settings_save(self, data):
-		old_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
+		old_bot_settings = '{}{}{}'.format(\
+			self._settings.get(['url'],merged=True),\
+			self._settings.get(['avatar'],merged=True),\
+			self._settings.get(['username'],merged=True)\
+		)
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		new_bot_settings = '{}{}{}'.format(self._settings.get(['url']),self._settings.get(['avatar']),self._settings.get(['username']))
+		new_bot_settings = '{}{}{}'.format(\
+			self._settings.get(['url'],merged=True),\
+			self._settings.get(['avatar'],merged=True),\
+			self._settings.get(['username'],merged=True)\
+		)
 	
 		if(old_bot_settings != new_bot_settings):
 			self._logger.info("Settings have changed. Send a test message...")
@@ -209,8 +217,8 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			self._logger.error("Tried to notifiy on inexistant eventID : ", eventID)
 			return False
 		
-		tmpConfig = self._settings.get(["events", eventID])
-
+		tmpConfig = self._settings.get(["events", eventID],merged=True)
+		
 		if tmpConfig["enabled"] != True:
 			self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
 			return False
@@ -225,7 +233,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	def send_message(self,message,withSnapshot=False):
 
 		# return false if no URL is provided
-		if "http" not in self._settings.get(["url"]):
+		if "http" not in self._settings.get(["url"],merged=True):
 			return False
 		
 		# Get snapshot if asked for
@@ -236,10 +244,10 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				snapshot = {'file': ("snapshot.jpg", snapshotCall.content)}
 
 		discordCall = Hook(
-			self._settings.get(["url"]),
+			self._settings.get(["url"], merged=True),
 			message,
-			self._settings.get(["username"]),
-			self._settings.get(['avatar']),
+			self._settings.get(["username"],merged=True),
+			self._settings.get(['avatar'],merged=True),
 			snapshot
 		)		
 		return discordCall.post()

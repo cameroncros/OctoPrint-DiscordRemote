@@ -8,7 +8,7 @@ author: Benjamin Chanudet
 license: MIT
 
 # TODO
-date: today's date in format YYYY-MM-DD, e.g. 2015-04-21
+date: 2017-09-03
 
 homepage: https://github.com/bchanudet/OctoPrint-Octorant
 source: https://github.com/bchanudet/OctoPrint-Octorant
@@ -23,7 +23,7 @@ archive: https://github.com/bchanudet/OctoPrint-Octorant/archive/master.zip
 tags:
 - discord
 - notifications
-- snapshots
+- snapshot
 
 # TODO
 screenshots:
@@ -82,6 +82,3 @@ compatibility:
   - freebsd
 
 ---
-
-**TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/octorant/
