@@ -87,21 +87,18 @@ Some events also support variables, here is a basic list :
 - `{name}` : file's name that's being printed
 - `{path}` : file's path within its origin location
 - `{origin}` : the origin storage location
-- `{time}`: time needed for the print (in seconds)
 - `{position}`: position of the hotend
 
 **Printing process : paused event** :
 - `{name}` : file's name that's being printed
 - `{path}` : file's path within its origin location
 - `{origin}` : the origin storage location
-- `{time}`: time needed for the print (in seconds)
 - `{position}`: position of the hotend
 
 **Printing process : resumed event** :
 - `{name}` : file's name that's being printed
 - `{path}` : file's path within its origin location
 - `{origin}` : the origin storage location
-- `{time}`: time needed for the print (in seconds)
 - `{position}`: position of the hotend
 
 **Printing progress event** :
