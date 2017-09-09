@@ -224,7 +224,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			return False
 
 		# Special case for progress eventID : we check for progress and stepss
-		if eventID == 'printing_progress' and data["progress"] % tmpConfig["step"] != 0 :
+		if eventID == 'printing_progress' and data["progress"] > 0 and data["progress"] % tmpConfig["step"] != 0 :
 			return False			
 
 		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
