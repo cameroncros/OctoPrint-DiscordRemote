@@ -24,7 +24,7 @@
 </form>
 <h3>{{ _('Messages settings') }}</h3>
 <form class="form-horizontal" data-bind="foreach: {data:Object.keys(settings.plugins.octorant.events) }">
-    <div class="octorant_message" data-bind="css: { disabled: !$parent.settings.plugins.octorant.events[$data].enabled }">
+    <div class="octorant_message" data-bind="visible: $parent.settings.plugins.octorant.events[$data].name">
         <h4>    
             <input type="checkbox" class="" data-bind="checked: $parent.settings.plugins.octorant.events[$data].enabled"/>
             <span data-bind="text: $parent.settings.plugins.octorant.events[$data].name"></span>
