@@ -200,6 +200,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			self._settings.get(['avatar'],merged=True),\
 			self._settings.get(['username'],merged=True)\
 		)
+		data["events"]["printing_progress"]["step"] = int(data["events"]["printing_progress"]["step"])
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		new_bot_settings = '{}{}{}'.format(\
 			self._settings.get(['url'],merged=True),\
