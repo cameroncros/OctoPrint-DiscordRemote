@@ -6,6 +6,7 @@ import json
 import octoprint.plugin
 import octoprint.settings
 import requests
+from datetime import timedelta
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
@@ -76,7 +77,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				"name" : "Priting process : done",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":thumbsup: Printing is done! Took ~{time} seconds"
+				"message" : ":thumbsup: Printing is done! Took about {time_formatted}"
 			},
 			"printing_failed":{
 				"name" : "Priting process : failed",
@@ -187,6 +188,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			return self.notify_event("printing_cancelled",payload)
 
 		if event == "PrintDone":
+			payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
 			return self.notify_event("printing_done", payload)
 	
 		return True
@@ -200,7 +202,6 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			self._settings.get(['avatar'],merged=True),\
 			self._settings.get(['username'],merged=True)\
 		)
-		data["events"]["printing_progress"]["step"] = int(data["events"]["printing_progress"]["step"])
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 		new_bot_settings = '{}{}{}'.format(\
 			self._settings.get(['url'],merged=True),\
@@ -225,7 +226,10 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			return False
 
 		# Special case for progress eventID : we check for progress and stepss
-		if eventID == 'printing_progress' and data["progress"] > 0 and data["progress"] % tmpConfig["step"] != 0 :
+		if eventID == 'printing_progress' and (\
+			int(data["progress"]) == 0 \
+			or int(data["progress"]) % int(tmpConfig["step"]) != 0 \
+		) :
 			return False			
 
 		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
