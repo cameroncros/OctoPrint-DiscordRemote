@@ -7,6 +7,8 @@ import octoprint.plugin
 import octoprint.settings
 import requests
 from datetime import timedelta
+from PIL import Image
+from io import BytesIO
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
@@ -245,8 +247,34 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		snapshot = None
 		if 	withSnapshot and "http" in self._settings.global_get(["webcam","snapshot"]) :
 			snapshotCall = requests.get(self._settings.global_get(["webcam","snapshot"]))
+			mustFlipH = self._settings.global_get(["webcam","flipH"])
+			mustFlipV = self._settings.global_get(["webcam","flipV"])
+			mustRotate = self._settings.global_get(["webcam","rotate90"])
+
 			if snapshotCall :
-				snapshot = {'file': ("snapshot.jpg", snapshotCall.content)}
+				snapshotImage = BytesIO(snapshotCall.content)				
+
+				if (mustFlipH or mustFlipV or mustRotate):
+					img = Image.open(snapshotImage)
+
+					self._logger.info("Transformation wanted : {} {} {}".format(mustFlipH, mustFlipV, mustRotate))
+
+					if mustFlipH:
+						img = img.transpose(Image.FLIP_LEFT_RIGHT)
+					
+					if mustFlipV:
+						img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+					if mustRotate:
+						img = img.transpose(Image.ROTATE_90)
+
+					newImage = BytesIO()
+					img.save(newImage,'png')			
+
+					snapshotImage = newImage	
+
+
+				snapshot = {'file': ("snapshot.png", snapshotImage.getvalue())}
 
 		discordCall = Hook(
 			self._settings.get(["url"], merged=True),
