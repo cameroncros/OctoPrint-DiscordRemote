@@ -1,6 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import
-from .discord2 import Hook
+from .discord import Hook
 
 import json
 import octoprint.plugin
@@ -247,10 +247,13 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		snapshot = None
 		if 	withSnapshot and "http" in self._settings.global_get(["webcam","snapshot"]) :
 			snapshotCall = requests.get(self._settings.global_get(["webcam","snapshot"]))
+
+			# Get the settings used for streaming to know if we should transform the snapshot
 			mustFlipH = self._settings.global_get(["webcam","flipH"])
 			mustFlipV = self._settings.global_get(["webcam","flipV"])
 			mustRotate = self._settings.global_get(["webcam","rotate90"])
 
+			# Only do something if we got the snapshot
 			if snapshotCall :
 				snapshotImage = BytesIO(snapshotCall.content)				
 
@@ -277,6 +280,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 
 				snapshot = {'file': ("snapshot.png", snapshotImage.getvalue())}
 
+		# Send to Discord WebHook
 		discordCall = Hook(
 			self._settings.get(["url"], merged=True),
 			message,
