@@ -254,10 +254,11 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			if snapshotCall :
 				snapshotImage = BytesIO(snapshotCall.content)				
 
-				if (mustFlipH or mustFlipV or mustRotate):
+				# Only call Pillow if we need to transpose anything
+				if (mustFlipH or mustFlipV or mustRotate): 
 					img = Image.open(snapshotImage)
 
-					self._logger.info("Transformation wanted : {} {} {}".format(mustFlipH, mustFlipV, mustRotate))
+					self._logger.info("Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
 
 					if mustFlipH:
 						img = img.transpose(Image.FLIP_LEFT_RIGHT)
