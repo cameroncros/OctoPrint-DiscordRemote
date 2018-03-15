@@ -25,73 +25,73 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				"name" : "Octoprint Startup",
 				"enabled" : True,
 				"with_snapshot": False,
-				"message" : ":alarm_clock: I just woke up! What are we gonna print today?"
+				"message" : "⏰ I just woke up! What are we gonna print today?"
 			},
 			"shutdown" : {
 				"name" : "Octoprint Shutdown",
 				"enabled" : True,
 				"with_snapshot": False,
-				"message" : ":zzz: Going to bed now!"
+				"message" : "💤 Going to bed now!"
 			},
 			"printer_state_operational":{
 				"name" : "Printer state : operational",
 				"enabled" : True,
 				"with_snapshot": False,
-				"message" : ":white_check_mark: Your printer is operational."
+				"message" : "✅ Your printer is operational."
 			},
 			"printer_state_error":{
 				"name" : "Printer state : error",
 				"enabled" : True,
 				"with_snapshot": False,
-				"message" : ":warning: Your printer is in an erroneous state."
+				"message" : "⚠️ Your printer is in an erroneous state."
 			},
 			"printer_state_unknown":{
 				"name" : "Printer state : unknown",
 				"enabled" : True,
 				"with_snapshot": False,
-				"message" : ":grey_question: Your printer is in an unknown state."
+				"message" : "❔ Your printer is in an unknown state."
 			},
 			"printing_started":{
 				"name" : "Printing process : started",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":printer: I've started printing {file}"
+				"message" : "🖨️ I've started printing {file}"
 			},
 			"printing_paused":{
 				"name" : "Printing process : paused",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":pause_button: The printing was paused."
+				"message" : "⏸️ The printing was paused."
 			},
 			"printing_resumed":{
 				"name" : "Printing process : resumed",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":play_button: The printing was resumed."
+				"message" : "▶️ The printing was resumed."
 			},
 			"printing_cancelled":{
 				"name" : "Printing process : cancelled",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":octagonal_sign: The printing was stopped."
+				"message" : "🛑 The printing was stopped."
 			},
 			"printing_done":{
 				"name" : "Printing process : done",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":thumbsup: Printing is done! Took about {time_formatted}"
+				"message" : "👍 Printing is done! Took about {time_formatted}"
 			},
 			"printing_failed":{
 				"name" : "Printing process : failed",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":thumbsdown: Printing has failed! :("
+				"message" : "👎 Printing has failed! :("
 			},
 			"printing_progress":{
 				"name" : "Printing progress",
 				"enabled" : True,
 				"with_snapshot": True,
-				"message" : ":loudspeaker: Printing is at {progress}%",
+				"message" : "📢 Printing is at {progress}%",
 				"step" : 10
 			},
 			"test":{ # Not a real message, but we will treat it as one
