@@ -248,13 +248,14 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		
 		# Get snapshot if asked for
 		snapshot = None
-		if 	withSnapshot and "http" in self._settings.global_get(["webcam","snapshot"]) :
-			snapshotCall = requests.get(self._settings.global_get(["webcam","snapshot"]))
+		snapshotUrl = self._settings.global_get(["webcam","snapshot"])
+		if 	withSnapshot and snapshotUrl is not None and "http" in snapshotUrl :
+			snapshotCall = requests.get(snapshotUrl)
 
 			# Get the settings used for streaming to know if we should transform the snapshot
-			mustFlipH = self._settings.global_get(["webcam","flipH"])
-			mustFlipV = self._settings.global_get(["webcam","flipV"])
-			mustRotate = self._settings.global_get(["webcam","rotate90"])
+			mustFlipH = self._settings.global_get_boolean(["webcam","flipH"])
+			mustFlipV = self._settings.global_get_boolean(["webcam","flipV"])
+			mustRotate = self._settings.global_get_boolean(["webcam","rotate90"])
 
 			# Only do something if we got the snapshot
 			if snapshotCall :
