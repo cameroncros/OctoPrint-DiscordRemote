@@ -49,3 +49,24 @@
         </div>
     </div>
 </form>
+<h3>Scripts settings</h3>
+<form class="form-horizontal">
+    <div style="clear:both">
+        <p>{{ _("To modify these settings, you need to set") }} <code>allow_scripts: true</code> {{ _("in your configuration file.") }}</p>
+    </div>
+    <div class="control-group" data-bind="visible: settings.plugins.octorant.allow_scripts">
+        <label class="control-label">{{ _('Before') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.octorant.script_before">
+        </div>
+    </div>
+    <div class="control-group" data-bind="visible: settings.plugins.octorant.allow_scripts">
+        <label class="control-label">{{ _('After') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.octorant.script_after">
+        </div>
+    </div>
+    <div style="clear:both">
+        <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
+    </div>
+</form>

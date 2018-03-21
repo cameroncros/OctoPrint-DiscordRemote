@@ -112,7 +112,10 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			'url': "",
 			'username': "",
 			'avatar': "",
-			'events' : self.events
+			'events' : self.events,
+			'allow_scripts': False,
+			'script_before': '',
+			'script_after': ''
 		}
 
 	# Restricts some paths to some roles only
@@ -120,7 +123,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		# settings.events.tests is a false message, so we should never see it as configurable.
 		# settings.url, username and avatar are admin only.
 		return dict(never=[["events","test"]],
-					admin=[["url"],["username"],["avatar"]])
+					admin=[["url"],["username"],["avatar"],['script_before'],['script_after']])
 
 	##~~ AssetPlugin mixin
 
