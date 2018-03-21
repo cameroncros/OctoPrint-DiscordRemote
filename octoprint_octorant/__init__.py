@@ -9,6 +9,7 @@ import requests
 from datetime import timedelta
 from PIL import Image
 from io import BytesIO
+import subprocess
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
@@ -239,12 +240,41 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 
 		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
 
+	def exec_script(self,which=""):
+
+		# I want to be sure that the scripts are allowed by the special configuration flag
+		scripts_allowed = self._settings.get(["allow_scripts"],merged=True)
+		if scripts_allowed is None or scripts_allowed == False:
+			return ""
+
+		# Finding which one should be used.
+		script_to_exec = None
+		if which == "before":
+			script_to_exec = self._settings.get(["script_before"], merged=True)
+		
+		elif which == "after":
+			script_to_exec = self._settings.get(["script_after"], merged=True)
+		
+		# Finally exec the script
+		out = ""
+		self._logger.info("File to start: '{}'".format(script_to_exec))
+
+		if script_to_exec is not None and len(script_to_exec) > 0:
+			out = subprocess.check_output(script_to_exec)
+		
+		self._logger.info("> Output: '{}'".format(script_to_exec, out))
+
+		return out
+
 
 	def send_message(self,message,withSnapshot=False):
 
 		# return false if no URL is provided
 		if "http" not in self._settings.get(["url"],merged=True):
 			return False
+
+		# exec "before" script if any
+		self.exec_script("before")
 		
 		# Get snapshot if asked for
 		snapshot = None
@@ -292,7 +322,13 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			self._settings.get(['avatar'],merged=True),
 			snapshot
 		)		
-		return discordCall.post()
+
+		out = discordCall.post()
+
+		# exec "after" script if any
+		self.exec_script("after")
+
+		return out
 		
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
