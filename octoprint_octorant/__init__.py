@@ -10,6 +10,8 @@ from datetime import timedelta
 from PIL import Image
 from io import BytesIO
 import subprocess
+import os
+
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
@@ -238,9 +240,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		) :
 			return False			
 
-		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
+		return self.send_message(eventID, tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
 
-	def exec_script(self,which=""):
+	def exec_script(self, eventName, which=""):
 
 		# I want to be sure that the scripts are allowed by the special configuration flag
 		scripts_allowed = self._settings.get(["allow_scripts"],merged=True)
@@ -257,24 +259,26 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		
 		# Finally exec the script
 		out = ""
-		self._logger.info("File to start: '{}'".format(script_to_exec))
+		self._logger.info("{}:{} File to start: '{}'".format(eventName, which, script_to_exec))
 
-		if script_to_exec is not None and len(script_to_exec) > 0:
-			out = subprocess.check_output(script_to_exec)
-		
-		self._logger.info("> Output: '{}'".format(script_to_exec, out))
+		try:
+			if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
+				out = subprocess.check_output(script_to_exec)
+		except (OSError, subprocess.CalledProcessError) as err:
+				out = err
+		finally:
+			self._logger.info("{}:{} > Output: '{}'".format(eventName, which, out))
+			return out
 
-		return out
 
-
-	def send_message(self,message,withSnapshot=False):
+	def send_message(self, eventID, message, withSnapshot=False):
 
 		# return false if no URL is provided
 		if "http" not in self._settings.get(["url"],merged=True):
 			return False
 
 		# exec "before" script if any
-		self.exec_script("before")
+		self.exec_script(eventID, "before")
 		
 		# Get snapshot if asked for
 		snapshot = None
@@ -326,7 +330,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		out = discordCall.post()
 
 		# exec "after" script if any
-		self.exec_script("after")
+		self.exec_script(eventID, "after")
 
 		return out
 		
