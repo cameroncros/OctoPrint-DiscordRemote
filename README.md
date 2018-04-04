@@ -1,4 +1,4 @@
-# OctoPrint-OctoRant 1.0.0
+# OctoPrint-OctoRant 1.2.0
 
 OctoRant is a plugin allowing Octoprint to send notifications to a Discord channel via a webhook URL. When wanted it can directly send a snapshot to Discord (without needing third-party services)
 
@@ -7,6 +7,10 @@ License : MIT
 ![Screeshot of the Discord messages](assets/img/discord.jpg)
 
 ![Screeshot of the settings panel](assets/img/settings.jpg)
+
+## Changelog
+
+See [the release history](https://github.com/bchanudet/OctoPrint-Octorant/releases) to get a quick summary of what's new in the latest versions.
 
 
 ## Setup
