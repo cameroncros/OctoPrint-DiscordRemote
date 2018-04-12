@@ -1,10 +1,10 @@
 package com.cross.beaglesightlibs;
 
-import android.content.Context;
 import android.util.Log;
 import android.util.Xml;
 
 import com.cross.beaglesightlibs.ProtoConfig.Config;
+import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -15,118 +15,48 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class BowConfig {
-	private String bowname;
-    private String bowfilepath;
-	private String bowdescription;
-	private Map<String, String> positionArray;
-	private int method;
+	private String id = "";
+	private String name = "";
+	private String description = "";
+	private List<PositionPair> positionArray = new ArrayList<>();
+	private PositionCalculator positionCalculator = new LineOfBestFitCalculator();
 
 
-	public BowConfig() {
-		positionArray = new HashMap<String, String>();
-		bowname="";
-		bowdescription="";
-		method=0;
+	public BowConfig() {}
+
+	public BowConfig(String name, String description) {
+		this.name = name;
+		this.description = description;
 	}
 
 	public BowConfig(Config conf) {
-		bowname = conf.getBowname();
-		bowdescription = conf.getBowdescription();
-		method = conf.getMethod();
-		positionArray = new HashMap<String, String>();
+		id = conf.getId();
+		name = conf.getBowName();
+		description = conf.getBowDescription();
 		for (int i = 0; i < conf.getPositionArrayCount(); i++) {
 			Config.Position pos = conf.getPositionArray(i);
-			positionArray.put(pos.getDistance(), pos.getPosvalue());
-		}
-	}
-
-	public String getName() {
-		return bowname;
-	}
-
-	public void setName(String name) {
-		bowname = name;
-	}
-
-	public String getDescription() {
-		return bowdescription;
-	}
-
-	public void setDescription(String description) {
-		bowdescription = description;
-	}
-
-    public String getPathToFile() {
-        return bowfilepath;
-    }
-
-	void clearPositions() {
-		positionArray.clear();
-	}
-
-	public void addPosition(String distance, String position) 
-	{
-		positionArray.put(distance, position);
-	}
-
-	public Map<String,String> getPositions() {
-		return positionArray;
-	}
-
-	public void save(String path, Context cont) {
-		FileOutputStream fileOS;
-		try {
-			String filename = path+File.separator+getFileName();
-			fileOS = new FileOutputStream(filename,false);
-			XmlSerializer serializer = Xml.newSerializer();
-			serializer.setOutput(fileOS, "UTF-8");
-			serializer.startDocument(null, Boolean.valueOf(true));
-			serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-
-			serializer.startTag(null, "bow");
-			serializer.startTag(null, "name");
-			serializer.text(bowname);
-			serializer.endTag(null, "name");
-			serializer.startTag(null, "description");
-			serializer.text(bowdescription);
-			serializer.endTag(null, "description");
-            serializer.startTag(null, "method");
-            serializer.text(Integer.toString(method));
-            serializer.endTag(null, "method");
-
-            for (String distance : positionArray.keySet()) {
-				if (distance != "" && positionArray.get(distance) != "") {
-					serializer.startTag(null, "position");
-					serializer.text(distance + "," + positionArray.get(distance));
-					serializer.endTag(null, "position");
-				}
+			try {
+				PositionPair pair = new PositionPair(pos.getDistance(), pos.getPosition());
+				positionArray.add(pair);
 			}
-			serializer.endTag(null, "bow");
-			serializer.endDocument();
-			serializer.flush();
-			fileOS.close();
-
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			Log.e("Exception",e.toString());
+			catch (InvalidNumberFormatException e)
+			{
+				// Just ignore it, should never happen.
+			}
 		}
-
 	}
-	
-	public void load(File file) throws IOException, ParserConfigurationException, SAXException {
-        bowfilepath = file.getAbsolutePath();
+
+	public BowConfig(File file) throws IOException, ParserConfigurationException, SAXException {
 		FileInputStream fileIS;
 		fileIS = new FileInputStream(file);
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -141,53 +71,117 @@ public class BowConfig {
 			for (int j = 0; j < children.getLength(); j++) {
 				Node nd = children.item(j);
 				switch (nd.getNodeName()) {
+					case "id":
+						id = nd.getTextContent();
+						break;
 					case "name":
-						setName(nd.getTextContent());
+						name = nd.getTextContent();
 						break;
 					case "description":
-						setDescription(nd.getTextContent());
+						description = nd.getTextContent();
 						break;
 					case "position":
 						String values = nd.getTextContent();
 						String parts[] = values.split(",");
-						addPosition(parts[0], parts[1]);
-						break;
-					case "method":
-						setMethod(Integer.parseInt(nd.getTextContent()));
+						try {
+						    PositionPair pair = new PositionPair(parts[0], parts[1]);
+						    addPosition(pair);
+                        }
+						catch (InvalidNumberFormatException f)
+                        {
+                            // Do nothing, should never happen
+                        }
 						break;
 				}
 			}
 		}
 	}
-	
-	public String getFileName() {
-		return bowname.replaceAll(" ", "_").concat(".xml");
+
+	public void save(FileOutputStream fileOS) {
+		try {
+			XmlSerializer serializer = Xml.newSerializer();
+			serializer.setOutput(fileOS, "UTF-8");
+			serializer.startDocument(null, Boolean.TRUE);
+			serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+
+			serializer.startTag(null, "bow");
+			serializer.startTag(null, "id");
+			serializer.text(id);
+			serializer.endTag(null, "id");
+			serializer.startTag(null, "name");
+			serializer.text(name);
+			serializer.endTag(null, "name");
+			serializer.startTag(null, "description");
+			serializer.text(description);
+			serializer.endTag(null, "description");
+
+			for (PositionPair pair : positionArray) {
+			    String distance = pair.getDistanceString();
+                String position = pair.getPositionString();
+
+                serializer.startTag(null, "position");
+                serializer.text(distance + "," + position);
+                serializer.endTag(null, "position");
+			}
+			serializer.endTag(null, "bow");
+			serializer.endDocument();
+			serializer.flush();
+			fileOS.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Log.e("Exception",e.toString());
+		}
+
 	}
 
-	public int getMethod() {
-		// TODO Auto-generated method stub
-		return method;
+	public String getId() {
+		return id;
 	}
 
-	public void setMethod(int methodType) {
-		// TODO Auto-generated method stub
-		method = methodType;
+	public String getName() {
+		return name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	 String getPathToFile() {
+        return id + ".xml";
+    }
+
+	void clearPositions() {
+		positionArray.clear();
+	}
+
+	public void addPosition(PositionPair pair)
+	{
+		positionArray.add(pair);
+		positionCalculator.setPositions(positionArray);
 	}
 
 	public byte[] toByteArray() {
 		Config.Builder cgbuilder = com.cross.beaglesightlibs.ProtoConfig.Config.newBuilder()
-                .setBowdescription(bowdescription)
-                .setBowname(bowname)
-				.setMethod(method);
+				.setId(id)
+                .setBowDescription(description)
+                .setBowName(name);
 
-        for (String distance : positionArray.keySet()) {
+        for (PositionPair pair : positionArray) {
             Config.Position pos = Config.Position.newBuilder()
-                    .setDistance(distance)
-                    .setPosvalue(positionArray.get(distance))
+                    .setDistance(pair.getDistanceString())
+                    .setPosition(pair.getPositionString())
                     .build();
             cgbuilder.addPositionArray(pos);
         }
         Config pc = cgbuilder.build();
 		return pc.toByteArray();
 	}
+
+	public PositionCalculator getPositionCalculator() {
+		return positionCalculator;
+	}
+
+    public List<PositionPair> getPositions() {
+        return positionArray;
+    }
 }

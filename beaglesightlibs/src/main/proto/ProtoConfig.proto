@@ -1,0 +1,17 @@
+package beaglesightlibs;
+
+option java_package = "com.cross.beaglesightlibs";
+option java_outer_classname = "ProtoConfig";
+
+message Config {
+    required string id = 1;
+    required string bowName = 2;
+    optional string bowDescription = 4;
+
+    message Position {
+        required string distance = 1;
+        required string position = 2;
+    }
+
+    repeated Position positionArray = 5;
+}

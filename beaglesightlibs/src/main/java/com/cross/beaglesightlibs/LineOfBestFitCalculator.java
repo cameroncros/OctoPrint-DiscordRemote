@@ -9,57 +9,56 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class LineOfBestFitCalculator extends PositionCalculator {
-	int size = 0;
-	int order = 0;
-	RealVector polynomial;
-	
-	LineOfBestFitCalculator(int order) {
-		this.order = order;
-		positionArray = new HashMap<Double,Double>();
-	}
+	private int size = 0;
+	private int order = 4;
+	private RealVector polynomial;
 
 	@Override
-	public void setPositions(Map<String, String> pos) {
+	public void setPositions(List<PositionPair> pos) {
 		super.setPositions(pos);
 		calcPolynomial();
 	}
 
 	@Override
-	public double calcPosition(double distance) {
-		if (size < order) {
-			return Double.NaN;
-		}
+	public float calcPosition(float distance) {
+	    if (size < 2)
+        {
+            return Float.NaN;
+        }
 		double [] val = new double[order];
 		for (int j = 0; j < order; j++) {
 			val[j]=Math.pow(distance, order-1-j);
 		}
 		RealVector a = new ArrayRealVector(val);
-		return a.dotProduct(polynomial);
+		return (float)a.dotProduct(polynomial);
 	}
 
 	/**
 	 * ideas from here: http://www.had2know.com/academics/quadratic-regression-calculator.html
 	 */
-	void calcPolynomial() {
+	private void calcPolynomial() {
 		try {
-			size = positionArray.size();
-			if (size < order) {
-				return;
+			size = positions.size();
+            if (size < 2) {
+                return;
+            }
+			order = size;
+			if (order > 4) {
+				order = 4;
 			}
 			double [][] values = new double[order][order];
 			double [] rhs = new double[order];
 			double [] xsum = new double[2*order-1];
 
 			for (int i = 0; i < order; i++) {
-				rhs[i]=sum(positionArray,order-1-i,1);
+				rhs[i]=sum(positions,order-1-i,1);
 				
 			}
 			for (int i = 0; i < 2*(order-1); i++) {
-				xsum[i]=sum(positionArray,i,0);
+				xsum[i]=sum(positions,i,0);
 			}
 			
 			for (int i = 0; i < order; i++) {
@@ -86,10 +85,11 @@ public class LineOfBestFitCalculator extends PositionCalculator {
 		
 	}
 
-	private double sum(Map<Double, Double> positionArray, int xpower, int ypower) {
-		double val = 0;
-		for (Double x : positionArray.keySet()) {
-			double y = positionArray.get(x);
+	private float sum(List<PositionPair> positionArray, int xpower, int ypower) {
+		float val = 0;
+		for (PositionPair pair : positionArray) {
+			float x = pair.getDistanceFloat();
+			float y = pair.getPositionFloat();
 			val += Math.pow(x, xpower)*Math.pow(y, ypower);
 			
 		}

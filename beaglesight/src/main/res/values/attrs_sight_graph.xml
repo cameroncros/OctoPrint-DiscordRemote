@@ -1,0 +1,11 @@
+<resources>
+    <declare-styleable name="SightGraph">
+        <attr name="graphColor" format="color" />
+        <attr name="lineColor" format="color" />
+        <attr name="pointColor" format="color" />
+        <attr name="backgroundColor" format="color" />
+        <attr name="labelColor" format="color" />
+        <attr name="labelSize" format="dimension" />
+        <attr name="lineWidth" format="dimension" />
+    </declare-styleable>
+</resources>

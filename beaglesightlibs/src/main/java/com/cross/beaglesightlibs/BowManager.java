@@ -1,144 +1,126 @@
 package com.cross.beaglesightlibs;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
-import com.mariux.teleport.lib.TeleportClient;
+import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
+
+import org.xml.sax.SAXException;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
-
-public class BowManager
-{
-	private static volatile BowManager instance = null;
-	Context cont = null;
-	Map<String, BowConfig> bowList = null;
-	File folder = null;
-	private TeleportClient mTeleportClient;
+import javax.xml.parsers.ParserConfigurationException;
 
 
+public class BowManager {
+    @SuppressLint("StaticFieldLeak")
+    private static volatile BowManager instance = null;
+    private Context cont = null;
+    private List<BowConfig> bowList;
+    private File folder = null;
 
-	Set<String> getBowNames() {
-		return bowList.keySet();
-	}
+    private BowManager(Context cont) {
+        bowList = new Vector<>();
+        setContext(cont);
+    }
 
-	BowManager(Context cont) {
-		bowList = new HashMap<String, BowConfig>();
-		setContext(cont);
-	}
-
-	private void loadBows() {
-		bowList.clear();
-		if (folder != null) {
-			File[] listOfFiles = folder.listFiles();
-			for (File fl : listOfFiles) {
-				BowConfig bc = importBow(fl);
-				if (bc != null) {
-					bowList.put(bc.getName(), bc);
-				}
-			}
-		}
-	}
-
-    public BowConfig importBow(File fl) {
-		try {
-			BowConfig bc = new BowConfig();
-			bc.load(fl);
-			return bc;
-		} catch (Exception e) {
-			Log.e("BeagleSight", e.getMessage());
-		}
-		return null;
-	}
-
-	public PositionCalculator getPositionCalculator(String bowName) {
-		if (bowName == null) {
-			return null;
-		}
-        BowConfig bc = bowList.get(bowName);
-        if (bc == null) {
-            return null;
+    private void loadBows() {
+        bowList.clear();
+        if (folder != null && folder.exists()) {
+            File[] listOfFiles = folder.listFiles();
+            for (File fl : listOfFiles) {
+                try {
+                    BowConfig bowConfig = new BowConfig(fl);
+                    bowList.add(bowConfig);
+                } catch (IOException | ParserConfigurationException | SAXException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-		PositionCalculator pc = null;
-		switch (bc.getMethod()) {
+    }
 
-		case 0:
-			pc = new PolynomialCalculator();
-			break;
-		case 1:
-			pc = new LineOfBestFitCalculator(3);
-			break;
-		case 2:
-			pc = new LineOfBestFitCalculator(4);
-			break;
-		}
-		pc.setPositions(bc.getPositions());
-		return pc;
+    public void saveBows() {
+        if (folder != null && folder.exists()) {
+            File[] listOfFiles = folder.listFiles();
+            for (File fl : listOfFiles) {
+                fl.delete();
+            }
+            for (BowConfig bowConfig : bowList) {
+                String filename = folder + File.separator + bowConfig.getId();
+                try {
+                    FileOutputStream fileOS = new FileOutputStream(filename, false);
+                    bowConfig.save(fileOS);
+                } catch (FileNotFoundException e) {
+                    Toast.makeText(cont, e.toString(), Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+	public void addBowConfig(BowConfig bowConfig)
+	{
+	    if (bowConfig != null) {
+            deleteBowConfig(bowConfig);
+            bowList.add(bowConfig);
+            saveBows();
+        }
 	}
 
 	public static BowManager getInstance(Context cont) {
-			synchronized (BowManager.class) {
-				if (instance == null && cont != null) {
-					instance = new BowManager(cont);
-					instance.loadBows();
-				}
-			}
-
+        synchronized (BowManager.class) {
+            if (instance == null && cont != null) {
+                instance = new BowManager(cont);
+                instance.loadBows();
+            }
+        }
 		return instance;
 	}
 
-	public Vector<String> getBowList() {
-		return new Vector<String>(bowList.keySet());
+	public List<BowConfig> getBowList() {
+		return bowList;
 	}
 
-	public void saveBowConfig(BowConfig bc) {
-		bowList.put(bc.getName(), bc);
-		bc.save(folder.getAbsolutePath(), cont);
-		Log.w("BowManager","saved "+bc.getFileName());
-		if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH))
+	public BowConfig getBowConfig(String id) throws InvalidBowConfigIdException {
+        for (BowConfig bowConfig : bowList)
 		{
-			mTeleportClient.syncByteArray(bc.getName(), bc.toByteArray());
-		};
+			if (bowConfig.getId().equals(id)) {
+				return bowConfig;
+			}
+		}
+		throw new InvalidBowConfigIdException();
 	}
 
 	private void setContext(Context cont) {
 		this.cont = cont;
         folder = new File(cont.getFilesDir()+File.separator+"bows"+File.separator);
-        if (!folder.exists() && !folder.mkdir()) {
+        if (!folder.exists() && !folder.mkdirs()) {
             Log.e("BeagleSight", "Cant create the bow folder or the folder wasnt found");
             folder=null;
         }
-		mTeleportClient = new TeleportClient(cont);
-		mTeleportClient.connect();
+		// TODO: Configure wear transfer
 	}
 
-	public void deleteBow(String bowname) {
+	public void deleteBowConfig(BowConfig bowConfig) {
 		try {
-			File file = new File(getBow(bowname).getPathToFile());
+			File file = new File(folder + File.separator + bowConfig.getId());
 			file.delete();
 			Log.w("BowManager", "deleted " + file.getAbsolutePath());
 
 			if (!cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH)) {
-				mTeleportClient.syncByteArray(bowname, null);
+				//TODO: Delete from wear as well
 			}
-			bowList.remove(bowname);
-		}
-		catch (NullPointerException e) {
+			bowList.remove(bowConfig);
+		} catch (NullPointerException e) {
 			//do nothing
 		}
-
 	}
-
-	public BowConfig getBow(String bowname) throws NullPointerException {
-		if (bowname == null) {
-			throw new NullPointerException();
-		}
-		return bowList.get(bowname);
-	}
-
 }

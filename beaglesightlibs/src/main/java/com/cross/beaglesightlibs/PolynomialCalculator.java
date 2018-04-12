@@ -1,7 +1,7 @@
 package com.cross.beaglesightlibs;
 
-import java.util.HashMap;
-import java.util.Map;
+import android.util.Log;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.DecompositionSolver;
@@ -9,41 +9,38 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
-import android.util.Log;
+import java.util.List;
+import java.util.Map;
 
+@Deprecated
 public class PolynomialCalculator extends PositionCalculator
 {
+	private RealVector polynomial;
+	private int size;
 
-	
-	RealVector polynomial;
-	int size;
-
-	PolynomialCalculator() {
-		positionArray = new HashMap<Double,Double>();
-	}
-
-	public void setPositions(Map<String,String> pos) 
+	@Override
+	void setPositions(List<PositionPair> pos)
 	{
 		super.setPositions(pos);
 		calcPolynomial();
 	}
 
-	public double calcPosition(double distance) {
+	public float calcPosition(float distance) {
 		if (size < 3) {
-			return Double.NaN;
+			return Float.NaN;
 		}
 		double [] val = new double[size];
 		for (int j = 0; j < size; j++) {
 			val[j]=Math.pow(distance, size-j-1);
 		}
 		RealVector a = new ArrayRealVector(val);
-		return a.dotProduct(polynomial);
+		return (float)a.dotProduct(polynomial);
 
 	}
 
-	void calcPolynomial() {
+	private void calcPolynomial() {
 		try {
-			size = positionArray.size();
+			size = positions.size();
 			if (size < 3) {
 				return;
 			}
@@ -51,8 +48,9 @@ public class PolynomialCalculator extends PositionCalculator
 			double [] rhs = new double[size];
 
 			int i = 0;
-			for (Double distance : positionArray.keySet()) {
-				double position = positionArray.get(distance);
+			for (PositionPair pair : positions) {
+				double distance = pair.getDistanceFloat();
+				double position = pair.getPositionFloat();
 				rhs[i]=position;
 				for (int j = 0; j < size; j++) {
 					values[i][j]=Math.pow(distance, size-j-1);
@@ -76,13 +74,13 @@ public class PolynomialCalculator extends PositionCalculator
 	}
 
 	public int precision() {
-		switch (positionArray.size()) {
+		switch (positions.size()) {
 		case 0:
 		case 1:
 		case 2:
 			return 0;
 		default:
-			return positionArray.size()-2;
+			return positions.size()-2;
 		}
 	}
 }

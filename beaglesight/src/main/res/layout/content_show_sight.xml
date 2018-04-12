@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.cross.beaglesight.ShowSight"
+    tools:showIn="@layout/activity_show_sight">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/distanceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/distance"/>
+
+            <EditText
+                android:id="@+id/distanceText"
+                android:layout_width="144dp"
+                android:layout_height="wrap_content"
+                android:ems="8"
+                android:inputType="numberDecimal"
+                android:text="@string/distance"/>
+
+            <TextView
+                android:id="@+id/positionLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pin_setting"/>
+
+            <EditText
+                android:id="@+id/positionText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="8"
+                android:inputType="none"
+                android:text="@string/pin_setting"/>
+
+        </LinearLayout>
+
+        <com.cross.beaglesight.views.SightGraph
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            app:backgroundColor="#00000000"
+            app:graphColor="#e58633"
+            app:lineColor="#e53333"
+            app:lineWidth="1dp"
+            app:pointColor="#33b5e5"/>
+
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>
