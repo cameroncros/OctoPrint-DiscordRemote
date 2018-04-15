@@ -1,6 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import
-from .discord import Hook
+from .discord import configure_discord, start_listener, send
 
 import json
 import octoprint.plugin
@@ -106,6 +106,11 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		
 	def on_after_startup(self):
 		self._logger.info("Octorant is started !")
+		# Configure discord
+		configure_discord(self._logger,
+		                  self._settings.get(['bottoken'], merged=True),
+		                  self._settings.get(['channelid'], merged=True))
+		start_listener()
 
 
 	##~~ SettingsPlugin mixin
@@ -124,9 +129,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	# Restricts some paths to some roles only
 	def get_settings_restricted_paths(self):
 		# settings.events.tests is a false message, so we should never see it as configurable.
-		# settings.url, username and avatar are admin only.
+		# settings.bottoken and channelid are admin only.
 		return dict(never=[["events","test"]],
-					admin=[["url"],["username"],["avatar"],['script_before'],['script_after']])
+		            admin=[["bottoken"],["channelid"],['script_before'],['script_after']])
 
 	##~~ AssetPlugin mixin
 
@@ -205,20 +210,23 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		self.notify_event("printing_progress",{"progress": progress})
 
 	def on_settings_save(self, data):
-		old_bot_settings = '{}{}{}'.format(\
-			self._settings.get(['url'],merged=True),\
-			self._settings.get(['avatar'],merged=True),\
-			self._settings.get(['username'],merged=True)\
+		old_bot_settings = '{}{}'.format(\
+			self._settings.get(['bottoken'],merged=True),\
+			self._settings.get(['channelid'],merged=True)\
 		)
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		new_bot_settings = '{}{}{}'.format(\
-			self._settings.get(['url'],merged=True),\
-			self._settings.get(['avatar'],merged=True),\
-			self._settings.get(['username'],merged=True)\
+		new_bot_settings = '{}{}'.format(\
+			self._settings.get(['bottoken'],merged=True),\
+			self._settings.get(['channelid'],merged=True)\
 		)
 	
 		if(old_bot_settings != new_bot_settings):
 			self._logger.info("Settings have changed. Send a test message...")
+			# Configure discord
+			configure_discord(self._logger,
+			                  self._settings.get(['bottoken'],merged=True),
+			                  self._settings.get(['channelid'],merged=True))
+			start_listener()
 			self.notify_event("test")
 
 
@@ -273,10 +281,6 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 
 	def send_message(self, eventID, message, withSnapshot=False):
 
-		# return false if no URL is provided
-		if "http" not in self._settings.get(["url"],merged=True):
-			return False
-
 		# exec "before" script if any
 		self.exec_script(eventID, "before")
 		
@@ -319,15 +323,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				snapshot = {'file': ("snapshot.png", snapshotImage.getvalue())}
 
 		# Send to Discord WebHook
-		discordCall = Hook(
-			self._settings.get(["url"], merged=True),
-			message,
-			self._settings.get(["username"],merged=True),
-			self._settings.get(['avatar'],merged=True),
-			snapshot
-		)		
-
-		out = discordCall.post()
+		out = send(message, snapshot)
 
 		# exec "after" script if any
 		self.exec_script(eventID, "after")
