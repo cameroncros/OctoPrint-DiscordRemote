@@ -83,7 +83,7 @@ public class SightGraph extends View {
 
     private void init(AttributeSet attrs, int defStyle) {
         if (isInEditMode()) {
-            BowConfig bowConfig = new BowConfig();
+            BowConfig bowConfig = new BowConfig("TempName", "TempDescription");
 
             try {
                 bowConfig.addPosition(new PositionPair("15", "45"));

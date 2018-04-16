@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,10 +32,8 @@ public class BowConfig {
 	private List<PositionPair> positionArray = new ArrayList<>();
 	private PositionCalculator positionCalculator = new LineOfBestFitCalculator();
 
-
-	public BowConfig() {}
-
 	public BowConfig(String name, String description) {
+		this.id = UUID.randomUUID().toString();
 		this.name = name;
 		this.description = description;
 	}
