@@ -55,7 +55,6 @@ public class LineOfBestFitCalculator extends PositionCalculator {
 
 			for (int i = 0; i < order; i++) {
 				rhs[i]=sum(positions,order-1-i,1);
-				
 			}
 			for (int i = 0; i < 2*(order-1); i++) {
 				xsum[i]=sum(positions,i,0);

@@ -3,7 +3,6 @@ package com.cross.beaglesightlibs;
 import android.util.Log;
 import android.util.Xml;
 
-import com.cross.beaglesightlibs.ProtoConfig.Config;
 import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 import org.w3c.dom.Document;
@@ -13,10 +12,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,29 +36,10 @@ public class BowConfig {
 		this.description = description;
 	}
 
-	public BowConfig(Config conf) {
-		id = conf.getId();
-		name = conf.getBowName();
-		description = conf.getBowDescription();
-		for (int i = 0; i < conf.getPositionArrayCount(); i++) {
-			Config.Position pos = conf.getPositionArray(i);
-			try {
-				PositionPair pair = new PositionPair(pos.getDistance(), pos.getPosition());
-				positionArray.add(pair);
-			}
-			catch (InvalidNumberFormatException e)
-			{
-				// Just ignore it, should never happen.
-			}
-		}
-	}
-
-	public BowConfig(File file) throws IOException, ParserConfigurationException, SAXException {
-		FileInputStream fileIS;
-		fileIS = new FileInputStream(file);
+	BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = factory.newDocumentBuilder();
-		InputSource inputSource = new InputSource(fileIS);
+		InputSource inputSource = new InputSource(stream);
 		Document document = db.parse(inputSource);
 
 		NodeList nodelist = document.getElementsByTagName("bow");
@@ -96,7 +75,7 @@ public class BowConfig {
 		}
 	}
 
-	public void save(FileOutputStream fileOS) {
+	public void save(OutputStream fileOS) {
 		try {
 			XmlSerializer serializer = Xml.newSerializer();
 			serializer.setOutput(fileOS, "UTF-8");
@@ -145,35 +124,10 @@ public class BowConfig {
 		return description;
 	}
 
-	 String getPathToFile() {
-        return id + ".xml";
-    }
-
-	void clearPositions() {
-		positionArray.clear();
-	}
-
 	public void addPosition(PositionPair pair)
 	{
 		positionArray.add(pair);
 		positionCalculator.setPositions(positionArray);
-	}
-
-	public byte[] toByteArray() {
-		Config.Builder cgbuilder = com.cross.beaglesightlibs.ProtoConfig.Config.newBuilder()
-				.setId(id)
-                .setBowDescription(description)
-                .setBowName(name);
-
-        for (PositionPair pair : positionArray) {
-            Config.Position pos = Config.Position.newBuilder()
-                    .setDistance(pair.getDistanceString())
-                    .setPosition(pair.getPositionString())
-                    .build();
-            cgbuilder.addPositionArray(pos);
-        }
-        Config pc = cgbuilder.build();
-		return pc.toByteArray();
 	}
 
 	public PositionCalculator getPositionCalculator() {
