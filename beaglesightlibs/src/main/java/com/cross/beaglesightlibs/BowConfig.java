@@ -36,7 +36,7 @@ public class BowConfig {
 		this.description = description;
 	}
 
-	BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
+	public BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = factory.newDocumentBuilder();
 		InputSource inputSource = new InputSource(stream);

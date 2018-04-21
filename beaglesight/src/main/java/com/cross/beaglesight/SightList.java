@@ -2,21 +2,39 @@ package com.cross.beaglesight;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.cross.beaglesight.fragments.BowListItemFragment;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesight.AddSight;
+import com.cross.beaglesightlibs.BowManager;
+
+import org.xml.sax.SAXException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
 public class SightList extends AppCompatActivity implements BowListItemFragment.OnListFragmentInteractionListener {
+    Intent addIntent;
+
+    private static final int FILE_SELECT_CODE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +68,19 @@ public class SightList extends AppCompatActivity implements BowListItemFragment.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id)
+        {
+            case R.id.action_add:
+                startActivity(addIntent);
+                return true;
+            case R.id.action_import:
+                Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                fileIntent.setType("file/*"); // intent type to filter application based on your requirement
+                startActivityForResult(fileIntent, FILE_SELECT_CODE);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -61,5 +88,43 @@ public class SightList extends AppCompatActivity implements BowListItemFragment.
         Intent intent = new Intent(this, ShowSight.class);
         intent.putExtra(CONFIG_TAG, bowConfig.getId());
         startActivity(intent);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case FILE_SELECT_CODE:
+                if (resultCode == RESULT_OK) {
+                    // Get the Uri of the selected file
+                    Uri uri = data.getData();
+                    Log.d("BeagleSight", "File Uri: " + uri.toString());
+                    // Get the path
+
+                    File fname = new File(getRealPathFromURI(uri));
+                    try {
+                        FileInputStream fis = new FileInputStream(fname);
+                        BowConfig bowConfig = new BowConfig(fis);
+                        BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig);
+                    } catch (SAXException | ParserConfigurationException | IOException e) {
+                        Toast.makeText(this, "Failed to load BowConfig: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private String getRealPathFromURI(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
     }
 }
