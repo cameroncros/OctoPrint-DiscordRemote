@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.google.protobuf'
 
 buildscript {
     repositories {
@@ -31,28 +30,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 }
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.0.0"
-    }
-    plugins {
-        lite {
-            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
-        }
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                remove java
-            }
-            task.plugins {
-                lite { }
-            }
-        }
-    }
-}
-
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
