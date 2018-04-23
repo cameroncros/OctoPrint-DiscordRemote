@@ -153,6 +153,7 @@ public class SightList extends AppCompatActivity implements BowListItemFragment.
                         Toast.makeText(this, "Failed to load BowConfig: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
+                recreate();
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
