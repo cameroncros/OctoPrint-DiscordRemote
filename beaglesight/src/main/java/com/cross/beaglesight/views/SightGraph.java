@@ -183,7 +183,7 @@ public class SightGraph extends View {
     float distanceToPixel(float distance)
     {
         float percent = (distance - minDist) / (maxDist - minDist);
-        return contentWidthStart + percent * (contentWidthEnd - contentWidthStart);
+        return Math.round(contentWidthStart + percent * (contentWidthEnd - contentWidthStart));
     }
 
     float pixelToPosition(float pixel)
@@ -195,7 +195,7 @@ public class SightGraph extends View {
     float positionToPixel(float position)
     {
         float percent = (position - minPos) / (maxPos - minPos);
-        return contentHeightStart + percent * (contentHeightEnd - contentHeightStart);
+        return Math.round(contentHeightStart + percent * (contentHeightEnd - contentHeightStart));
     }
 
     float calculateYVal(float xVal)
