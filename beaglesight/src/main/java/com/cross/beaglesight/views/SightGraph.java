@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MotionEventCompat;
@@ -18,7 +19,10 @@ import com.cross.beaglesightlibs.PositionPair;
 import com.cross.beaglesightlibs.PositionCalculator;
 import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO: document your custom view class.
@@ -27,6 +31,7 @@ public class SightGraph extends View {
 
     private Paint linePaint;
     private Paint pointPaint;
+    private Paint pointSelectedPaint;
     private Paint graphPaint;
     private Paint graphMinorAxis;
     private Paint backgroundPaint;
@@ -47,9 +52,13 @@ public class SightGraph extends View {
     float contentHeightEnd;
 
     float selectedDistance;
-    PositionPair selectedPosition;
+
+    PositionPair selectedPairPixel;
+    Map<PositionPair, PositionPair> positionPairMap;
+
     private SightGraphCallback updateCallback;
     private float lineWidth;
+    private float touchRadius;
 
     public SightGraph(Context context) {
         super(context);
@@ -133,10 +142,23 @@ public class SightGraph extends View {
         labelPaint.setTextSize(textSize);
         axisLabelPaint.setTextSize(textSize/2);
 
+        pointSelectedPaint = new Paint(pointPaint);
+        pointSelectedPaint.setColor(manipulateColor(pointPaint.getColor(), 0.8f));
 
         if (!isInEditMode() && a != null) {
             a.recycle();
         }
+    }
+
+    public static int manipulateColor(int color, float factor) {
+        int a = Color.alpha(color);
+        int r = Math.round(Color.red(color) * factor);
+        int g = Math.round(Color.green(color) * factor);
+        int b = Math.round(Color.blue(color) * factor);
+        return Color.argb(a,
+                Math.min(r,255),
+                Math.min(g,255),
+                Math.min(b,255));
     }
 
     @Override
@@ -155,6 +177,19 @@ public class SightGraph extends View {
         contentWidthEnd = canvasWidth + paddingLeft;
         contentHeightStart = paddingTop;
         contentHeightEnd = canvasHeight + paddingTop;
+
+        // Touch radius
+        if (canvasWidth > canvasHeight)
+        {
+            touchRadius = canvasHeight*0.2f * canvasHeight*0.2f ;
+        }
+        else
+        {
+            touchRadius = canvasWidth*0.2f * canvasWidth*0.2f;
+        }
+
+        // Precalculate dot locations
+        precalcDotLocations();
     }
 
     /**
@@ -170,6 +205,26 @@ public class SightGraph extends View {
         float tenPercent = (maxPos - minPos) * 0.1f;
         minPos -= tenPercent;
         maxPos += tenPercent;
+
+        // Precalculate dot locations
+        precalcDotLocations();
+    }
+
+    private void precalcDotLocations() {
+        positionPairMap = new HashMap<>();
+        List<PositionPair> positions = bowConfig.getPositions();
+
+        for (PositionPair pair : positions)
+        {
+            float position = pair.getPositionFloat();
+            float distance = pair.getDistanceFloat();
+
+            float positionPixel = positionToPixel(position);
+            float distancePixel = distanceToPixel(distance);
+
+            PositionPair pixelPair = new PositionPair(distancePixel, positionPixel);
+            positionPairMap.put(pixelPair, pair);
+        }
     }
 
     float pixelToDistance(float pixel)
@@ -237,24 +292,18 @@ public class SightGraph extends View {
         }
 
         // Draw the dots.
-        List<PositionPair> positions = bowConfig.getPositions();
-        if (selectedPosition != null)
+        Set<PositionPair> positions = positionPairMap.keySet();
+        if (selectedPairPixel != null)
         {
-            float position = selectedPosition.getPositionFloat();
-            float distance = selectedPosition.getDistanceFloat();
+            float positionPixel = selectedPairPixel.getPositionFloat();
+            float distancePixel = selectedPairPixel.getDistanceFloat();
 
-            float positionPixel = positionToPixel(position);
-            float distancePixel = distanceToPixel(distance);
-
-            canvas.drawCircle(distancePixel, positionPixel, lineWidth*4, pointPaint);
+            canvas.drawCircle(distancePixel, positionPixel, lineWidth*4, pointSelectedPaint);
         }
         for (PositionPair pair : positions)
         {
-            float position = pair.getPositionFloat();
-            float distance = pair.getDistanceFloat();
-
-            float positionPixel = positionToPixel(position);
-            float distancePixel = distanceToPixel(distance);
+            float positionPixel = pair.getPositionFloat();
+            float distancePixel = pair.getDistanceFloat();
 
             canvas.drawCircle(distancePixel, positionPixel, lineWidth*2, pointPaint);
         }
@@ -300,14 +349,47 @@ public class SightGraph extends View {
     }
 
     private void updateOnTouch(MotionEvent event) {
-        float xPixel = event.getRawX();
+        float xPixel = event.getX();
+        float yPixel = event.getY();
+
         selectedDistance = pixelToDistance(xPixel);
 
         if (updateCallback != null)
         {
             updateCallback.updateDistance(selectedDistance);
         }
-        selectedPosition = null;
+
+        Set<PositionPair> pixelPairs = positionPairMap.keySet();
+        float closestDist = Float.MAX_VALUE;
+        PositionPair closestPixel = null;
+        for (PositionPair pair : pixelPairs)
+        {
+            float xdist = pair.getDistanceFloat()-xPixel;
+            float ydist = pair.getPositionFloat()-yPixel;
+            float dist = xdist*xdist + ydist*ydist;
+            if (dist < closestDist)
+            {
+                closestPixel = pair;
+                closestDist = dist;
+            }
+        }
+
+        if (closestDist < touchRadius)
+        {
+            selectedPairPixel = closestPixel;
+            if (updateCallback != null)
+            {
+                updateCallback.setSelected(positionPairMap.get(selectedPairPixel));
+            }
+        }
+        else
+        {
+            if (selectedPairPixel != null)
+            {
+                updateCallback.setSelected(null);
+            }
+            selectedPairPixel = null;
+        }
     }
 
     public void setSelectedDistance(float selectedDistance)
@@ -332,5 +414,6 @@ public class SightGraph extends View {
     public interface SightGraphCallback
     {
         void updateDistance(float distance);
+        void setSelected(PositionPair selectedPair);
     }
 }

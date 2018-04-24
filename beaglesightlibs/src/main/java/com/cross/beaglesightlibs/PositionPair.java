@@ -8,6 +8,15 @@ public class PositionPair {
     private float positionFloat;
     private float distanceFloat;
 
+    public PositionPair(float distance, float position)
+    {
+        distanceFloat = distance;
+        positionFloat = position;
+
+        distanceString = Float.toString(distance);
+        positionString = Float.toString(position);
+    }
+
     public PositionPair(String distance, String position) throws InvalidNumberFormatException
     {
         distanceString = distance;
@@ -37,5 +46,11 @@ public class PositionPair {
 
     public float getPositionFloat() {
         return positionFloat;
+    }
+
+    @Override
+    public String toString()
+    {
+        return distanceString + "," + positionString;
     }
 }

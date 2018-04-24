@@ -7,6 +7,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -15,6 +19,7 @@ import com.cross.beaglesight.views.SightGraph;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesightlibs.PositionCalculator;
+import com.cross.beaglesightlibs.PositionPair;
 import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
 
 public class ShowSight extends AppCompatActivity implements SightGraph.SightGraphCallback {
@@ -24,7 +29,10 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     EditText distance;
     EditText position;
 
+    private BowConfig bowConfig;
     private PositionCalculator positionCalculator;
+    private ActionMode actionMode;
+    private PositionPair selectedPair;
 
     private TextWatcher distanceListener = new TextWatcher() {
         @Override
@@ -63,7 +71,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
 
             Intent intent = getIntent();
             String id = (String) intent.getSerializableExtra(CONFIG_TAG);
-            BowConfig bowConfig = BowManager.getInstance(this).getBowConfig(id);;
+            bowConfig = BowManager.getInstance(this).getBowConfig(id);
 
             final Intent addDistance = new Intent(this, AddDistance.class);
             addDistance.putExtra(CONFIG_TAG, bowConfig.getId());
@@ -99,4 +107,49 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     public void updateDistance(float distance) {
         this.distance.setText(PositionCalculator.getDisplayValue(distance, 0));
     }
+
+    @Override
+    public void setSelected(PositionPair selectedPair) {
+        if (selectedPair == null && actionMode != null)
+        {
+            actionMode.finish();
+            return;
+        }
+        if (this.selectedPair == null) {
+            actionMode = startActionMode(selectedActionMode);
+        }
+        this.selectedPair = selectedPair;
+    }
+
+    private ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.menu_show_sight_selected, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.delete_position:
+                    bowConfig.deletePosition(selectedPair);
+                    BowManager.getInstance(getBaseContext()).addBowConfig(bowConfig);
+                    mode.finish();
+                    recreate();
+                    break;
+            }
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+
+        }
+    };
 }

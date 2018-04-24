@@ -24,117 +24,118 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class BowConfig {
-	private String id = "";
-	private String name = "";
-	private String description = "";
-	private List<PositionPair> positionArray = new ArrayList<>();
-	private PositionCalculator positionCalculator = new LineOfBestFitCalculator();
+    private String id = "";
+    private String name = "";
+    private String description = "";
+    private List<PositionPair> positionArray = new ArrayList<>();
+    private PositionCalculator positionCalculator = new LineOfBestFitCalculator();
 
-	public BowConfig(String name, String description) {
-		this.id = UUID.randomUUID().toString();
-		this.name = name;
-		this.description = description;
-	}
+    public BowConfig(String name, String description) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.description = description;
+    }
 
-	public BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = factory.newDocumentBuilder();
-		InputSource inputSource = new InputSource(stream);
-		Document document = db.parse(inputSource);
+    public BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = factory.newDocumentBuilder();
+        InputSource inputSource = new InputSource(stream);
+        Document document = db.parse(inputSource);
 
-		NodeList nodelist = document.getElementsByTagName("bow");
-		for (int i = 0; i < nodelist.getLength(); i++) {
-			Node e = nodelist.item(i);
-			NodeList children = e.getChildNodes();
-			for (int j = 0; j < children.getLength(); j++) {
-				Node nd = children.item(j);
-				switch (nd.getNodeName()) {
-					case "id":
-						id = nd.getTextContent();
-						break;
-					case "name":
-						name = nd.getTextContent();
-						break;
-					case "description":
-						description = nd.getTextContent();
-						break;
-					case "position":
-						String values = nd.getTextContent();
-						String parts[] = values.split(",");
-						try {
-						    PositionPair pair = new PositionPair(parts[0], parts[1]);
-						    addPosition(pair);
+        NodeList nodelist = document.getElementsByTagName("bow");
+        for (int i = 0; i < nodelist.getLength(); i++) {
+            Node e = nodelist.item(i);
+            NodeList children = e.getChildNodes();
+            for (int j = 0; j < children.getLength(); j++) {
+                Node nd = children.item(j);
+                switch (nd.getNodeName()) {
+                    case "id":
+                        id = nd.getTextContent();
+                        break;
+                    case "name":
+                        name = nd.getTextContent();
+                        break;
+                    case "description":
+                        description = nd.getTextContent();
+                        break;
+                    case "position":
+                        String values = nd.getTextContent();
+                        String parts[] = values.split(",");
+                        try {
+                            PositionPair pair = new PositionPair(parts[0], parts[1]);
+                            addPosition(pair);
                         }
-						catch (InvalidNumberFormatException f)
+                        catch (InvalidNumberFormatException f)
                         {
                             // Do nothing, should never happen
                         }
-						break;
-				}
-			}
-		}
-	}
+                        break;
+                }
+            }
+        }
+    }
 
-	public void save(OutputStream fileOS) {
-		try {
-			XmlSerializer serializer = Xml.newSerializer();
-			serializer.setOutput(fileOS, "UTF-8");
-			serializer.startDocument(null, Boolean.TRUE);
-			serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+    public void save(OutputStream fileOS) {
+        try {
+            XmlSerializer serializer = Xml.newSerializer();
+            serializer.setOutput(fileOS, "UTF-8");
+            serializer.startDocument(null, Boolean.TRUE);
+            serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
 
-			serializer.startTag(null, "bow");
-			serializer.startTag(null, "id");
-			serializer.text(id);
-			serializer.endTag(null, "id");
-			serializer.startTag(null, "name");
-			serializer.text(name);
-			serializer.endTag(null, "name");
-			serializer.startTag(null, "description");
-			serializer.text(description);
-			serializer.endTag(null, "description");
+            serializer.startTag(null, "bow");
+            serializer.startTag(null, "id");
+            serializer.text(id);
+            serializer.endTag(null, "id");
+            serializer.startTag(null, "name");
+            serializer.text(name);
+            serializer.endTag(null, "name");
+            serializer.startTag(null, "description");
+            serializer.text(description);
+            serializer.endTag(null, "description");
 
-			for (PositionPair pair : positionArray) {
-			    String distance = pair.getDistanceString();
-                String position = pair.getPositionString();
-
+            for (PositionPair pair : positionArray) {
                 serializer.startTag(null, "position");
-                serializer.text(distance + "," + position);
+                serializer.text(pair.toString());
                 serializer.endTag(null, "position");
-			}
-			serializer.endTag(null, "bow");
-			serializer.endDocument();
-			serializer.flush();
-			fileOS.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			Log.e("Exception",e.toString());
-		}
+            }
+            serializer.endTag(null, "bow");
+            serializer.endDocument();
+            serializer.flush();
+            fileOS.close();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            Log.e("Exception",e.toString());
+        }
 
-	}
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void addPosition(PositionPair pair)
-	{
-		positionArray.add(pair);
-		positionCalculator.setPositions(positionArray);
-	}
+    public void addPosition(PositionPair pair)
+    {
+        positionArray.add(pair);
+        positionCalculator.setPositions(positionArray);
+    }
 
-	public PositionCalculator getPositionCalculator() {
-		return positionCalculator;
-	}
+    public PositionCalculator getPositionCalculator() {
+        return positionCalculator;
+    }
 
     public List<PositionPair> getPositions() {
         return positionArray;
+    }
+
+    public void deletePosition(PositionPair selectedPair) {
+        positionArray.remove(selectedPair);
     }
 }
