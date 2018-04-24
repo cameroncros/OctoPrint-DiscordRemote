@@ -45,7 +45,7 @@ public class LineOfBestFitCalculator extends PositionCalculator {
             if (size < 2) {
                 return;
             }
-			order = size;
+			order = size + 1;
 			if (order > 4) {
 				order = 4;
 			}
