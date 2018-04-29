@@ -1,7 +1,9 @@
+#coding: utf-8
+
+# Simple module to send messages through a Discord WebHook
 # post a message to discord api via a bot
 # bot must be added to the server and have write access to the channel
-# you may need to connect with a websocket the first time you run the bot
-#   use a library like discord.py to do so
+
 import json
 import thread
 import time
@@ -9,19 +11,19 @@ import requests
 import websocket
 import logging
 
-from octoprint_octorant.command import parse_command
-
 channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
 bot_token = None  # get from the bot page. must be a bot, not a discord app
 gatewayURL = "https://discordapp.com/api/gateway"
-postURL = None
+postURL = None  # URL to post messages to, as the bot
 heartbeat_interval = None
 heartbeat_thread = None
 listener_thread = None
 last_sequence = None
-ws = None
-logger = logging
-headers = None
+ws = None  # Websocket. Used for heartbeat.
+logger = logging  # Logger, uses default logging unless overridden
+headers = None  # Object containing the headers to send messages with.
+running = None  # True if the bot is connected and running.
+queue = []  # Message queue, stores messages until the bot reconnects.
 
 
 def configure_discord(p_logger, p_bot_token, p_channel_id):
@@ -29,27 +31,28 @@ def configure_discord(p_logger, p_bot_token, p_channel_id):
 	bot_token = p_bot_token
 	channel_id = p_channel_id
 	logger = p_logger
+	start_listener()
 
 
 def listener_func():
 	global postURL, ws, headers
 	postURL = "https://discordapp.com/api/channels/{}/messages".format(channel_id)
 	headers = {"Authorization": "Bot {}".format(bot_token),
-				"User-Agent": "myBotThing (http://some.url, v0.1)",
-				"Content-Type": "application/json"}
+				"User-Agent": "myBotThing (http://some.url, v0.1)"}
 
 	r = requests.get(gatewayURL, headers=headers)
 	socketurl = json.loads(r.content)['url']
 	ws = websocket.WebSocketApp(socketurl,
-								on_message=on_message,
-								on_error=on_error,
-								on_close=on_close)
+				    on_message=on_message,
+				    on_error=on_error,
+				    on_close=on_close)
 	while True:
 		ws.run_forever()
 
 
 def start_listener():
-	global listener_thread
+	global listener_thread, running
+	running = None
 	listener_thread = thread.start_new_thread(listener_func, ())
 
 
@@ -66,7 +69,7 @@ def heartbeat():
 
 
 def on_message(web_socket, message):
-	global bot_token, heartbeat_interval, heartbeat_thread, last_sequence, channel_id
+	global bot_token, heartbeat_interval, heartbeat_thread, last_sequence, channel_id, running
 	js = json.loads(message)
 	if js['op'] == 10:  # Hello message
 		# Authenticate
@@ -87,6 +90,10 @@ def on_message(web_socket, message):
 		# Setup heartbeat_thread
 		if not heartbeat_thread:
 			heartbeat_thread = thread.start_new_thread(heartbeat, ())
+
+		# Signal that we are connected.
+		running = True
+		process_queue()
 	elif js['op'] == 11:
 		pass
 	elif js['op'] == 0:
@@ -95,21 +102,38 @@ def on_message(web_socket, message):
 			send("Received command, did nothing: %s" % js['d']['content'])
 
 
+def process_queue():
+	global queue
+	while len(queue):
+		(message, snapshot) = queue.pop()
+		send(message, snapshot)
+
+
 def send(message, snapshot=None):
-	global postURL, headers
+	global postURL, headers, running
+	if not running:
+		queue.append((message, snapshot))
+		return True
+
 	json_data = json.dumps({"content": message})
-	r = requests.post(postURL,
+	if snapshot:
+		r = requests.post(postURL,
 	                  headers=headers,
-	                  data=json_data,
-	                  files=snapshot)
+	                  data={"payload_json": json_data},
+	                  files=[("file", ("snapshot.png", snapshot))])
+	else:
+		r = requests.post(postURL,
+		                  headers=headers,
+		                  data={"payload_json": json_data})
 	if r:
 		return True
 	return False
 
 
 def on_error(ws, error):
-	global logger
+	global logger, running
 	logger.error("Connection error: {}" % error)
+	running = False
 
 
 def on_close(ws):

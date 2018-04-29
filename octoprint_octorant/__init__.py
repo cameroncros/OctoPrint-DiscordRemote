@@ -107,10 +107,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	def on_after_startup(self):
 		self._logger.info("Octorant is started !")
 		# Configure discord
-		configure_discord(self._logger,
-		                  self._settings.get(['bottoken'], merged=True),
-		                  self._settings.get(['channelid'], merged=True))
-		start_listener()
+		self.bot_configured = configure_discord(self._logger,
+		                                        self._settings.get(['bottoken'],merged=True),
+		                                        self._settings.get(['channelid'],merged=True))
 
 
 	##~~ SettingsPlugin mixin
@@ -223,10 +222,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		if(old_bot_settings != new_bot_settings):
 			self._logger.info("Settings have changed. Send a test message...")
 			# Configure discord
-			configure_discord(self._logger,
-			                  self._settings.get(['bottoken'],merged=True),
-			                  self._settings.get(['channelid'],merged=True))
-			start_listener()
+			self.bot_configured = configure_discord(self._logger,
+			                                        self._settings.get(['bottoken'],merged=True),
+			                                        self._settings.get(['channelid'],merged=True))
 			self.notify_event("test")
 
 
@@ -280,7 +278,6 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 
 
 	def send_message(self, eventID, message, withSnapshot=False):
-
 		# exec "before" script if any
 		self.exec_script(eventID, "before")
 		
