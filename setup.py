@@ -33,7 +33,7 @@ plugin_url = "https://github.com/bchanudet/OctoPrint-Octorant"
 plugin_license = "MIT"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests"]
+plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests", "terminaltables"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

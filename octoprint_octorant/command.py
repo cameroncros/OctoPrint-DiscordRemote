@@ -1,40 +1,61 @@
-import argparse
 import re
 from terminaltables import AsciiTable as Table
 
 
 class Command:
-	def __init__(self, printer_interface, file_manager):
-		assert printer_interface
-		assert file_manager
-		self.printer_interface = printer_interface
-		self.file_manager = file_manager
+	def __init__(self, plugin):
+		assert plugin
+		self.plugin = plugin
 
-		self.parser = argparse.ArgumentParser(description="OctoPrint command parser")
-		self.parser.add_argument("list", help="List the files")
-		self.parser.add_argument("print", help="Print a file")
-		self.parser.add_argument("cancel", help="Cancel a running print")
-
-	def parse_command(self, str):
-		parts = re.split('\s+', str)
-		output = self.parser.parse_args(parts)
+	def parse_command(self, string):
+		parts = re.split('\s+', string)
 
 		snapshot = None
 		message = ""
 
-		if output.list:
+		if parts[0].upper() == "list".upper():
 			message += "The list of files are:\n"
-			for key in self.file_manager.registered_storages:
-				message += key + ":\n"
-				data = []
-				for file in self.file_manager.list_files(key):
-					data.append([file])
+			file_list = self.plugin._file_manager.list_files()
+			data = [["File Name",
+			         "Extimated Print Time",
+				 "Average Print Time",
+			         "Filament Required"]]
+			for (location, files) in file_list.items():
+				for (filename, details) in files.items():
+					estimated_print_time = ""
+					try:
+						estimated_print_time = details['analysis']['estimatedPrintTime']
+					except:
+						pass
 
+					average_print_time = ""
+					try:
+						average_print_time = details['statistics']['averagePrintTime']['_default']
+					except:
+						pass
+
+					filament_required = ""
+					try:
+						filament_required = details['analysis']['filament']['tool0']['length']
+					except:
+						pass
+
+					data.append([filename,
+					             estimated_print_time,
+					             average_print_time,
+					             filament_required
+					             ])
 				table = Table(data)
-				message += str(table.table) + "\n"
-		elif output.print_:
+				message += str(table.table)
+		elif parts[0].upper() == "print".upper():
 			pass
-		elif output.cancel:
-			pass
+		elif parts[0].upper() == "cancel".upper():
+			self._plugin.printer.cancel_print()
+			message = ""
+		else:
+			message = "Help:\n" \
+			          "* list - List all files\n" \
+			          "* print [filename] - Print a file\n" \
+			          "* cancel - Cancel a print"
 
 		return message, snapshot
