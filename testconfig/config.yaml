@@ -1,0 +1,28 @@
+accessControl:
+  enabled: false
+api:
+  key: B98B2340FAE64A6B96BDDFC9166E1AF3
+plugins:
+  announcements:
+    _config_version: 1
+  discovery:
+    upnpUuid: 8177d9dc-adfd-481d-b020-594c148a8c96
+  softwareupdate:
+    _config_version: 6
+    check_providers:
+      octorant: octorant
+printerProfiles:
+  default: _default
+server:
+  firstRun: false
+  onlineCheck:
+    enabled: false
+  pluginBlacklist:
+    enabled: false
+  secretKey: BADxdaCrABj1ObYQe1OsBUvmqUsE8rck
+  seenWizards:
+    corewizard: 3
+    cura: null
+devel:
+  virtualPrinter:
+    enabled: true
