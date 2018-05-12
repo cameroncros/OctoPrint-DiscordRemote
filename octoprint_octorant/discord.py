@@ -135,6 +135,7 @@ def send(message, snapshot=None):
 
 		json_data = json.dumps({"content": message})
 		if snapshot:
+			snapshot.seek(0)
 			r = requests.post(postURL,
 			                  headers=headers,
 			                  data={"payload_json": json_data},
