@@ -290,38 +290,8 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 
 		# Get snapshot if asked for
 		snapshot = None
-		snapshotUrl = self._settings.global_get(["webcam","snapshot"])
-		if 	withSnapshot and snapshotUrl is not None and "http" in snapshotUrl :
-			snapshotCall = requests.get(snapshotUrl)
-
-			# Get the settings used for streaming to know if we should transform the snapshot
-			mustFlipH = self._settings.global_get_boolean(["webcam","flipH"])
-			mustFlipV = self._settings.global_get_boolean(["webcam","flipV"])
-			mustRotate = self._settings.global_get_boolean(["webcam","rotate90"])
-
-			# Only do something if we got the snapshot
-			if snapshotCall :
-				snapshot = BytesIO(snapshotCall.content)
-
-				# Only call Pillow if we need to transpose anything
-				if (mustFlipH or mustFlipV or mustRotate):
-					img = Image.open(snapshot)
-
-					self._logger.info("Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
-
-					if mustFlipH:
-						img = img.transpose(Image.FLIP_LEFT_RIGHT)
-
-					if mustFlipV:
-						img = img.transpose(Image.FLIP_TOP_BOTTOM)
-
-					if mustRotate:
-						img = img.transpose(Image.ROTATE_90)
-
-					newImage = BytesIO()
-					img.save(newImage,'png')
-
-					snapshot = newImage
+		if withSnapshot:
+			snapshot = self.get_snapshot()
 
 		# Send to Discord WebHook
 		out = send(message, snapshot)
@@ -330,6 +300,46 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		self.exec_script(eventID, "after")
 
 		return out
+
+	def get_snapshot(self):
+		snapshotUrl = self._settings.global_get(["webcam", "snapshot"])
+		if snapshotUrl is  None or "http" not in snapshotUrl:
+			return None
+
+		snapshotCall = requests.get(snapshotUrl)
+		if not snapshotCall:
+			return None
+
+		snapshot = BytesIO(snapshotCall.content)
+
+		# Get the settings used for streaming to know if we should transform the snapshot
+		mustFlipH = self._settings.global_get_boolean(["webcam", "flipH"])
+		mustFlipV = self._settings.global_get_boolean(["webcam", "flipV"])
+		mustRotate = self._settings.global_get_boolean(["webcam", "rotate90"])
+
+
+		# Only call Pillow if we need to transpose anything
+		if mustFlipH or mustFlipV or mustRotate:
+			img = Image.open(snapshot)
+
+			self._logger.info(
+				"Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
+
+			if mustFlipH:
+				img = img.transpose(Image.FLIP_LEFT_RIGHT)
+
+			if mustFlipV:
+				img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+			if mustRotate:
+				img = img.transpose(Image.ROTATE_90)
+
+			newImage = BytesIO()
+			img.save(newImage, 'png')
+
+			return newImage
+		return snapshot
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
