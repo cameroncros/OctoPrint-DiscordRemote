@@ -179,13 +179,13 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	##~~ EventHandlerPlugin hook
 
 	def on_event(self, event, payload):
-
+		
 		if event == "Startup":
 			return self.notify_event("startup")
-
+		
 		if event == "Shutdown":
 			return self.notify_event("shutdown")
-
+		
 		if event == "PrinterStateChanged":
 			if payload["state_id"] == "OPERATIONAL":
 				return self.notify_event("printer_state_operational")
@@ -193,9 +193,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				return self.notify_event("printer_state_error")
 			elif payload["state_id"] == "UNKNOWN":
 				return self.notify_event("printer_state_unknown")
-
+		
 		if event == "PrintStarted":
-			return self.notify_event("printing_started",payload)
+			return self.notify_event("printing_started",payload)	
 		if event == "PrintPaused":
 			return self.notify_event("printing_paused",payload)
 		if event == "PrintResumed":
@@ -206,7 +206,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		if event == "PrintDone":
 			payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
 			return self.notify_event("printing_done", payload)
-
+	
 		return True
 
 	def on_print_progress(self,location,path,progress):
@@ -222,7 +222,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			self._settings.get(['bottoken'],merged=True),\
 			self._settings.get(['channelid'],merged=True)\
 		)
-
+	
 		if(old_bot_settings != new_bot_settings):
 			self._logger.info("Settings have changed. Send a test message...")
 			# Configure discord
@@ -239,9 +239,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		if(eventID not in self.events):
 			self._logger.error("Tried to notifiy on inexistant eventID : ", eventID)
 			return False
-
+		
 		tmpConfig = self._settings.get(["events", eventID],merged=True)
-
+		
 		if tmpConfig["enabled"] != True:
 			self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
 			return False
@@ -251,7 +251,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 			int(data["progress"]) == 0 \
 			or int(data["progress"]) % int(tmpConfig["step"]) != 0 \
 		) :
-			return False
+			return False			
 
 		return self.send_message(eventID, tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
 
@@ -266,10 +266,10 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		script_to_exec = None
 		if which == "before":
 			script_to_exec = self._settings.get(["script_before"], merged=True)
-
+		
 		elif which == "after":
 			script_to_exec = self._settings.get(["script_after"], merged=True)
-
+		
 		# Finally exec the script
 		out = ""
 		self._logger.info("{}:{} File to start: '{}'".format(eventName, which, script_to_exec))
@@ -287,7 +287,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	def send_message(self, eventID, message, withSnapshot=False):
 		# exec "before" script if any
 		self.exec_script(eventID, "before")
-
+		
 		# Get snapshot if asked for
 		snapshot = None
 		if withSnapshot:
