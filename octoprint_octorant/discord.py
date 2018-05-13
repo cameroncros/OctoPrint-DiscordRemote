@@ -47,9 +47,9 @@ def listener_func():
 	r = requests.get(gatewayURL, headers=headers)
 	socketurl = json.loads(r.content)['url']
 	socket = websocket.WebSocketApp(socketurl,
-				    on_message=on_message,
-				    on_error=on_error,
-				    on_close=on_close)
+					on_message=on_message,
+					on_error=on_error,
+					on_close=on_close)
 	while True:
 		socket.run_forever()
 
@@ -137,14 +137,14 @@ def send(message, snapshot=None):
 		if snapshot:
 			snapshot.seek(0)
 			r = requests.post(postURL,
-			                  headers=headers,
-			                  data={"payload_json": json_data},
-			                  files=[("file", ("snapshot.png", snapshot))])
+					  headers=headers,
+					  data={"payload_json": json_data},
+					  files=[("file", ("snapshot.png", snapshot))])
 		else:
 			r = requests.post(postURL,
-			                  headers=headers,
-			                  data={"payload_json": json_data},
-			                  files=[])
+					  headers=headers,
+					  data={"payload_json": json_data},
+					  files=[])
 		if r:
 			return True
 
