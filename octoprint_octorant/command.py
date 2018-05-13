@@ -1,4 +1,5 @@
 import re
+import time
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 from terminaltables import AsciiTable as Table
@@ -8,11 +9,13 @@ class Command:
 		assert plugin
 		self.plugin = plugin
 		self.command_dict = {
-			'/print':    {'cmd': self.start_print, 'param': True},
-			'/files':    {'cmd': self.list_files},
-			'/abort':    {'cmd': self.cancel_print},
-			'/snapshot': {'cmd': self.snapshot},
-			'/help' :    {'cmd': self.help}
+			'/connect': {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer"},
+			'/disconnect': {'cmd': self.disconnect, 'description': "Disconnect to a printer"},
+			'/print':    {'cmd': self.start_print, 'params': "{filename}", 'description': "print a file"},
+			'/files':    {'cmd': self.list_files, 'description': "List all the files"},
+			'/abort':    {'cmd': self.cancel_print, 'description': "Abort a print"},
+			'/snapshot': {'cmd': self.snapshot, 'description': "Take a snapshot with the camera"},
+			'/help' :    {'cmd': self.help, 'description': "Print this help"}
 		}
 
 	def parse_command(self, string):
@@ -22,16 +25,21 @@ class Command:
 		if command is None:
 			return self.help(), None
 
-		if command.get('param'):
+		if command.get('params'):
 			return command['cmd'](parts)
 		else:
 			return command['cmd']()
 
 	def help(self):
-		message = "Help:\n" \
-				  "* list - List all files\n" \
-				  "* print [filename] - Print a file\n" \
-				  "* cancel - Cancel a print"
+		data = [["Command",
+				 "Params",
+				 "Description"]]
+
+		for command, details in self.command_dict.items():
+			data.append([command, details.get('params') or "", details.get('description')])
+
+		table = Table(data, title="List of commands")
+		message = str(table.table)
 		return message, None
 
 	def cancel_print(self):
@@ -40,13 +48,13 @@ class Command:
 		else:
 			return "Failed to abort print, is there a print running?", None
 
-	def start_print(self, args):
-		if len(args) != 2:
+	def start_print(self, params):
+		if len(params) != 2:
 			return "Wrong number of arguments, try 'print [filename]'", None
 		if not self.plugin._printer.is_ready():
 			return "Printer is not ready", None
 
-		file = self.find_file(args[1])
+		file = self.find_file(params[1])
 		if file is None:\
 			return "Failed to find the file", None
 
@@ -62,7 +70,6 @@ class Command:
 		return "Successfully started print: %s" % file['path'], None
 
 	def list_files(self):
-		message = "The list of files are:\n"
 		file_list = self.get_flat_file_list()
 		data = [["Storage",
 				 "File Path",
@@ -109,9 +116,8 @@ class Command:
 				filament_required
 			])
 
-		table = Table(data)
-		message += str(table.table)
-		return message, None
+		table = Table(data, title="List of files")
+		return  str(table.table), None
 
 	def snapshot(self):
 		return None, self.plugin.get_snapshot()
@@ -144,3 +150,37 @@ class Command:
 				details['location'] = location
 				file_array.append(details)
 
+	def connect(self, params):
+		if len(params) > 3:
+			return "Too many parameters. Should be: /connect [port] [baudrate]", None
+		if  self.plugin._printer.is_operational():
+			return 'Printer already connected. Disconnect first', None
+
+		port = None
+		baudrate = None
+		if len(params) >= 2:
+			port = params[1]
+		if len(params) == 3:
+			try:
+				baudrate = int(params[2])
+			except ValueError:
+				return "Wrong format for baudrate, should be a number", None
+
+		self.plugin._printer.connect(port=port, baudrate=baudrate, profile=None)
+		# Sleep a while before checking if connected
+		time.sleep(10)
+		if not self.plugin._printer.is_operational():
+			return 'Failed to connect, try: "/connect [port] [baudrate]"', None
+
+		return 'Connected to printer', None
+
+	def disconnect(self):
+		if not self.plugin._printer.is_operational():
+			return 'Printer is not connected', None
+		self.plugin._printer.disconnect()
+		# Sleep a while before checking if disconnected
+		time.sleep(10)
+		if self.plugin._printer.is_operational():
+			return 'Failed to disconnect', None
+
+		return 'Disconnected to printer', None

@@ -38,7 +38,7 @@ class TestCommand(TestCase):
 		self._file_manager.list_files.return_value = file_list
 		message, snapshot = self.command.parse_command("/files")
 		self._file_manager.list_files.assert_called_once()
-		self.assertTrue("The list of files are:" in message)
+		self.assertIn("List of files", message)
 		self.assertIsNone(snapshot)
 
 	def test_parse_command_print(self):
@@ -59,8 +59,8 @@ class TestCommand(TestCase):
 		self._printer.is_ready.return_value = True
 		message, snapshot = self.command.parse_command("/print test.gcode")
 		self._printer.is_ready.assert_called_once()
-		self.assertTrue("Successfully started print:" in message)
-		self.assertTrue("test.gcode" in message)
+		self.assertIn("Successfully started print:", message)
+		self.assertIn("test.gcode", message)
 		self.assertIsNone(snapshot)
 
 	def get_snapshot(self):
@@ -95,7 +95,12 @@ class TestCommand(TestCase):
 	def test_parse_command_help(self):
 		# Success: Printed help
 		message, snapshot = self.command.parse_command("/help")
-		self.assertTrue("Help:" in message)
+		self.assertIn("List of commands", message)
+		for command, details in self.command.command_dict.items():
+			self.assertIn(command, message)
+			if details.get('params'):
+				self.assertIn(details.get('params'), message)
+			self.assertIn(details.get('description'), message)
 		self.assertIsNone(snapshot)
 
 	def test_get_flat_file_list(self):
@@ -106,4 +111,55 @@ class TestCommand(TestCase):
 		self.assertEqual(2, len(flat_file_list))
 		self.assertEqual(flatten_file_list, flat_file_list)
 
+	@mock.patch("time.sleep")
+	def test_parse_command_connect(self, mock_sleep):
+		# Fail: Too many parameters
+		message, snapshot = self.command.parse_command("/connect asdf asdf  asdf")
+		self.assertEqual("Too many parameters. Should be: /connect [port] [baudrate]", message)
+		self.assertIsNone(snapshot)
 
+		# Fail: Printer already connected
+		self._printer.is_operational = mock.Mock()
+		self._printer.is_operational.return_value = True
+		message, snapshot = self.command.parse_command("/connect")
+		self.assertEqual('Printer already connected. Disconnect first', message)
+		self.assertIsNone(snapshot)
+		self._printer.is_operational.assert_called_once()
+
+		# Fail: wrong format for baudrate
+		self._printer.is_operational = mock.Mock()
+		self._printer.is_operational.return_value = False
+		message, snapshot = self.command.parse_command("/connect port baudrate")
+		self.assertEqual('Wrong format for baudrate, should be a number', message)
+		self.assertIsNone(snapshot)
+		self._printer.is_operational.assert_called_once()
+
+		# Fail: connect failed.
+		self._printer.is_operational = mock.Mock()
+		self._printer.is_operational.return_value = False
+		self._printer.connect = mock.Mock()
+		message, snapshot = self.command.parse_command("/connect port 1234")
+		self.assertEqual('Failed to connect, try: "/connect [port] [baudrate]"', message)
+		self.assertIsNone(snapshot)
+		self.assertEqual(2, self._printer.is_operational.call_count)
+		self._printer.connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
+
+	@mock.patch("time.sleep")
+	def test_parse_command_disconnect(self, mock_sleep):
+		# Fail: Printer already disconnected
+		self._printer.is_operational = mock.Mock()
+		self._printer.is_operational.return_value = False
+		message, snapshot = self.command.parse_command("/disconnect")
+		self.assertEqual('Printer is not connected', message)
+		self.assertIsNone(snapshot)
+		self._printer.is_operational.assert_called_once()
+
+		# Fail: disconnect failed.
+		self._printer.is_operational = mock.Mock()
+		self._printer.is_operational.return_value = True
+		self._printer.disconnect = mock.Mock()
+		message, snapshot = self.command.parse_command("/disconnect")
+		self.assertEqual('Failed to disconnect', message)
+		self.assertIsNone(snapshot)
+		self.assertEqual(2, self._printer.is_operational.call_count)
+		self._printer.disconnect.assert_called_once_with()
