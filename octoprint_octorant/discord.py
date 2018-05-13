@@ -108,8 +108,11 @@ def on_message(web_socket, message):
 			last_sequence = js['s']
 			if js['t'] == "MESSAGE_CREATE" and js['d']['channel_id'] == channel_id and "bot" not in js['d']['author']:
 				(text, snapshot) = command.parse_command(js['d']['content'])
-				for line in text.split("\n"):
-					send("`%s`" % line, snapshot)
+				if text:
+					for line in text.split("\n"):
+						send("`%s`" % line, None)
+				if snapshot:
+					send(None, snapshot)
 		except:
 			pass
 
