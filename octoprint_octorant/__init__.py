@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import
-from .discord import Hook
+
+from octoprint_octorant.command import Command
+from .discord import configure_discord, start_listener, send
 
 import json
 import octoprint.plugin
@@ -10,6 +12,8 @@ from datetime import timedelta
 from PIL import Image
 from io import BytesIO
 import subprocess
+import os
+
 
 class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 					 octoprint.plugin.StartupPlugin,
@@ -101,18 +105,24 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 				"message" : "Hello hello! If you see this message, it means that the settings are correct!"
 			},
 		}
-		
+		self.command = None
+
 	def on_after_startup(self):
 		self._logger.info("Octorant is started !")
-
+		if self.command is None:
+			self.command = Command(self)
+		# Configure discord
+		configure_discord(self._logger,
+		                  self._settings.get(['bottoken'],merged=True),
+		                  self._settings.get(['channelid'],merged=True),
+		                  self.command)
 
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
 		return {
-			'url': "",
-			'username': "",
-			'avatar': "",
+			'bottoken': "",
+			'channelid': "",
 			'events' : self.events,
 			'allow_scripts': False,
 			'script_before': '',
@@ -122,9 +132,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 	# Restricts some paths to some roles only
 	def get_settings_restricted_paths(self):
 		# settings.events.tests is a false message, so we should never see it as configurable.
-		# settings.url, username and avatar are admin only.
+		# settings.bottoken and channelid are admin only.
 		return dict(never=[["events","test"]],
-					admin=[["url"],["username"],["avatar"],['script_before'],['script_after']])
+		            admin=[["bottoken"],["channelid"],['script_before'],['script_after']])
 
 	##~~ AssetPlugin mixin
 
@@ -203,20 +213,25 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		self.notify_event("printing_progress",{"progress": progress})
 
 	def on_settings_save(self, data):
-		old_bot_settings = '{}{}{}'.format(\
-			self._settings.get(['url'],merged=True),\
-			self._settings.get(['avatar'],merged=True),\
-			self._settings.get(['username'],merged=True)\
+		old_bot_settings = '{}{}'.format(\
+			self._settings.get(['bottoken'],merged=True),\
+			self._settings.get(['channelid'],merged=True)\
 		)
 		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-		new_bot_settings = '{}{}{}'.format(\
-			self._settings.get(['url'],merged=True),\
-			self._settings.get(['avatar'],merged=True),\
-			self._settings.get(['username'],merged=True)\
+		new_bot_settings = '{}{}'.format(\
+			self._settings.get(['bottoken'],merged=True),\
+			self._settings.get(['channelid'],merged=True)\
 		)
 	
 		if(old_bot_settings != new_bot_settings):
 			self._logger.info("Settings have changed. Send a test message...")
+			# Configure discord
+			if self.command is None:
+				self.command = Command(self._printer, self._file_manager)
+			configure_discord(self._logger,
+			                  self._settings.get(['bottoken'],merged=True),
+			                  self._settings.get(['channelid'],merged=True),
+			                  self.command)
 			self.notify_event("test")
 
 
@@ -238,9 +253,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		) :
 			return False			
 
-		return self.send_message(tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
+		return self.send_message(eventID, tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
 
-	def exec_script(self,which=""):
+	def exec_script(self, eventName, which=""):
 
 		# I want to be sure that the scripts are allowed by the special configuration flag
 		scripts_allowed = self._settings.get(["allow_scripts"],merged=True)
@@ -257,79 +272,75 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 		
 		# Finally exec the script
 		out = ""
-		self._logger.info("File to start: '{}'".format(script_to_exec))
+		self._logger.info("{}:{} File to start: '{}'".format(eventName, which, script_to_exec))
 
-		if script_to_exec is not None and len(script_to_exec) > 0:
-			out = subprocess.check_output(script_to_exec)
-		
-		self._logger.info("> Output: '{}'".format(script_to_exec, out))
+		try:
+			if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
+				out = subprocess.check_output(script_to_exec)
+		except (OSError, subprocess.CalledProcessError) as err:
+				out = err
+		finally:
+			self._logger.info("{}:{} > Output: '{}'".format(eventName, which, out))
+			return out
 
-		return out
 
-
-	def send_message(self,message,withSnapshot=False):
-
-		# return false if no URL is provided
-		if "http" not in self._settings.get(["url"],merged=True):
-			return False
-
+	def send_message(self, eventID, message, withSnapshot=False):
 		# exec "before" script if any
-		self.exec_script("before")
+		self.exec_script(eventID, "before")
 		
 		# Get snapshot if asked for
 		snapshot = None
-		snapshotUrl = self._settings.global_get(["webcam","snapshot"])
-		if 	withSnapshot and snapshotUrl is not None and "http" in snapshotUrl :
-			snapshotCall = requests.get(snapshotUrl)
-
-			# Get the settings used for streaming to know if we should transform the snapshot
-			mustFlipH = self._settings.global_get_boolean(["webcam","flipH"])
-			mustFlipV = self._settings.global_get_boolean(["webcam","flipV"])
-			mustRotate = self._settings.global_get_boolean(["webcam","rotate90"])
-
-			# Only do something if we got the snapshot
-			if snapshotCall :
-				snapshotImage = BytesIO(snapshotCall.content)				
-
-				# Only call Pillow if we need to transpose anything
-				if (mustFlipH or mustFlipV or mustRotate): 
-					img = Image.open(snapshotImage)
-
-					self._logger.info("Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
-
-					if mustFlipH:
-						img = img.transpose(Image.FLIP_LEFT_RIGHT)
-					
-					if mustFlipV:
-						img = img.transpose(Image.FLIP_TOP_BOTTOM)
-
-					if mustRotate:
-						img = img.transpose(Image.ROTATE_90)
-
-					newImage = BytesIO()
-					img.save(newImage,'png')			
-
-					snapshotImage = newImage	
-
-
-				snapshot = {'file': ("snapshot.png", snapshotImage.getvalue())}
+		if withSnapshot:
+			snapshot = self.get_snapshot()
 
 		# Send to Discord WebHook
-		discordCall = Hook(
-			self._settings.get(["url"], merged=True),
-			message,
-			self._settings.get(["username"],merged=True),
-			self._settings.get(['avatar'],merged=True),
-			snapshot
-		)		
-
-		out = discordCall.post()
+		out = send(message, snapshot)
 
 		# exec "after" script if any
-		self.exec_script("after")
+		self.exec_script(eventID, "after")
 
 		return out
-		
+
+	def get_snapshot(self):
+		snapshotUrl = self._settings.global_get(["webcam", "snapshot"])
+		if snapshotUrl is  None or "http" not in snapshotUrl:
+			return None
+
+		snapshotCall = requests.get(snapshotUrl)
+		if not snapshotCall:
+			return None
+
+		snapshot = BytesIO(snapshotCall.content)
+
+		# Get the settings used for streaming to know if we should transform the snapshot
+		mustFlipH = self._settings.global_get_boolean(["webcam", "flipH"])
+		mustFlipV = self._settings.global_get_boolean(["webcam", "flipV"])
+		mustRotate = self._settings.global_get_boolean(["webcam", "rotate90"])
+
+
+		# Only call Pillow if we need to transpose anything
+		if mustFlipH or mustFlipV or mustRotate:
+			img = Image.open(snapshot)
+
+			self._logger.info(
+				"Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
+
+			if mustFlipH:
+				img = img.transpose(Image.FLIP_LEFT_RIGHT)
+
+			if mustFlipV:
+				img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+			if mustRotate:
+				img = img.transpose(Image.ROTATE_90)
+
+			newImage = BytesIO()
+			img.save(newImage, 'png')
+
+			return newImage
+		return snapshot
+
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
