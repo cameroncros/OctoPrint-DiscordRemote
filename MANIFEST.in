@@ -1,4 +1,4 @@
 include README.md
-recursive-include octoprint_octorant/templates *
-recursive-include octoprint_octorant/translations *
-recursive-include octoprint_octorant/static *
+recursive-include octoprint_discordremote/templates *
+recursive-include octoprint_discordremote/translations *
+recursive-include octoprint_discordremote/static *

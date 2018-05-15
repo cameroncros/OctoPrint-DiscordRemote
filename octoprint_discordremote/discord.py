@@ -11,7 +11,7 @@ import requests
 import websocket
 import logging
 
-from octoprint_octorant import Command
+from octoprint_discordremote import Command
 
 channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
 bot_token = None  # get from the bot page. must be a bot, not a discord app

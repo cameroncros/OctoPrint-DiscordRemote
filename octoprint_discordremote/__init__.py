@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-from octoprint_octorant.command import Command
+from octoprint_discordremote.command import Command
 from .discord import configure_discord, start_listener, send
 
 import json
@@ -15,7 +15,7 @@ import subprocess
 import os
 
 
-class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
+class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                      octoprint.plugin.StartupPlugin,
                      octoprint.plugin.SettingsPlugin,
                      octoprint.plugin.AssetPlugin,
@@ -108,7 +108,7 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
         self.command = None
 
     def on_after_startup(self):
-        self._logger.info("Octorant is started !")
+        self._logger.info("DiscordRemote is started !")
         if self.command is None:
             self.command = Command(self)
         # Configure discord
@@ -142,9 +142,9 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
         # Define your plugin's asset files to automatically include in the
         # core UI here.
         return dict(
-            js=["js/octorant.js"],
-            css=["css/octorant.css"],
-            less=["less/octorant.less"]
+            js=["js/discordremote.js"],
+            css=["css/discordremote.css"],
+            less=["less/discordremote.less"]
         )
 
 
@@ -161,18 +161,18 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
         # Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
         # for details.
         return dict(
-            octorant=dict(
-                displayName="Octorant Plugin",
+            discordremote=dict(
+                displayName="DiscordRemote Plugin",
                 displayVersion=self._plugin_version,
 
                 # version check: github repository
                 type="github_release",
                 user="bchanudet",
-                repo="OctoPrint-Octorant",
+                repo="OctoPrint-DiscordRemote",
                 current=self._plugin_version,
 
                 # update method: pip
-                pip="https://github.com/bchanudet/OctoPrint-Octorant/archive/{target_version}.zip"
+                pip="https://github.com/bchanudet/OctoPrint-DiscordRemote/archive/{target_version}.zip"
             )
         )
 
@@ -344,11 +344,11 @@ class OctorantPlugin(octoprint.plugin.EventHandlerPlugin,
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "OctoRant"
+__plugin_name__ = "DiscordRemote"
 
 def __plugin_load__():
     global __plugin_implementation__
-    __plugin_implementation__ = OctorantPlugin()
+    __plugin_implementation__ = DiscordRemotePlugin()
 
     global __plugin_hooks__
     __plugin_hooks__ = {
