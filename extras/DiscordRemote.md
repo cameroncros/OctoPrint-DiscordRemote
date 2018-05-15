@@ -10,9 +10,9 @@ license: MIT
 # TODO
 date: 2018-03-11
 
-homepage: https://github.com/cameroncros/OctoPrint-Octorant
-source: https://github.com/cameroncros/OctoPrint-Octorant
-archive: https://github.com/cameroncros/OctoPrint-Octorant/archive/master.zip
+homepage: https://github.com/cameroncros/Octoprint-DiscordRemote
+source: https://github.com/cameroncros/Octoprint-DiscordRemote
+archive: https://github.com/cameroncros/Octoprint-DiscordRemote/archive/master.zip
 
 # tags
 tags:

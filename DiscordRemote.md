@@ -10,9 +10,9 @@ license: MIT
 # TODO
 date: 2017-09-03
 
-homepage: https://github.com/cameroncros/OctoPrint-OctoRant
-source: https://github.com/cameroncros/OctoPrint-OctoRant
-archive: https://github.com/cameroncros/OctoPrint-OctoRant/archive/master.zip
+homepage: https://github.com/cameroncros/Octoprint-DiscordRemote
+source: https://github.com/cameroncros/OctoPrint-DiscordRemote
+archive: https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/master.zip
 
 # TODO
 # Set this to true if your plugin uses the dependency_links setup parameter to include

@@ -7,8 +7,7 @@ License : MIT
 
 ## Changelog
 
-This is forked from https://github.com/cameroncros/OctoPrint-Octorant/releases/1.2.0
-See [the release history](https://github.com/cameroncros/OctoPrint-Octorant/releases) to get a quick summary of what's new in the latest versions.
+See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
 
 ## Setup
 
@@ -17,10 +16,10 @@ See [the release history](https://github.com/cameroncros/OctoPrint-Octorant/rele
 Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
 or manually using this URL:
 
-    https://github.com/cameroncros/OctoPrint-Octorant/archive/master.zip
+    https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/master.zip
 
 ### Create the Discord Bot  in Discord
-
+TODO: XXX
 
 ## Configuration
 
@@ -100,4 +99,4 @@ For more reference, you can go to the [Octoprint documentation on Events](http:/
 
 ## Issues and Help
 
-If you encounter any trouble don't hesitate to [open an issue](https://github.com/cameroncros/OctoPrint-Octorant/issues/new). I'll gladly do my best to help you setup this plugin.
+If you encounter any trouble don't hesitate to [open an issue](https://github.com/cameroncros/OctoPrint-DiscordRemote/issues/new). I'll gladly do my best to help you setup this plugin.
