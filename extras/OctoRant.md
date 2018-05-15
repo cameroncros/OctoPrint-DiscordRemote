@@ -1,18 +1,18 @@
 ---
 layout: plugin
 
-id: octorant
-title: OctoPrint-Octorant
-description: Discord plugin for OctoPrint
-author: Benjamin Chanudet
+id: discordremote
+title: OctoPrint-DiscordRemote
+description: Discord bot for OctoPrint
+author: Cameron Cross, Benjamin Chanudet
 license: MIT
 
 # TODO
 date: 2018-03-11
 
-homepage: https://github.com/bchanudet/OctoPrint-Octorant
-source: https://github.com/bchanudet/OctoPrint-Octorant
-archive: https://github.com/bchanudet/OctoPrint-Octorant/archive/master.zip
+homepage: https://github.com/cameroncros/OctoPrint-Octorant
+source: https://github.com/cameroncros/OctoPrint-Octorant
+archive: https://github.com/cameroncros/OctoPrint-Octorant/archive/master.zip
 
 # tags
 tags:
@@ -22,17 +22,17 @@ tags:
 
 # screenshots
 screenshots:
-- url: /assets/img/octorant/featured.jpg
+- url: /assets/img/discordremote/featured.jpg
   alt: Receive octoprint's events on your Discord channel
   caption: Receive octoprint's events on your Discord channel
-- url: /assets/img/octorant/settings.jpg
+- url: /assets/img/discordremote/settings.jpg
   alt: Customize the text Octorant sends to your channel
   caption: Customize the text Octorant sends to your channel
 
 # Featured image
-featuredimage: /assets/img/octorant/featured.jpg
+featuredimage: /assets/img/discordremote/featured.jpg
 
 ---
 
 **TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/octorant/
+http://plugins.octoprint.org/plugin/discordremote/
