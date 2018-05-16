@@ -10,7 +10,7 @@ plugins:
   softwareupdate:
     _config_version: 6
     check_providers:
-      octorant: octorant
+      discordremote: discordremote
 printerProfiles:
   default: _default
 server:

@@ -14,8 +14,8 @@ class TestSend(TestCase):
             with open(config_file, "r") as config:
                 config = yaml.load(config.read())
             configure_discord(logging,
-                              p_bot_token=config['bot_token'],
-                              p_channel_id=config['channel_id'],
+                              p_bot_token=config['bottoken'],
+                              p_channel_id=config['channelid'],
                               p_command=None)
             time.sleep(5)
         except:
