@@ -1,8 +1,8 @@
 ---
 layout: plugin
 
-id: octorant
-title: OctoPrint-Octorant
+id: discordremote
+title: OctoPrint-DiscordRemote
 description: Discord plugin for OctoPrint
 author: Benjamin Chanudet
 license: MIT
@@ -10,9 +10,9 @@ license: MIT
 # TODO
 date: 2017-09-03
 
-homepage: https://github.com/bchanudet/OctoPrint-Octorant
-source: https://github.com/bchanudet/OctoPrint-Octorant
-archive: https://github.com/bchanudet/OctoPrint-Octorant/archive/master.zip
+homepage: https://github.com/cameroncros/Octoprint-DiscordRemote
+source: https://github.com/cameroncros/OctoPrint-DiscordRemote
+archive: https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/master.zip
 
 # TODO
 # Set this to true if your plugin uses the dependency_links setup parameter to include

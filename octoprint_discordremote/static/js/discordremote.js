@@ -1,11 +1,11 @@
 /*
- * View model for OctoPrint-Octorant
+ * View model for OctoPrint-DiscordRemote
  *
  * Author: Benjamin Chanudet
  * License: MIT
  */
 $(function() {
-    function OctorantViewModel(parameters) {
+    function DiscordRemoteViewModel(parameters) {
         var self = this;
 
         // assign the injected parameters, e.g.:
@@ -17,12 +17,12 @@ $(function() {
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
-        OctorantViewModel,
+        DiscordRemoteViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
         [ "loginStateViewModel", "settingsViewModel" ],
 
-        // e.g. #settings_plugin_octorant, #tab_plugin_octorant, ...
+        // e.g. #settings_plugin_discordremote, #tab_plugin_octorant, ...
         [ /* ... */ ]
     ]);
 });
