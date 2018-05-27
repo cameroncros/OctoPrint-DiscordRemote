@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import socket
+from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
 from .discord import configure_discord, start_listener, send
@@ -319,8 +320,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if snapshotUrl is  None or "http" not in snapshotUrl:
             return None
 
-        snapshotCall = requests.get(snapshotUrl)
-        if not snapshotCall:
+        try:
+            snapshotCall = requests.get(snapshotUrl)
+            if not snapshotCall:
+                return None
+        except ConnectionError:
             return None
 
         snapshot = BytesIO(snapshotCall.content)
