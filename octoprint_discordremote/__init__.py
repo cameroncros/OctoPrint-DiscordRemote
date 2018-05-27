@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import socket
+
 from octoprint_discordremote.command import Command
 from .discord import configure_discord, start_listener, send
 
@@ -245,6 +247,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if tmpConfig["enabled"] != True:
             self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
             return False
+
+        # Store IP address for message
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            data['ipaddr'] = s.getsockname()[0]
+        except:
+            data['ipaddr'] = '127.0.0.1'
+        finally:
+            s.close()
 
         # Special case for progress eventID : we check for progress and stepss
         if eventID == 'printing_progress' and (\
