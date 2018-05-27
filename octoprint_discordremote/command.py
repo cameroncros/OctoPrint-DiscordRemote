@@ -4,6 +4,8 @@ import time
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 from terminaltables import AsciiTable as Table
 
+from command_plugins import plugin_list
+
 
 class Command:
     def __init__(self, plugin):
@@ -18,6 +20,10 @@ class Command:
             '/snapshot': {'cmd': self.snapshot, 'description': "Take a snapshot with the camera"},
             '/help' :    {'cmd': self.help, 'description': "Print this help"}
         }
+
+        # Load plugins
+        for command_plugin in plugin_list:
+            command_plugin.setup(self, plugin)
 
     def parse_command(self, string):
         parts = re.split('\s+', string)
