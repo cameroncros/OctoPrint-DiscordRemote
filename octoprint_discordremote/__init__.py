@@ -317,17 +317,21 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_snapshot(self):
         snapshotUrl = self._settings.global_get(["webcam", "snapshot"])
-        if snapshotUrl is  None or "http" not in snapshotUrl:
+        if snapshotUrl is None:
             return None
-
-        try:
-            snapshotCall = requests.get(snapshotUrl)
-            if not snapshotCall:
+        if "http" in snapshotUrl:
+            try:
+                snapshotCall = requests.get(snapshotUrl)
+                if not snapshotCall:
+                    return None
+                snapshot = BytesIO(snapshotCall.content)
+            except ConnectionError:
                 return None
-        except ConnectionError:
-            return None
+        if snapshotUrl.startswith("file://"):
+            snapshot = open(snapshotUrl.partition('file://')[2], "r")
 
-        snapshot = BytesIO(snapshotCall.content)
+        if snapshot is None:
+            return None
 
         # Get the settings used for streaming to know if we should transform the snapshot
         mustFlipH = self._settings.global_get_boolean(["webcam", "flipH"])

@@ -28,6 +28,7 @@ flatten_file_list = [{'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'locat
 class TestCommand(TestCase):
     _file_manager = mock.Mock()
     _printer = mock.Mock()
+    _plugin_manager = mock.Mock()
 
     def setUp(self):
         self.command = Command(self)

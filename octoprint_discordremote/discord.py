@@ -72,6 +72,17 @@ def heartbeat():
         logger.info("Heartbeat: %s" % js)
 
 
+def split_text(text):
+    parts = text.split('\n')
+    chunks = [""]
+    for part in parts:
+        if len(chunks[-1]) + len(part) < 1998:
+            chunks[-1] = "%s\n%s" % (chunks[-1], part)
+        else:
+            chunks.append(part)
+    return chunks
+
+
 def on_message(web_socket, message):
     global bot_token, heartbeat_interval, heartbeat_thread, last_sequence, channel_id, running, command
 
@@ -109,8 +120,8 @@ def on_message(web_socket, message):
             if js['t'] == "MESSAGE_CREATE" and js['d']['channel_id'] == channel_id and "bot" not in js['d']['author']:
                 (text, snapshot) = command.parse_command(js['d']['content'])
                 if text:
-                    for line in text.split("\n"):
-                        send("`%s`" % line, None)
+                    for chunk in split_text(text):
+                        send("`%s`" % chunk, None)
                 send(None, snapshot)
         except:
             pass
