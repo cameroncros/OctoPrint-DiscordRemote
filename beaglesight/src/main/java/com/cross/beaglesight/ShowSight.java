@@ -29,6 +29,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     EditText distance;
     EditText position;
 
+    private String id;
     private BowConfig bowConfig;
     private PositionCalculator positionCalculator;
     private ActionMode actionMode;
@@ -70,7 +71,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
             setSupportActionBar(toolbar);
 
             Intent intent = getIntent();
-            String id = (String) intent.getSerializableExtra(CONFIG_TAG);
+            id = (String) intent.getSerializableExtra(CONFIG_TAG);
             bowConfig = BowManager.getInstance(this).getBowConfig(id);
 
             final Intent addDistance = new Intent(this, AddDistance.class);
@@ -85,13 +86,9 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
             });
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-            sightGraph = findViewById(R.id.sightGraph);
-            sightGraph.setBowConfig(bowConfig);
-            sightGraph.setUpdateDistanceCallback(this);
-            sightGraph.invalidate();
-
             positionCalculator = bowConfig.getPositionCalculator();
 
+            sightGraph = findViewById(R.id.sightGraph);
             distance = findViewById(R.id.distanceText);
             position = findViewById(R.id.positionText);
             distance.addTextChangedListener(distanceListener);
@@ -104,21 +101,45 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     }
 
     @Override
+    protected void onResume()
+    {
+        try
+        {
+            bowConfig = BowManager.getInstance(this).getBowConfig(id);
+            sightGraph.setBowConfig(bowConfig);
+            sightGraph.setUpdateDistanceCallback(this);
+            sightGraph.invalidate();
+        }
+        catch (InvalidBowConfigIdException e)
+        {
+            Toast.makeText(this, R.string.failed_find_bow_settings, Toast.LENGTH_LONG).show();
+            finish();
+        }
+        super.onResume();
+    }
+
+    @Override
     public void updateDistance(float distance) {
         this.distance.setText(PositionCalculator.getDisplayValue(distance, 0));
     }
 
     @Override
-    public void setSelected(PositionPair selectedPair) {
-        if (selectedPair == null && actionMode != null)
-        {
-            actionMode.finish();
-            return;
+    public void setSelected(PositionPair newSelectedPair) {
+        // If nothing is selected, end the context menu.
+        if (actionMode != null) {
+            if (newSelectedPair == null) {
+                actionMode.getMenu().findItem(R.id.delete_position).setEnabled(false);
+            } else {
+                actionMode.getMenu().findItem(R.id.delete_position).setEnabled(true);
+            }
         }
-        if (this.selectedPair == null) {
-            actionMode = startActionMode(selectedActionMode);
-        }
-        this.selectedPair = selectedPair;
+        this.selectedPair = newSelectedPair;
+    }
+
+    @Override
+    public void startDelete()
+    {
+        actionMode = startActionMode(selectedActionMode);
     }
 
     private ActionMode.Callback selectedActionMode = new ActionMode.Callback() {

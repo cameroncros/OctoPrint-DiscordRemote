@@ -19,4 +19,6 @@
     <string name="add">Add</string>
     <string name="failed_find_bow_settings">Failed to find bow settings</string>
     <string name="delete_position">Delete Position</string>
+    <string name="delete">Delete</string>
+    <string name="export">Export</string>
 </resources>

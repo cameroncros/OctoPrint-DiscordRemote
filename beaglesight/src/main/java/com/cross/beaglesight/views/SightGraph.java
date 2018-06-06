@@ -4,19 +4,15 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.Paint;
-import android.support.v4.view.GestureDetectorCompat;
-import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesight.R;
-import com.cross.beaglesightlibs.PositionPair;
+import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.PositionCalculator;
+import com.cross.beaglesightlibs.PositionPair;
 import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 import java.util.HashMap;
@@ -27,7 +23,7 @@ import java.util.Set;
 /**
  * TODO: document your custom view class.
  */
-public class SightGraph extends View {
+public class SightGraph extends View implements LongPressCustomView {
 
     private Paint linePaint;
     private Paint pointPaint;
@@ -59,6 +55,8 @@ public class SightGraph extends View {
     private SightGraphCallback updateCallback;
     private float lineWidth;
     private float touchRadius;
+
+    private LongPressCustomViewListener longTouchEventListener;
 
     public SightGraph(Context context) {
         super(context);
@@ -148,6 +146,9 @@ public class SightGraph extends View {
         if (!isInEditMode() && a != null) {
             a.recycle();
         }
+
+        touchRadius = 20 * lineWidth;
+        longTouchEventListener = new LongPressCustomViewListener(this, touchRadius);
     }
 
     public static int manipulateColor(int color, float factor) {
@@ -177,16 +178,6 @@ public class SightGraph extends View {
         contentWidthEnd = canvasWidth + paddingLeft;
         contentHeightStart = paddingTop;
         contentHeightEnd = canvasHeight + paddingTop;
-
-        // Touch radius
-        if (canvasWidth > canvasHeight)
-        {
-            touchRadius = canvasHeight*0.2f * canvasHeight*0.2f ;
-        }
-        else
-        {
-            touchRadius = canvasWidth*0.2f * canvasWidth*0.2f;
-        }
 
         // Precalculate dot locations
         precalcDotLocations();
@@ -326,69 +317,60 @@ public class SightGraph extends View {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public void onLongTouchEvent(MotionEvent event)
+    {
+        updateOnTouch(event);
 
+        if (selectedPairPixel != null) {
+            updateCallback.startDelete();
+        }
+    }
+
+    private void updateSelectedPair(MotionEvent event) {
+        float xPixel = event.getX();
+        float yPixel = event.getY();
+
+        selectedPairPixel = null;
+
+        Set<PositionPair> pixelPairs = positionPairMap.keySet();
+        float closestDist = Float.MAX_VALUE;
+        for (PositionPair pair : pixelPairs) {
+            float xdist = pair.getDistanceFloat() - xPixel;
+            float ydist = pair.getPositionFloat() - yPixel;
+            float dist = Math.abs(xdist) + Math.abs(ydist);
+            if (dist < (2 * touchRadius) && dist < closestDist) {
+                selectedPairPixel = pair;
+                closestDist = dist;
+            }
+        }
+        this.invalidate();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                updateOnTouch(event);
-                break;
             case MotionEvent.ACTION_MOVE:
                 updateOnTouch(event);
                 break;
-            case MotionEvent.ACTION_UP:
-                performClick();
-                setPressed(false);
-                this.getParent().requestDisallowInterceptTouchEvent(false);
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                setPressed(false);
-                this.getParent().requestDisallowInterceptTouchEvent(false);
-                break;
         }
+
+        longTouchEventListener.updateOnTouch(event);
         return true;
     }
 
     private void updateOnTouch(MotionEvent event) {
         float xPixel = event.getX();
-        float yPixel = event.getY();
 
+        updateSelectedPair(event);
         selectedDistance = pixelToDistance(xPixel);
 
         if (updateCallback != null)
         {
             updateCallback.updateDistance(selectedDistance);
-        }
 
-        Set<PositionPair> pixelPairs = positionPairMap.keySet();
-        float closestDist = Float.MAX_VALUE;
-        PositionPair closestPixel = null;
-        for (PositionPair pair : pixelPairs)
-        {
-            float xdist = pair.getDistanceFloat()-xPixel;
-            float ydist = pair.getPositionFloat()-yPixel;
-            float dist = xdist*xdist + ydist*ydist;
-            if (dist < closestDist)
-            {
-                closestPixel = pair;
-                closestDist = dist;
-            }
-        }
-
-        if (closestDist < touchRadius)
-        {
-            selectedPairPixel = closestPixel;
-            if (updateCallback != null)
-            {
-                updateCallback.setSelected(positionPairMap.get(selectedPairPixel));
-            }
-        }
-        else
-        {
-            if (selectedPairPixel != null)
-            {
-                updateCallback.setSelected(null);
-            }
-            selectedPairPixel = null;
+            PositionPair pairPosition = positionPairMap.get(selectedPairPixel);
+            updateCallback.setSelected(pairPosition);
         }
     }
 
@@ -403,17 +385,10 @@ public class SightGraph extends View {
         this.updateCallback = updateCallback;
     }
 
-
-
-    @Override
-    public boolean performClick() {
-        return super.performClick();
-    }
-
-
     public interface SightGraphCallback
     {
         void updateDistance(float distance);
         void setSelected(PositionPair selectedPair);
+        void startDelete();
     }
 }
