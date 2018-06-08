@@ -19,7 +19,9 @@ class Command:
             '/abort': {'cmd': self.cancel_print, 'description': "Abort a print"},
             '/snapshot': {'cmd': self.snapshot, 'description': "Take a snapshot with the camera"},
             '/status': {'cmd': self.status, 'description': "Get the current status of the printer"},
-            '/help': {'cmd': self.help, 'description': "Print this help"}
+            '/help': {'cmd': self.help, 'description': "Print this help"},
+            '/pause': {'cmd': self.pause, 'description': "Pause current print"},
+            '/resume': {'cmd': self.resume, 'description': "Resume current print"},
         }
 
         # Load plugins
@@ -197,15 +199,19 @@ class Command:
 
         operational = self.plugin._printer.is_operational()
         data.append(['Operational', 'Yes' if operational else 'No'])
+        current_data = self.plugin._printer.get_current_data()
+
+        if current_data.get('currentZ'):
+            data.append(['Current Z', current_data['currentZ']])
         if operational:
-            printing = self.plugin._printer.is_printing()
-            current_data = self.plugin._printer.get_current_data()
             temperatures = self.plugin._printer.get_current_temperatures()
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
                 data.append(['Extruder Temp (%s)' % heater, temperatures[heater]['actual']])
             data.append(['Bed Temp', temperatures['bed']['actual']])
+
+            printing = self.plugin._printer.is_printing()
             data.append(['Printing', 'Yes' if printing else 'No'])
             if printing:
                 data.append(['File', current_data['job']['file']['name']])
@@ -215,3 +221,11 @@ class Command:
 
         table = Table(data, title="Printer Status")
         return str(table.table), self.plugin.get_snapshot()
+
+    def pause(self):
+        self.plugin._printer.pause_print()
+        return "Print paused", self.plugin.get_snapshot()
+
+    def resume(self):
+        self.plugin._printer.resume_print()
+        return "Print resumed", self.plugin.get_snapshot()
