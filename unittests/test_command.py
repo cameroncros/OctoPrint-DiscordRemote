@@ -4,16 +4,18 @@ import mock
 
 from octoprint_discordremote import Command
 
-file_list = {'local': {u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530L, 	'type': 'folder',	'typePath': ['folder'], 'display': u'folder1',
-    'children': {
-        u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
-                        'typePath': ['machinecode', 'gcode'], 'analysis': {
-                'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None,
-                                 'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
-                'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822075,
-                        'path': u'folder1/test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
-                        'size': 6530L}
-    }},
+file_list = {'local': {
+    u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530L, 'type': 'folder', 'typePath': ['folder'],
+                 'display': u'folder1',
+                 'children': {
+                     u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
+                                     'typePath': ['machinecode', 'gcode'], 'analysis': {
+                             'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None,
+                                              'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
+                             'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822075,
+                                     'path': u'folder1/test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
+                                     'size': 6530L}
+                 }},
     u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
                     'typePath': ['machinecode', 'gcode'], 'analysis': {
             'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None,
@@ -22,8 +24,18 @@ file_list = {'local': {u'folder1': {'name': u'folder1', 'path': u'folder1', 'siz
                     'path': u'test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
                     'size': 6530L}}}
 
-flatten_file_list = [{'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822075, 'path': u'folder1/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'], 'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0}, 'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'},
-                                 {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822021, 'path': u'/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'], 'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0}, 'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
+flatten_file_list = [
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822075,
+     'path': u'folder1/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
+                  'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
+                  'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'},
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822021,
+     'path': u'/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
+                  'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
+                  'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
+
 
 class TestCommand(TestCase):
     _file_manager = mock.Mock()
@@ -50,10 +62,10 @@ class TestCommand(TestCase):
         self._printer.is_ready.assert_called_once()
         self.assertEqual("Printer is not ready", message)
         self.assertIsNone(snapshot)
-        #TODO
+        # TODO
 
         # Success: Printer ready
-        #TODO: Mock and validate the print started
+        # TODO: Mock and validate the print started
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = flatten_file_list
         self._printer.is_ready = mock.Mock()
@@ -70,7 +82,7 @@ class TestCommand(TestCase):
 
     def test_parse_command_snapshot(self):
         # Fail: Camera not working.
-        #TODO
+        # TODO
 
         # Success: Camera serving images
         TestCommand.get_snapshot = mock.Mock()
@@ -85,10 +97,10 @@ class TestCommand(TestCase):
 
     def test_parse_command_abort(self):
         # Fail: No print running
-        #TODO
+        # TODO
 
         # Success: Print aborted
-        #TODO mock and validate
+        # TODO mock and validate
         message, snapshot = self.command.parse_command("/abort")
         self.assertEqual("Print aborted", message)
         self.assertIsNone(snapshot)
@@ -164,3 +176,60 @@ class TestCommand(TestCase):
         self.assertIsNone(snapshot)
         self.assertEqual(2, self._printer.is_operational.call_count)
         self._printer.disconnect.assert_called_once_with()
+
+    def test_parse_command_status(self):
+        self._printer.is_operational = mock.Mock()
+        self._printer.is_operational.return_value = True
+
+        self._printer.is_printing = mock.Mock()
+        self._printer.is_printing.return_value = True
+
+        self._printer.get_current_data = mock.Mock()
+        self._printer.get_current_data.return_value = {
+            'currentZ': 10,
+            'job': {'file': {'name': 'filename'}},
+            'progress': {
+                'completion': 15,
+                'printTime': 300,
+                'printTimeLeft': 500
+            }
+        }
+
+        self._printer.get_current_temperatures = mock.Mock()
+        self._printer.get_current_temperatures.return_value = {
+            'bed': {'actual': 100},
+            'extruder0': {'actual': 250},
+            'extruder1': {'actual': 350}
+        }
+
+        self.get_snapshot = mock.Mock()
+        self.get_snapshot.return_value = mock.Mock()
+        message, snapshot = self.command.parse_command('/status')
+        self.get_snapshot.assert_called_once()
+        self.assertEqual(self.get_snapshot.return_value, snapshot)
+
+        expected_terms = ['Status', 'Value', 'Operational', 'Current Z',
+                          'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
+                          'Time Spent', 'Time Remaining', 'Printer Status']
+        for term in expected_terms:
+            self.assertIn(term, message)
+
+    def test_parse_command_pause(self):
+        self.get_snapshot = mock.Mock()
+        self.get_snapshot.return_value = mock.Mock()
+        self._printer.pause_print = mock.Mock()
+        message, snapshot = self.command.parse_command("/pause")
+        self.assertEqual("Print paused", message)
+        self.get_snapshot.assert_called_once()
+        self.assertEqual(self.get_snapshot.return_value, snapshot)
+        self._printer.pause_print.assert_called_once()
+
+    def test_parse_command_resume(self):
+        self.get_snapshot = mock.Mock()
+        self.get_snapshot.return_value = mock.Mock()
+        self._printer.resume_print = mock.Mock()
+        message, snapshot = self.command.parse_command("/resume")
+        self.assertEqual("Print resumed", message)
+        self.get_snapshot.assert_called_once()
+        self.assertEqual(self.get_snapshot.return_value, snapshot)
+        self._printer.resume_print.assert_called_once()
