@@ -14,11 +14,14 @@ class Command:
         self.command_dict = {
             '/connect': {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer"},
             '/disconnect': {'cmd': self.disconnect, 'description': "Disconnect to a printer"},
-            '/print':    {'cmd': self.start_print, 'params': "{filename}", 'description': "print a file"},
-            '/files':    {'cmd': self.list_files, 'description': "List all the files"},
-            '/abort':    {'cmd': self.cancel_print, 'description': "Abort a print"},
+            '/print': {'cmd': self.start_print, 'params': "{filename}", 'description': "print a file"},
+            '/files': {'cmd': self.list_files, 'description': "List all the files"},
+            '/abort': {'cmd': self.cancel_print, 'description': "Abort a print"},
             '/snapshot': {'cmd': self.snapshot, 'description': "Take a snapshot with the camera"},
-            '/help' :    {'cmd': self.help, 'description': "Print this help"}
+            '/status': {'cmd': self.status, 'description': "Get the current status of the printer"},
+            '/help': {'cmd': self.help, 'description': "Print this help"},
+            '/pause': {'cmd': self.pause, 'description': "Pause current print"},
+            '/resume': {'cmd': self.resume, 'description': "Resume current print"},
         }
 
         # Load plugins
@@ -80,7 +83,7 @@ class Command:
         file_list = self.get_flat_file_list()
         data = [["Storage",
                  "File Path",
-                 "Extimated Print Time",
+                 "Estimated Print Time",
                  "Average Print Time",
                  "Filament Required"]]
         for details in file_list:
@@ -136,7 +139,6 @@ class Command:
                 return file
         return None
 
-
     def get_flat_file_list(self):
         file_list = self.plugin._file_manager.list_files(recursive=True)
         flat_filelist = []
@@ -191,3 +193,39 @@ class Command:
             return 'Failed to disconnect', None
 
         return 'Disconnected to printer', None
+
+    def status(self):
+        data = [['Status', 'Value']]
+
+        operational = self.plugin._printer.is_operational()
+        data.append(['Operational', 'Yes' if operational else 'No'])
+        current_data = self.plugin._printer.get_current_data()
+
+        if current_data.get('currentZ'):
+            data.append(['Current Z', current_data['currentZ']])
+        if operational:
+            temperatures = self.plugin._printer.get_current_temperatures()
+            for heater in temperatures.keys():
+                if heater == 'bed':
+                    continue
+                data.append(['Extruder Temp (%s)' % heater, temperatures[heater]['actual']])
+            data.append(['Bed Temp', temperatures['bed']['actual']])
+
+            printing = self.plugin._printer.is_printing()
+            data.append(['Printing', 'Yes' if printing else 'No'])
+            if printing:
+                data.append(['File', current_data['job']['file']['name']])
+                data.append(['Progress', "%d" % current_data['progress']['completion']])
+                data.append(['Time Spent', "%d" % current_data['progress']['printTime']])
+                data.append(['Time Remaining', "%d" % current_data['progress']['printTimeLeft']])
+
+        table = Table(data, title="Printer Status")
+        return str(table.table), self.plugin.get_snapshot()
+
+    def pause(self):
+        self.plugin._printer.pause_print()
+        return "Print paused", self.plugin.get_snapshot()
+
+    def resume(self):
+        self.plugin._printer.resume_print()
+        return "Print resumed", self.plugin.get_snapshot()

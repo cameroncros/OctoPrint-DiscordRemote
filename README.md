@@ -19,7 +19,14 @@ or manually using this URL:
     https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/master.zip
 
 ### Create the Discord Bot  in Discord
-TODO: XXX
+
+See the following link for instructions on how to setup a Discord bot and get the Channel ID:
+
+    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
+    
+## Commands
+
+To get a list of available commands and arguments, type ``/help`` into the discord channel. The bot will return all available commands.
 
 ## Configuration
 
