@@ -1,111 +1,111 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+from datetime import timedelta
+
+import octoprint.plugin
+import octoprint.settings
+import os
+import requests
 import socket
+import subprocess
+from PIL import Image
+from io import BytesIO
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from .discord import configure_discord, start_listener, send
-
-import json
-import octoprint.plugin
-import octoprint.settings
-import requests
-from datetime import timedelta
-from PIL import Image
-from io import BytesIO
-import subprocess
-import os
+from .discord import Discord
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
-                     octoprint.plugin.StartupPlugin,
-                     octoprint.plugin.SettingsPlugin,
-                     octoprint.plugin.AssetPlugin,
-                     octoprint.plugin.TemplatePlugin,
-                     octoprint.plugin.ProgressPlugin):
+                          octoprint.plugin.StartupPlugin,
+                          octoprint.plugin.SettingsPlugin,
+                          octoprint.plugin.AssetPlugin,
+                          octoprint.plugin.TemplatePlugin,
+                          octoprint.plugin.ProgressPlugin):
+    discord = None
 
     def __init__(self):
         # Events definition here (better for intellisense in IDE)
         # referenced in the settings too.
         self.events = {
-            "startup" : {
-                "name" : "Octoprint Startup",
-                "enabled" : True,
+            "startup": {
+                "name": "Octoprint Startup",
+                "enabled": True,
                 "with_snapshot": False,
-                "message" : "⏰ I just woke up! What are we gonna print today?"
+                "message": "⏰ I just woke up! What are we gonna print today?"
             },
-            "shutdown" : {
-                "name" : "Octoprint Shutdown",
-                "enabled" : True,
+            "shutdown": {
+                "name": "Octoprint Shutdown",
+                "enabled": True,
                 "with_snapshot": False,
-                "message" : "💤 Going to bed now!"
+                "message": "💤 Going to bed now!"
             },
-            "printer_state_operational":{
-                "name" : "Printer state : operational",
-                "enabled" : True,
+            "printer_state_operational": {
+                "name": "Printer state : operational",
+                "enabled": True,
                 "with_snapshot": False,
-                "message" : "✅ Your printer is operational."
+                "message": "✅ Your printer is operational."
             },
-            "printer_state_error":{
-                "name" : "Printer state : error",
-                "enabled" : True,
+            "printer_state_error": {
+                "name": "Printer state : error",
+                "enabled": True,
                 "with_snapshot": False,
-                "message" : "⚠️ Your printer is in an erroneous state."
+                "message": "⚠️ Your printer is in an erroneous state."
             },
-            "printer_state_unknown":{
-                "name" : "Printer state : unknown",
-                "enabled" : True,
+            "printer_state_unknown": {
+                "name": "Printer state : unknown",
+                "enabled": True,
                 "with_snapshot": False,
-                "message" : "❔ Your printer is in an unknown state."
+                "message": "❔ Your printer is in an unknown state."
             },
-            "printing_started":{
-                "name" : "Printing process : started",
-                "enabled" : True,
+            "printing_started": {
+                "name": "Printing process : started",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "🖨️ I've started printing {file}"
+                "message": "🖨️ I've started printing {file}"
             },
-            "printing_paused":{
-                "name" : "Printing process : paused",
-                "enabled" : True,
+            "printing_paused": {
+                "name": "Printing process : paused",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "⏸️ The printing was paused."
+                "message": "⏸️ The printing was paused."
             },
-            "printing_resumed":{
-                "name" : "Printing process : resumed",
-                "enabled" : True,
+            "printing_resumed": {
+                "name": "Printing process : resumed",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "▶️ The printing was resumed."
+                "message": "▶️ The printing was resumed."
             },
-            "printing_cancelled":{
-                "name" : "Printing process : cancelled",
-                "enabled" : True,
+            "printing_cancelled": {
+                "name": "Printing process : cancelled",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "🛑 The printing was stopped."
+                "message": "🛑 The printing was stopped."
             },
-            "printing_done":{
-                "name" : "Printing process : done",
-                "enabled" : True,
+            "printing_done": {
+                "name": "Printing process : done",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "👍 Printing is done! Took about {time_formatted}"
+                "message": "👍 Printing is done! Took about {time_formatted}"
             },
-            "printing_failed":{
-                "name" : "Printing process : failed",
-                "enabled" : True,
+            "printing_failed": {
+                "name": "Printing process : failed",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "👎 Printing has failed! :("
+                "message": "👎 Printing has failed! :("
             },
-            "printing_progress":{
-                "name" : "Printing progress",
-                "enabled" : True,
+            "printing_progress": {
+                "name": "Printing progress",
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "📢 Printing is at {progress}%",
-                "step" : 10
+                "message": "📢 Printing is at {progress}%",
+                "step": 10
             },
-            "test":{ # Not a real message, but we will treat it as one
-                "enabled" : True,
+            "test": {  # Not a real message, but we will treat it as one
+                "enabled": True,
                 "with_snapshot": True,
-                "message" : "Hello hello! If you see this message, it means that the settings are correct!"
+                "message": "Hello hello! If you see this message, it means that the settings are correct!"
             },
         }
         self.command = None
@@ -115,10 +115,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.command is None:
             self.command = Command(self)
         # Configure discord
-        configure_discord(self._logger,
-                          self._settings.get(['bottoken'],merged=True),
-                          self._settings.get(['channelid'],merged=True),
-                          self.command)
+        if self.discord is None:
+            self.discord = Discord()
+        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                       self._settings.get(['channelid'], merged=True),
+                                       self._logger,
+                                       self.command)
 
     ##~~ SettingsPlugin mixin
 
@@ -126,7 +128,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return {
             'bottoken': "",
             'channelid': "",
-            'events' : self.events,
+            'events': self.events,
             'allow_scripts': False,
             'script_before': '',
             'script_after': ''
@@ -136,8 +138,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def get_settings_restricted_paths(self):
         # settings.events.tests is a false message, so we should never see it as configurable.
         # settings.bottoken and channelid are admin only.
-        return dict(never=[["events","test"]],
-                    admin=[["bottoken"],["channelid"],['script_before'],['script_after']])
+        return dict(never=[["events", "test"]],
+                    admin=[["bottoken"], ["channelid"], ['script_before'], ['script_after']])
 
     ##~~ AssetPlugin mixin
 
@@ -149,7 +151,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             css=["css/discordremote.css"],
             less=["less/discordremote.less"]
         )
-
 
     ##~~ TemplatePlugin mixin
     def get_template_configs(self):
@@ -170,12 +171,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
                 # version check: github repository
                 type="github_release",
-                user="bchanudet",
+                user="cameroncros",
                 repo="OctoPrint-DiscordRemote",
                 current=self._plugin_version,
 
                 # update method: pip
-                pip="https://github.com/bchanudet/OctoPrint-DiscordRemote/archive/{target_version}.zip"
+                pip="https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/{target_version}.zip"
             )
         )
 
@@ -198,13 +199,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 return self.notify_event("printer_state_unknown")
 
         if event == "PrintStarted":
-            return self.notify_event("printing_started",payload)
+            return self.notify_event("printing_started", payload)
         if event == "PrintPaused":
-            return self.notify_event("printing_paused",payload)
+            return self.notify_event("printing_paused", payload)
         if event == "PrintResumed":
-            return self.notify_event("printing_resumed",payload)
+            return self.notify_event("printing_resumed", payload)
         if event == "PrintCancelled":
-            return self.notify_event("printing_cancelled",payload)
+            return self.notify_event("printing_cancelled", payload)
 
         if event == "PrintDone":
             payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
@@ -212,46 +213,47 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return True
 
-    def on_print_progress(self,location,path,progress):
-        self.notify_event("printing_progress",{"progress": progress})
+    def on_print_progress(self, location, path, progress):
+        self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
-        old_bot_settings = '{}{}'.format(\
-            self._settings.get(['bottoken'],merged=True),\
-            self._settings.get(['channelid'],merged=True)\
-        )
+        old_bot_settings = '{}{}'.format(self._settings.get(['bottoken'], merged=True),
+                                         self._settings.get(['channelid'], merged=True))
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        new_bot_settings = '{}{}'.format(\
-            self._settings.get(['bottoken'],merged=True),\
-            self._settings.get(['channelid'],merged=True)\
-        )
+        new_bot_settings = '{}{}'.format(self._settings.get(['bottoken'], merged=True),
+                                         self._settings.get(['channelid'], merged=True))
 
-        if(old_bot_settings != new_bot_settings):
+        if old_bot_settings != new_bot_settings:
             self._logger.info("Settings have changed. Send a test message...")
             # Configure discord
             if self.command is None:
-                self.command = Command(self._printer, self._file_manager)
-            configure_discord(self._logger,
-                              self._settings.get(['bottoken'],merged=True),
-                              self._settings.get(['channelid'],merged=True),
-                              self.command)
+                self.command = Command(self)
+
+            if self.discord is None:
+                self.discord = Discord()
+
+            self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                           self._settings.get(['channelid'], merged=True),
+                                           self._logger,
+                                           self.command)
             self.notify_event("test")
 
-
-    def notify_event(self,eventID,data={}):
-        if(eventID not in self.events):
-            self._logger.error("Tried to notifiy on inexistant eventID : ", eventID)
+    def notify_event(self, eventID, data=None):
+        if data is None:
+            data = {}
+        if eventID not in self.events:
+            self._logger.error("Tried to notify on non-existant eventID : ", eventID)
             return False
 
-        tmpConfig = self._settings.get(["events", eventID],merged=True)
+        tmpConfig = self._settings.get(["events", eventID], merged=True)
 
-        if tmpConfig["enabled"] != True:
+        if not tmpConfig["enabled"]:
             self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
             return False
 
         # Store IP address for message
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             # doesn't even have to be reachable
             s.connect(('10.255.255.255', 1))
             data['ipaddr'] = s.getsockname()[0]
@@ -260,11 +262,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         finally:
             s.close()
 
-        # Special case for progress eventID : we check for progress and stepss
-        if eventID == 'printing_progress' and (\
-            int(data["progress"]) == 0 \
-            or int(data["progress"]) % int(tmpConfig["step"]) != 0 \
-        ) :
+        # Special case for progress eventID : we check for progress and steps
+        if not (not (eventID == 'printing_progress') or not ( \
+                        int(data["progress"]) == 0 \
+                        or int(data["progress"]) % int(tmpConfig["step"]) != 0 \
+                )):
             return False
 
         return self.send_message(eventID, tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
@@ -272,8 +274,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def exec_script(self, eventName, which=""):
 
         # I want to be sure that the scripts are allowed by the special configuration flag
-        scripts_allowed = self._settings.get(["allow_scripts"],merged=True)
-        if scripts_allowed is None or scripts_allowed == False:
+        scripts_allowed = self._settings.get(["allow_scripts"], merged=True)
+        if scripts_allowed is None or scripts_allowed is False:
             return ""
 
         # Finding which one should be used.
@@ -292,11 +294,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
                 out = subprocess.check_output(script_to_exec)
         except (OSError, subprocess.CalledProcessError) as err:
-                out = err
+            out = err
         finally:
             self._logger.info("{}:{} > Output: '{}'".format(eventName, which, out))
             return out
-
 
     def send_message(self, eventID, message, withSnapshot=False):
         # exec "before" script if any
@@ -307,8 +308,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if withSnapshot:
             snapshot = self.get_snapshot()
 
-        # Send to Discord WebHook
-        out = send(message, snapshot)
+        # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
+        if self.discord is None:
+            self.discord = Discord()
+
+        out = self.discord.send(message=message, snapshot=snapshot)
 
         # exec "after" script if any
         self.exec_script(eventID, "after")
@@ -316,6 +320,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return out
 
     def get_snapshot(self):
+        snapshot = None
         snapshotUrl = self._settings.global_get(["webcam", "snapshot"])
         if snapshotUrl is None:
             return None
@@ -337,7 +342,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         mustFlipH = self._settings.global_get_boolean(["webcam", "flipH"])
         mustFlipV = self._settings.global_get_boolean(["webcam", "flipV"])
         mustRotate = self._settings.global_get_boolean(["webcam", "rotate90"])
-
 
         # Only call Pillow if we need to transpose anything
         if mustFlipH or mustFlipV or mustRotate:
@@ -367,6 +371,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
 
+
 def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = DiscordRemotePlugin()
@@ -375,4 +380,3 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
     }
-
