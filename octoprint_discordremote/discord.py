@@ -45,10 +45,14 @@ class Discord:
     def __init__(self):
         pass
 
+    def __del__(self):
+        self.running = False
+        self.stop_listener()
+
     running = True  # Server is running while true.
     channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
     bot_token = None  # get from the bot page. must be a bot, not a discord app
-    gatewayURL = "https://discordapp.com/api/gateway"
+    gateway_url = "https://discordapp.com/api/gateway"
     postURL = None  # URL to post messages to, as the bot
     heartbeat_sent = 0
     heartbeat_interval = None
@@ -74,10 +78,11 @@ class Discord:
 
     def start_listener(self):
         self.stop_listener()
+        socket_url = None
 
-        while self.running:
+        while self.running and socket_url is None:
             try:
-                r = requests.get(self.gatewayURL, headers=self.headers)
+                r = requests.get(self.gateway_url, headers=self.headers)
                 socket_url = json.loads(r.content)['url']
                 self.logger.info("Socket URL is %s", socket_url)
                 break
