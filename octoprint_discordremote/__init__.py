@@ -122,8 +122,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command)
 
-    ##~~ SettingsPlugin mixin
-
+    # SettingsPlugin mixin
     def get_settings_defaults(self):
         return {
             'bottoken': "",
@@ -141,8 +140,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return dict(never=[["events", "test"]],
                     admin=[["bottoken"], ["channelid"], ['script_before'], ['script_after']])
 
-    ##~~ AssetPlugin mixin
-
+    # AssetPlugin mixin
     def get_assets(self):
         # Define your plugin's asset files to automatically include in the
         # core UI here.
@@ -152,14 +150,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             less=["less/discordremote.less"]
         )
 
-    ##~~ TemplatePlugin mixin
+    # TemplatePlugin mixin
     def get_template_configs(self):
         return [
             dict(type="settings", custom_bindings=False)
         ]
 
-    ##~~ Softwareupdate hook
-
+    # Softwareupdate hook
     def get_update_information(self):
         # Define the configuration for your plugin to use with the Software Update
         # Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
@@ -180,8 +177,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             )
         )
 
-    ##~~ EventHandlerPlugin hook
-
+    # EventHandlerPlugin hook
     def on_event(self, event, payload):
 
         if event == "Startup":
@@ -238,40 +234,40 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                            self.command)
             self.notify_event("test")
 
-    def notify_event(self, eventID, data=None):
+    def notify_event(self, event_id, data=None):
         if data is None:
             data = {}
-        if eventID not in self.events:
-            self._logger.error("Tried to notify on non-existant eventID : ", eventID)
+        if event_id not in self.events:
+            self._logger.error("Tried to notify on non-existant eventID : ", event_id)
             return False
 
-        tmpConfig = self._settings.get(["events", eventID], merged=True)
+        tmp_config = self._settings.get(["events", event_id], merged=True)
 
-        if not tmpConfig["enabled"]:
-            self._logger.debug("Event {} is not enabled. Returning gracefully".format(eventID))
+        if not tmp_config["enabled"]:
+            self._logger.debug("Event {} is not enabled. Returning gracefully".format(event_id))
             return False
 
         # Store IP address for message
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             # doesn't even have to be reachable
             s.connect(('10.255.255.255', 1))
             data['ipaddr'] = s.getsockname()[0]
-        except:
+        except Exception as e:
+            print(e)
             data['ipaddr'] = '127.0.0.1'
         finally:
             s.close()
 
         # Special case for progress eventID : we check for progress and steps
-        if not (not (eventID == 'printing_progress') or not ( \
-                        int(data["progress"]) == 0 \
-                        or int(data["progress"]) % int(tmpConfig["step"]) != 0 \
-                )):
+        if not (not (event_id == 'printing_progress') or
+                not (int(data["progress"]) == 0 or
+                     int(data["progress"]) % int(tmp_config["step"]) != 0)):
             return False
 
-        return self.send_message(eventID, tmpConfig["message"].format(**data), tmpConfig["with_snapshot"])
+        return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 
-    def exec_script(self, eventName, which=""):
+    def exec_script(self, event_name, which=""):
 
         # I want to be sure that the scripts are allowed by the special configuration flag
         scripts_allowed = self._settings.get(["allow_scripts"], merged=True)
@@ -288,7 +284,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         # Finally exec the script
         out = ""
-        self._logger.info("{}:{} File to start: '{}'".format(eventName, which, script_to_exec))
+        self._logger.info("{}:{} File to start: '{}'".format(event_name, which, script_to_exec))
 
         try:
             if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
@@ -296,16 +292,16 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         except (OSError, subprocess.CalledProcessError) as err:
             out = err
         finally:
-            self._logger.info("{}:{} > Output: '{}'".format(eventName, which, out))
+            self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
             return out
 
-    def send_message(self, eventID, message, withSnapshot=False):
+    def send_message(self, event_id, message, with_snapshot=False):
         # exec "before" script if any
-        self.exec_script(eventID, "before")
+        self.exec_script(event_id, "before")
 
         # Get snapshot if asked for
         snapshot = None
-        if withSnapshot:
+        if with_snapshot:
             snapshot = self.get_snapshot()
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
@@ -315,54 +311,54 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         out = self.discord.send(message=message, snapshot=snapshot)
 
         # exec "after" script if any
-        self.exec_script(eventID, "after")
+        self.exec_script(event_id, "after")
 
         return out
 
     def get_snapshot(self):
         snapshot = None
-        snapshotUrl = self._settings.global_get(["webcam", "snapshot"])
-        if snapshotUrl is None:
+        snapshot_url = self._settings.global_get(["webcam", "snapshot"])
+        if snapshot_url is None:
             return None
-        if "http" in snapshotUrl:
+        if "http" in snapshot_url:
             try:
-                snapshotCall = requests.get(snapshotUrl)
-                if not snapshotCall:
+                snapshot_call = requests.get(snapshot_url)
+                if not snapshot_call:
                     return None
-                snapshot = BytesIO(snapshotCall.content)
+                snapshot = BytesIO(snapshot_call.content)
             except ConnectionError:
                 return None
-        if snapshotUrl.startswith("file://"):
-            snapshot = open(snapshotUrl.partition('file://')[2], "r")
+        if snapshot_url.startswith("file://"):
+            snapshot = open(snapshot_url.partition('file://')[2], "r")
 
         if snapshot is None:
             return None
 
         # Get the settings used for streaming to know if we should transform the snapshot
-        mustFlipH = self._settings.global_get_boolean(["webcam", "flipH"])
-        mustFlipV = self._settings.global_get_boolean(["webcam", "flipV"])
-        mustRotate = self._settings.global_get_boolean(["webcam", "rotate90"])
+        must_flip_h = self._settings.global_get_boolean(["webcam", "flipH"])
+        must_flip_v = self._settings.global_get_boolean(["webcam", "flipV"])
+        must_rotate = self._settings.global_get_boolean(["webcam", "rotate90"])
 
         # Only call Pillow if we need to transpose anything
-        if mustFlipH or mustFlipV or mustRotate:
+        if must_flip_h or must_flip_v or must_rotate:
             img = Image.open(snapshot)
 
             self._logger.info(
-                "Transformations : FlipH={}, FlipV={} Rotate={}".format(mustFlipH, mustFlipV, mustRotate))
+                "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
 
-            if mustFlipH:
+            if must_flip_h:
                 img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-            if mustFlipV:
+            if must_flip_v:
                 img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
-            if mustRotate:
+            if must_rotate:
                 img = img.transpose(Image.ROTATE_90)
 
-            newImage = BytesIO()
-            img.save(newImage, 'png')
+            new_image = BytesIO()
+            img.save(new_image, 'png')
 
-            return newImage
+            return new_image
         return snapshot
 
 
