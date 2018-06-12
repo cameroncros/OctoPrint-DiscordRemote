@@ -172,6 +172,12 @@ class Discord:
             # TODO: Add user authentication here?
             return
 
+        if 'attachments' in data:
+            for upload in data['attachments']:
+                filename = upload['filename']
+                url = upload['url']
+                self.send(message=self.command.upload_file(filename, url))
+
         if 'content' in data:
             (text, snapshot) = self.command.parse_command(data['content'])
             if text:

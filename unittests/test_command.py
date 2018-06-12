@@ -1,3 +1,5 @@
+import os
+
 from unittest import TestCase
 
 import mock
@@ -233,3 +235,23 @@ class TestCommand(TestCase):
         self.get_snapshot.assert_called_once()
         self.assertEqual(self.get_snapshot.return_value, snapshot)
         self._printer.resume_print.assert_called_once()
+
+    @mock.patch("requests.get")
+    def test_upload_file(self, mock_get):
+        self._file_manager.path_on_disk = mock.Mock()
+        self._file_manager.path_on_disk.return_value = "./temp.file"
+
+        mock_request_val = mock.Mock()
+        mock_request_val.iter_content = mock.Mock()
+        mock_request_val.iter_content.return_value = b'1234'
+        mock_get.return_value = mock_request_val
+
+        self.command.upload_file("filename", "http://mock.url")
+
+        self._file_manager.path_on_disk.assert_called_once_with('local', 'filename')
+        mock_get.assert_called_once_with("http://mock.url", stream=True)
+
+        with open("./temp.file", 'rb') as f:
+            self.assertEqual(b'1234', f.read())
+
+        os.remove("./temp.file")
