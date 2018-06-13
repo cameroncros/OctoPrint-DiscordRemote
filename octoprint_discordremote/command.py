@@ -1,6 +1,7 @@
 import humanfriendly
 import re
 import time
+import requests
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 from terminaltables import AsciiTable as Table
@@ -34,7 +35,7 @@ class Command:
 
         command = self.command_dict.get(parts[0])
         if command is None:
-            return self.help(), None
+            return self.help()
 
         if command.get('params'):
             return command['cmd'](parts)
@@ -66,7 +67,7 @@ class Command:
             return "Printer is not ready", None
 
         file = self.find_file(params[1])
-        if file is None:\
+        if file is None:
             return "Failed to find the file", None
 
         is_sdcard = (file['location']=='sdcard')
@@ -128,7 +129,7 @@ class Command:
             ])
 
         table = Table(data, title="List of files")
-        return  str(table.table), None
+        return str(table.table), None
 
     def snapshot(self):
         return None, self.plugin.get_snapshot()
@@ -232,3 +233,13 @@ class Command:
     def resume(self):
         self.plugin._printer.resume_print()
         return "Print resumed", self.plugin.get_snapshot()
+
+    def upload_file(self, filename, url):
+        upload_file = self.plugin._file_manager.path_on_disk('local', filename)
+
+        r = requests.get(url, stream=True)
+        with open(upload_file, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+        return "File Received: %s\n" % filename
