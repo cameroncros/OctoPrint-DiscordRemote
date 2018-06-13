@@ -1,3 +1,4 @@
+import humanfriendly
 import re
 import time
 
@@ -215,9 +216,11 @@ class Command:
             data.append(['Printing', 'Yes' if printing else 'No'])
             if printing:
                 data.append(['File', current_data['job']['file']['name']])
-                data.append(['Progress', "%d" % current_data['progress']['completion']])
-                data.append(['Time Spent', "%d" % current_data['progress']['printTime']])
-                data.append(['Time Remaining', "%d" % current_data['progress']['printTimeLeft']])
+                data.append(['Progress', "%d%%" % current_data['progress']['completion']])
+                time_spent = humanfriendly.format_timespan(current_data['progress']['printTime'])
+                data.append(['Time Spent', time_spent])
+                time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
+                data.append(['Time Remaining', time_left])
 
         table = Table(data, title="Printer Status")
         return str(table.table), self.plugin.get_snapshot()
