@@ -102,19 +102,19 @@ class Command:
 
             estimated_print_time = ""
             try:
-                estimated_print_time = details['analysis']['estimatedPrintTime']
+                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'])
             except:
                 pass
 
             average_print_time = ""
             try:
-                average_print_time = details['statistics']['averagePrintTime']['_default']
+                average_print_time = humanfriendly.format_timespan(details['statistics']['averagePrintTime']['_default'])
             except:
                 pass
 
             filament_required = ""
             try:
-                filament_required = details['analysis']['filament']['tool0']['length']
+                filament_required = humanfriendly.format_length(details['analysis']['filament']['tool0']['length']/1000)
             except:
                 pass
 
