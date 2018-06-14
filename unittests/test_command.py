@@ -98,11 +98,7 @@ class TestCommand(TestCase):
                 self.assertEqual([image.read()], [snapshot.read()])
 
     def test_parse_command_abort(self):
-        # Fail: No print running
-        # TODO
-
         # Success: Print aborted
-        # TODO mock and validate
         message, snapshot = self.command.parse_command("/abort")
         self.assertEqual("Print aborted", message)
         self.assertIsNone(snapshot)

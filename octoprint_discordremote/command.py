@@ -55,10 +55,8 @@ class Command:
         return message, None
 
     def cancel_print(self):
-        if self.plugin._printer.cancel_print():
-            return "Print aborted", None
-        else:
-            return "Failed to abort print, is there a print running?", None
+        self.plugin._printer.cancel_print()
+        return "Print aborted", None
 
     def start_print(self, params):
         if len(params) != 2:
@@ -104,19 +102,19 @@ class Command:
 
             estimated_print_time = ""
             try:
-                estimated_print_time = details['analysis']['estimatedPrintTime']
+                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'])
             except:
                 pass
 
             average_print_time = ""
             try:
-                average_print_time = details['statistics']['averagePrintTime']['_default']
+                average_print_time = humanfriendly.format_timespan(details['statistics']['averagePrintTime']['_default'])
             except:
                 pass
 
             filament_required = ""
             try:
-                filament_required = details['analysis']['filament']['tool0']['length']
+                filament_required = humanfriendly.format_length(details['analysis']['filament']['tool0']['length']/1000)
             except:
                 pass
 
@@ -217,11 +215,23 @@ class Command:
             data.append(['Printing', 'Yes' if printing else 'No'])
             if printing:
                 data.append(['File', current_data['job']['file']['name']])
-                data.append(['Progress', "%d%%" % current_data['progress']['completion']])
-                time_spent = humanfriendly.format_timespan(current_data['progress']['printTime'])
-                data.append(['Time Spent', time_spent])
-                time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
-                data.append(['Time Remaining', time_left])
+                completion = current_data['progress']['completion']
+                if completion:
+                    data.append(['Progress', "%d%%" % completion])
+
+                current_time_val = current_data['progress']['printTime']
+                if current_time_val:
+                    time_spent = humanfriendly.format_timespan(current_time_val)
+                    data.append(['Time Spent', time_spent])
+                else:
+                    data.append(['Time Spent', 'Unknown'])
+
+                remaining_time_val = current_data['progress']['printTimeLeft']
+                if remaining_time_val:
+                    time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
+                    data.append(['Time Remaining', time_left])
+                else:
+                    data.append(['Time Remaining', 'Unknown'])
 
         table = Table(data, title="Printer Status")
         return str(table.table), self.plugin.get_snapshot()

@@ -15,6 +15,7 @@ import logging
 DISPATCH = 0
 HEARTBEAT = 1
 IDENTIFY = 2
+READY = 2
 PRESENCE = 3
 VOICE_STATE = 4
 VOICE_PING = 5
@@ -103,16 +104,7 @@ class Discord:
         time.sleep(1)
 
         if self.session_id:
-            out = {
-                'op': RESUME,
-                'd': {
-                    'seq': self.last_sequence,
-                    'session_id': self.session_id,
-                    'token': self.bot_token
-                }
-            }
-            js = json.dumps(out)
-            self.web_socket.send(js)
+            self.send_resume()
 
     def stop_listener(self):
         if self.web_socket:
@@ -142,11 +134,15 @@ class Discord:
         js = json.loads(message)
 
         if js['op'] == HELLO:
-            self.handle_hello(js, web_socket)
+            self.handle_hello(js)
+        elif js['op'] == READY:
+            self.handle_ready(js)
         elif js['op'] == DISPATCH:
             self.handle_dispatch(js)
         elif js['op'] == HEARTBEAT_ACK:
             self.handle_heartbeat_ack()
+        elif js['op'] == INVALIDATE_SESSION:
+            self.handle_invalid_session()
         else:
             self.logger.debug("Unhandled message: %s" % json.dumps(js))
 
@@ -190,20 +186,10 @@ class Discord:
                     self.send(message="`%s`" % chunk)
             self.send(snapshot=snapshot)
 
-    def handle_hello(self, js, ws):
+    def handle_hello(self, js):
         self.logger.info("Received HELLO message")
         # Authenticate
-        out = {
-            "op": IDENTIFY,
-            "d": {
-                "token": self.bot_token,
-                "properties": {},
-                "compress": False,
-                "large_threshold": 250
-            }
-        }
-        out_js = json.dumps(out)
-        ws.send(out_js)
+        self.send_identify()
 
         # Setup heartbeat_interval
         self.heartbeat_interval = js['d']['heartbeat_interval']
@@ -216,10 +202,49 @@ class Discord:
         # Signal that we are connected.
         self.process_queue()
 
+    def send_identify(self):
+        self.logger.info("Sending IDENTIFY message")
+        out = {
+            "op": IDENTIFY,
+            "d": {
+                "token": self.bot_token,
+                "properties": {},
+                "compress": False,
+                "large_threshold": 250
+            }
+        }
+        out_js = json.dumps(out)
+        self.web_socket.send(out_js)
+
+    def send_resume(self):
+        self.logger.info("Sending RESUME message")
+        out = {
+            'op': RESUME,
+            'd': {
+                'seq': self.last_sequence,
+                'session_id': self.session_id,
+                'token': self.bot_token
+            }
+        }
+        js = json.dumps(out)
+        self.web_socket.send(js)
+
     def handle_heartbeat_ack(self):
         self.logger.info("Received HEARTBEAT_ACK message")
         self.heartbeat_sent = 0
         self.process_queue()
+
+    def handle_ready(self, js):
+        self.logger.info("Received READY message")
+        self.session_id = js['session_id']
+
+    def handle_invalid_session(self, js):
+        self.logger.info("Received INVALID_SESSION message")
+        time.sleep(5)
+        if js['d']:
+            self.send_resume()
+        else:
+            self.send_identify()
 
     def process_queue(self):
         while len(self.queue):
@@ -264,11 +289,11 @@ class Discord:
 
     def on_error(self, ws, error):
         self.logger.error("Connection error: %s" % error)
-        self.start_listener()
+        threading.Thread(target=self.start_listener).start()
 
     def on_close(self, ws):
         self.logger.info("WebSocket Closed")
-        self.start_listener()
+        threading.Thread(target=self.start_listener).start()
 
     def queue_message(self, message, snapshot):
         if message is not None or snapshot is not None:
