@@ -289,11 +289,11 @@ class Discord:
 
     def on_error(self, ws, error):
         self.logger.error("Connection error: %s" % error)
-        self.start_listener()
+        threading.Thread(target=self.start_listener).start()
 
     def on_close(self, ws):
         self.logger.info("WebSocket Closed")
-        self.start_listener()
+        threading.Thread(target=self.start_listener).start()
 
     def queue_message(self, message, snapshot):
         if message is not None or snapshot is not None:
