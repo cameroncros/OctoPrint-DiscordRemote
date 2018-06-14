@@ -55,10 +55,8 @@ class Command:
         return message, None
 
     def cancel_print(self):
-        if self.plugin._printer.cancel_print():
-            return "Print aborted", None
-        else:
-            return "Failed to abort print, is there a print running?", None
+        self.plugin._printer.cancel_print()
+        return "Print aborted", None
 
     def start_print(self, params):
         if len(params) != 2:
