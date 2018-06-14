@@ -220,10 +220,20 @@ class Command:
                 completion = current_data['progress']['completion']
                 if completion:
                     data.append(['Progress', "%d%%" % completion])
-                time_spent = humanfriendly.format_timespan(current_data['progress']['printTime'])
-                data.append(['Time Spent', time_spent])
-                time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
-                data.append(['Time Remaining', time_left])
+
+                current_time_val = current_data['progress']['printTime']
+                if current_time_val:
+                    time_spent = humanfriendly.format_timespan(current_time_val)
+                    data.append(['Time Spent', time_spent])
+                else:
+                    data.append(['Time Spent', 'Unknown'])
+
+                remaining_time_val = current_data['progress']['printTimeLeft']
+                if remaining_time_val:
+                    time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
+                    data.append(['Time Remaining', time_left])
+                else:
+                    data.append(['Time Remaining', 'Unknown'])
 
         table = Table(data, title="Printer Status")
         return str(table.table), self.plugin.get_snapshot()
