@@ -9,5 +9,5 @@ PyYAML
 websocket-client
 requests
 terminaltables
-
+humanfriendly
 .

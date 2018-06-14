@@ -1,5 +1,5 @@
 import os
-
+import humanfriendly
 from unittest import TestCase
 
 import mock
@@ -212,7 +212,8 @@ class TestCommand(TestCase):
 
         expected_terms = ['Status', 'Value', 'Operational', 'Current Z',
                           'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
-                          'Time Spent', 'Time Remaining', 'Printer Status']
+                          'Time Spent', 'Time Remaining', 'Printer Status',
+                          humanfriendly.format_timespan(300), humanfriendly.format_timespan(500)]
         for term in expected_terms:
             self.assertIn(term, message)
 
