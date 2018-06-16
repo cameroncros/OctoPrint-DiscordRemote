@@ -19,6 +19,7 @@ from .discord import Discord
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.StartupPlugin,
+                          octoprint.plugin.ShutdownPlugin,
                           octoprint.plugin.SettingsPlugin,
                           octoprint.plugin.AssetPlugin,
                           octoprint.plugin.TemplatePlugin,
@@ -121,6 +122,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._settings.get(['channelid'], merged=True),
                                        self._logger,
                                        self.command)
+
+    # ShutdownPlugin mixin
+    def on_shutdown(self):
+        self.discord.shutdown_discord()
 
     # SettingsPlugin mixin
     def get_settings_defaults(self):
