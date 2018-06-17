@@ -117,11 +117,10 @@ class Discord:
 
             # Clean up resources
             if self.web_socket:
-                self.web_socket.keep_running = False
                 try:
                     self.web_socket.close()
-                except websocket.WebSocketConnectionClosedException:
-                    pass
+                except websocket.WebSocketConnectionClosedException as e:
+                    self.logger.error("Failed to close websocket: %s" % e.message)
                 self.web_socket = None
             if self.listener_thread:
                 self.logger.info("Waiting for listener thread to join.")
