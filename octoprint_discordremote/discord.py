@@ -75,8 +75,11 @@ class Discord:
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
-        self.manager_thread = Thread(target=self.monitor_thread)
-        self.manager_thread.start()
+        if not self.manager_thread:
+            self.manager_thread = Thread(target=self.monitor_thread)
+            self.manager_thread.start()
+        else:
+            self.restart_event.set()
 
     def monitor_thread(self):
         while not self.shutdown_event.is_set():
