@@ -11,8 +11,28 @@ $(function() {
         // assign the injected parameters, e.g.:
         // self.loginStateViewModel = parameters[0];
         // self.settingsViewModel = parameters[1];
+        self.isConnected = ko.observable(undefined);
+        self.discordremote = $("#discordremote_indicator")
 
-        // TODO: Implement your plugin's view model here.
+        self.onStartup = function () {
+            self.isConnected.subscribe(function() {
+                self.discordremote.removeClass("connecting").removeClass("disconnected").removeClass("connected");
+                self.discordremote.addClass(self.isConnected());
+            });
+            self.isConnected("connecting")
+        }
+
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin != "discordremote") {
+                return;
+            }
+
+            self.isConnected(data.isConnected);
+        };
+
+        self.sendTestMessage = function() {
+            return;
+        }
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -23,6 +43,6 @@ $(function() {
         [ "loginStateViewModel", "settingsViewModel" ],
 
         // e.g. #settings_plugin_discordremote, #tab_plugin_octorant, ...
-        [ /* ... */ ]
+        [ "#navbar_plugin_discordremote" ]
     ]);
 });

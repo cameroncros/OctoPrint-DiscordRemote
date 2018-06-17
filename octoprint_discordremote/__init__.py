@@ -121,7 +121,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
                                        self._logger,
-                                       self.command)
+                                       self.command,
+                                       self.update_discord_status)
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
@@ -236,7 +237,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                            self._settings.get(['channelid'], merged=True),
                                            self._logger,
-                                           self.command)
+                                           self.command,
+                                           self.update_discord_status)
             self.notify_event("test")
 
     def notify_event(self, event_id, data=None):
@@ -365,6 +367,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             return new_image
         return snapshot
+
+    def update_discord_status(self, connected):
+        self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

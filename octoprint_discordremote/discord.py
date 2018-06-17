@@ -56,6 +56,7 @@ class Discord:
     headers = None  # Object containing the headers to send messages with.
     queue = []  # Message queue, stores messages until the bot reconnects.
     command = None  # Command parser
+    status_callback = None  # The callback to use when the status changes.
 
     # Threads:
     manager_thread = None
@@ -66,11 +67,14 @@ class Discord:
     restart_event = Event()  # Set to restart discord bot.
     shutdown_event = Event()  # Set to stop all threads
 
-    def configure_discord(self, bot_token, channel_id, logger, command):
+    def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
         self.bot_token = bot_token
         self.channel_id = channel_id
         self.logger = logger
         self.command = command
+        self.status_callback = status_callback
+        if self.status_callback:
+            self.status_callback(connected="disconnected")
         self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
@@ -84,6 +88,9 @@ class Discord:
     def monitor_thread(self):
         while not self.shutdown_event.is_set():
             socket_url = None
+
+            if self.status_callback:
+                self.status_callback(connected="connecting")
 
             while not self.shutdown_event.is_set() and socket_url is None:
                 try:
@@ -115,6 +122,9 @@ class Discord:
             self.restart_event.wait()
             self.logger.info("Restart Triggered")
 
+            if self.status_callback:
+                self.status_callback(connected="disconnected")
+
             # Clean up resources
             if self.web_socket:
                 try:
@@ -145,6 +155,8 @@ class Discord:
             # Send heartbeat
             if self.heartbeat_sent > 1:
                 self.logger.error("Haven't received a heartbeat ACK in a while")
+                if self.status_callback:
+                    self.status_callback(connected="disconnected")
                 self.restart_event.set()
             elif self.web_socket:
                 out = {'op': 1, 'd': self.last_sequence}
@@ -256,6 +268,8 @@ class Discord:
 
     def handle_heartbeat_ack(self):
         self.logger.info("Received HEARTBEAT_ACK message")
+        if self.status_callback:
+            self.status_callback(connected="connected")
         self.heartbeat_sent = 0
         self.process_queue()
 

@@ -16,3 +16,7 @@
 #settings_plugin_discordremote .discordremote_message .control-group{
     margin-bottom: 3px;
 }
+
+#discordremote_indicator.connected i{color:#00FF00}
+#discordremote_indicator.connecting i{color:#FF8C00}
+#discordremote_indicator.disconnected i{color:grey}
