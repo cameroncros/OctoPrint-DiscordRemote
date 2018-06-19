@@ -5,6 +5,7 @@ from datetime import timedelta
 
 import octoprint.plugin
 import octoprint.settings
+from octoprint.server import user_permission
 import os
 import requests
 import socket
@@ -12,6 +13,7 @@ import subprocess
 from PIL import Image
 from io import BytesIO
 from requests import ConnectionError
+from flask import make_response
 
 from octoprint_discordremote.command import Command
 from .discord import Discord
@@ -23,7 +25,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.SettingsPlugin,
                           octoprint.plugin.AssetPlugin,
                           octoprint.plugin.TemplatePlugin,
-                          octoprint.plugin.ProgressPlugin):
+                          octoprint.plugin.ProgressPlugin,
+                          octoprint.plugin.SimpleApiPlugin):
     discord = None
 
     def __init__(self):
@@ -240,6 +243,27 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                            self.command,
                                            self.update_discord_status)
             self.notify_event("test")
+
+    # SimpleApiPlugin mixin
+    def get_api_commands(self):
+        return dict(
+            executeCommand=['args']
+        )
+
+    def on_api_command(self, command, data):
+        if not user_permission.can():
+            return make_response("Insufficient rights", 403)
+
+        if command == 'executeCommand':
+            self.execute_command(data)
+
+    def execute_command(self, data):
+        args = ""
+        if 'args' in data:
+            args = data['args']
+
+        message, snapshot = self.command.parse_command(args)
+        self.discord.send(message=message, snapshot=snapshot)
 
     def notify_event(self, event_id, data=None):
         if data is None:

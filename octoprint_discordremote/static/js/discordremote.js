@@ -31,7 +31,16 @@ $(function() {
         };
 
         self.sendTestMessage = function() {
-            return;
+            $.ajax({
+                url: API_BASEURL + "plugin/discordremote",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "executeCommand",
+                    args: "/status"
+                }),
+                contentType: "application/json; charset=UTF-8"
+            });
         }
     }
 
