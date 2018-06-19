@@ -5,7 +5,7 @@
 # bot must be added to the server and have write access to the channel
 
 import json
-import threading
+from threading import Thread, Event
 import time
 import requests
 import websocket
@@ -29,9 +29,6 @@ GUILD_SYNC = 12
 
 
 def split_text(text):
-    if isinstance(text, tuple):
-        import pdb
-        pdb.set_trace()
     parts = text.split('\n')
     chunks = [""]
     for part in parts:
@@ -46,82 +43,122 @@ class Discord:
     def __init__(self):
         pass
 
-    def __del__(self):
-        self.running = False
-        self.stop_listener()
-
-    running = True  # Server is running while true.
     channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
     bot_token = None  # get from the bot page. must be a bot, not a discord app
     gateway_url = "https://discordapp.com/api/gateway"
     postURL = None  # URL to post messages to, as the bot
     heartbeat_sent = 0
     heartbeat_interval = None
-    heartbeat_thread = None
-    listener_thread = None
     last_sequence = None
     session_id = None
-    web_socket = None  # Websocket. Used for heartbeat.
+    web_socket = None  # WebSocket. Used for heartbeat.
     logger = logging  # Logger, uses default logging unless overridden
     headers = None  # Object containing the headers to send messages with.
     queue = []  # Message queue, stores messages until the bot reconnects.
     command = None  # Command parser
+    status_callback = None  # The callback to use when the status changes.
 
-    def configure_discord(self, bot_token, channel_id, logger, command):
+    # Threads:
+    manager_thread = None
+    heartbeat_thread = None
+    listener_thread = None
+
+    # Events
+    restart_event = Event()  # Set to restart discord bot.
+    shutdown_event = Event()  # Set to stop all threads
+
+    def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
         self.bot_token = bot_token
         self.channel_id = channel_id
         self.logger = logger
         self.command = command
+        self.status_callback = status_callback
+        if self.status_callback:
+            self.status_callback(connected="disconnected")
         self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
-        self.start_listener()
 
-    def start_listener(self):
-        self.stop_listener()
-        socket_url = None
+        if not self.manager_thread:
+            self.manager_thread = Thread(target=self.monitor_thread)
+            self.manager_thread.start()
+        else:
+            self.restart_event.set()
 
-        while self.running and socket_url is None:
-            try:
-                r = requests.get(self.gateway_url, headers=self.headers)
-                socket_url = json.loads(r.content)['url']
-                self.logger.info("Socket URL is %s", socket_url)
-                break
-            except Exception as e:
-                self.logger.error("Failed to connect to gateway: %s" % e.message)
-                time.sleep(5)
-                continue
+    def monitor_thread(self):
+        while not self.shutdown_event.is_set():
+            socket_url = None
 
-        self.heartbeat_sent = 0
-        self.web_socket = websocket.WebSocketApp(socket_url,
-                                                 on_message=self.on_message,
-                                                 on_error=self.on_error,
-                                                 on_close=self.on_close)
+            if self.status_callback:
+                self.status_callback(connected="connecting")
 
-        self.listener_thread = threading.Thread(target=self.web_socket.run_forever)
-        self.listener_thread.start()
-        self.logger.debug("WebSocket listener started")
-        time.sleep(1)
+            while not self.shutdown_event.is_set() and socket_url is None:
+                try:
+                    r = requests.get(self.gateway_url, headers=self.headers)
+                    socket_url = json.loads(r.content)['url']
+                    self.logger.info("Socket URL is %s", socket_url)
+                    break
+                except Exception as e:
+                    self.logger.error("Failed to connect to gateway: %s" % e.message)
+                    time.sleep(5)
+                    continue
 
-        if self.session_id:
-            self.send_resume()
+            self.heartbeat_sent = 0
+            self.web_socket = websocket.WebSocketApp(socket_url,
+                                                     on_message=self.on_message,
+                                                     on_error=self.on_error,
+                                                     on_close=self.on_close)
 
-    def stop_listener(self):
-        if self.web_socket:
-            self.web_socket.keep_running = False
-            self.web_socket.close()
-            self.logger.info("Waiting for thread to join.")
-            self.listener_thread.join()
-            self.logger.info("Thread joined.")
-        return True
+            self.listener_thread = Thread(target=self.web_socket.run_forever)
+            self.listener_thread.start()
+            self.logger.debug("WebSocket listener started")
+            time.sleep(1)
+
+            if self.session_id:
+                self.send_resume()
+
+            # Wait until we are told to restart
+            self.restart_event.clear()
+            self.restart_event.wait()
+            self.logger.info("Restart Triggered")
+
+            if self.status_callback:
+                self.status_callback(connected="disconnected")
+
+            # Clean up resources
+            if self.web_socket:
+                try:
+                    self.web_socket.close()
+                except websocket.WebSocketConnectionClosedException as e:
+                    self.logger.error("Failed to close websocket: %s" % e.message)
+                self.web_socket = None
+            if self.listener_thread:
+                self.logger.info("Waiting for listener thread to join.")
+                self.listener_thread.join()
+                self.logger.info("Listener thread joined.")
+                self.listener_thread = None
+
+    def shutdown_discord(self):
+        # Shutdown event must be set first.
+        self.shutdown_event.set()
+        self.restart_event.set()
+        if self.manager_thread:
+            self.manager_thread.join()
+            self.manager_thread = None
+        if self.heartbeat_thread:
+            self.heartbeat_thread.join()
+            self.heartbeat_thread = None
 
     def heartbeat(self):
-        while self.running:
+        self.shutdown_event.clear()
+        while not self.shutdown_event.is_set():
             # Send heartbeat
             if self.heartbeat_sent > 1:
                 self.logger.error("Haven't received a heartbeat ACK in a while")
-                self.start_listener()
-            else:
+                if self.status_callback:
+                    self.status_callback(connected="disconnected")
+                self.restart_event.set()
+            elif self.web_socket:
                 out = {'op': 1, 'd': self.last_sequence}
                 js = json.dumps(out)
                 self.web_socket.send(js)
@@ -142,7 +179,7 @@ class Discord:
         elif js['op'] == HEARTBEAT_ACK:
             self.handle_heartbeat_ack()
         elif js['op'] == INVALIDATE_SESSION:
-            self.handle_invalid_session()
+            self.handle_invalid_session(js)
         else:
             self.logger.debug("Unhandled message: %s" % json.dumps(js))
 
@@ -196,7 +233,7 @@ class Discord:
 
         # Setup heartbeat_thread
         if not self.heartbeat_thread:
-            self.heartbeat_thread = threading.Thread(target=self.heartbeat)
+            self.heartbeat_thread = Thread(target=self.heartbeat)
             self.heartbeat_thread.start()
 
         # Signal that we are connected.
@@ -231,6 +268,8 @@ class Discord:
 
     def handle_heartbeat_ack(self):
         self.logger.info("Received HEARTBEAT_ACK message")
+        if self.status_callback:
+            self.status_callback(connected="connected")
         self.heartbeat_sent = 0
         self.process_queue()
 
@@ -289,11 +328,11 @@ class Discord:
 
     def on_error(self, ws, error):
         self.logger.error("Connection error: %s" % error)
-        threading.Thread(target=self.start_listener).start()
+        self.restart_event.set()
 
     def on_close(self, ws):
         self.logger.info("WebSocket Closed")
-        threading.Thread(target=self.start_listener).start()
+        self.restart_event.set()
 
     def queue_message(self, message, snapshot):
         if message is not None or snapshot is not None:
