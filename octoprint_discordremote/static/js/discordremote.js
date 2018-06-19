@@ -31,13 +31,14 @@ $(function() {
         };
 
         self.sendTestMessage = function() {
+            arg_string = prompt("Command to send?", "/status")
             $.ajax({
                 url: API_BASEURL + "plugin/discordremote",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
                     command: "executeCommand",
-                    args: "/status"
+                    args: arg_string
                 }),
                 contentType: "application/json; charset=UTF-8"
             });
