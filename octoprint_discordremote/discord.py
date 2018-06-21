@@ -29,10 +29,13 @@ GUILD_SYNC = 12
 
 
 def split_text(text):
+    if not text or len(text) == 0:
+        return []
+
     parts = text.split('\n')
-    chunks = [""]
-    for part in parts:
-        if len(chunks[-1]) + len(part) < 1998:
+    chunks = [parts[0]]
+    for part in parts[1:]:
+        if len(chunks[-1]) + len(part) + len('`')*2 + len('\n') < 2000:
             chunks[-1] = "%s\n%s" % (chunks[-1], part)
         else:
             chunks.append(part)
@@ -165,7 +168,9 @@ class Discord:
                 self.heartbeat_sent += 1
                 self.logger.info("Heartbeat: %s" % js)
 
-            time.sleep(self.heartbeat_interval / 1000)
+            for i in range(self.heartbeat_interval / 1000):
+                if not self.shutdown_event.is_set():
+                    time.sleep(1)
 
     def on_message(self, web_socket, message):
         js = json.loads(message)
@@ -218,10 +223,8 @@ class Discord:
 
         if 'content' in data:
             (text, snapshot) = self.command.parse_command(data['content'])
-            if text:
-                for chunk in split_text(text):
-                    self.send(message="`%s`" % chunk)
-            self.send(snapshot=snapshot)
+            self.send(message=message, snapshot=snapshot)
+
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
@@ -291,6 +294,19 @@ class Discord:
             self.send(message=message, snapshot=snapshot)
 
     def send(self, message=None, snapshot=None):
+        if message:
+            chunks = split_text(message)
+            for chunk in chunks[0:-1]:
+                if not self._dispatch_message(message="`%s`" % chunk):
+                    return False
+            if not self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot):
+                return False
+        else:
+            if not self._dispatch_message(snapshot=snapshot):
+                return False
+        return True
+
+    def _dispatch_message(self, message=None, snapshot=None):
         data = None
         files = None
         if message is not None and len(message) != 0:

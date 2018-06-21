@@ -15,15 +15,6 @@ from octoprint_discordremote.discord import Discord
 
 class TestSend(TestCase):
     def setUp(self):
-
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.connect(('10.255.255.255', 1))
-        except Exception as e:
-            self.fail("Can't be tested without an internet connection")
-        finally:
-            s.close()
-
         config_file = "config.yaml"
         try:
             with open(config_file, "r") as config:
@@ -42,15 +33,42 @@ class TestSend(TestCase):
     def tearDown(self):
         self.discord.shutdown_discord()
 
-    def test_send(self):
+    @unittest.skipIf("NET_TEST" not in os.environ,
+                     "'NET_TEST' not in os.environ - Not running network test")
+    def test_dispatch(self):
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(('10.255.255.255', 1))
+        except Exception as e:
+            self.fail("Can't be tested without an internet connection")
+        finally:
+            s.close()
+
         # Should result in 3 messages. 1 text only, 1 text+img and 1 image only
-        self.assertTrue(self.discord.send("Test message 1"))
-        with open("unittests/test_pattern.png", "rb") as file:
-            self.assertTrue(self.discord.send("Test message 2", file))
-            self.assertTrue(self.discord.send(None, file))
+        self.assertTrue(self.discord._dispatch_message("Test message 1"))
+        with open("unittests/test_pattern.png", "rb") as f:
+            self.assertTrue(self.discord._dispatch_message("Test message 2", f))
+            self.assertTrue(self.discord._dispatch_message(None, f))
+
+    def test_send(self):
+        self.discord._dispatch_message = mock.Mock()
+
+        with open("unittests/test_pattern.png", "rb") as f:
+            short_str = "x" * 1998
+            self.assertTrue(self.discord.send(short_str, f))
+            self.discord._dispatch_message.assert_called_once_with(message="`%s`" % short_str, snapshot=f)
+            self.discord._dispatch_message.reset_mock()
+
+            # split_text() doesnt properly deal with lines over 1998 chars long.
+            # Wont fix it til it comes up.
+            long_str = (short_str + '\n') * 5
+            self.assertTrue(self.discord.send(long_str, f))
+            self.assertEqual(6 , self.discord._dispatch_message.call_count)
+            self.discord._dispatch_message.reset_mock()
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
-                     "Not running long test")
+                     "'LONG_TEST' not in os.environ - Not running long test")
     def test_reconnect(self):
         # Wait til connected fully
         while self.discord.session_id is None:
