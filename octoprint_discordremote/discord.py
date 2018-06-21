@@ -222,7 +222,7 @@ class Discord:
                 self.send(message=self.command.upload_file(filename, url))
 
         if 'content' in data:
-            (text, snapshot) = self.command.parse_command(data['content'])
+            (message, snapshot) = self.command.parse_command(data['content'])
             self.send(message=message, snapshot=snapshot)
 
 
