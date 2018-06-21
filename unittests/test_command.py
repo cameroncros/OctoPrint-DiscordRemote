@@ -52,8 +52,8 @@ class TestCommand(TestCase):
         self._file_manager.list_files = mock.Mock()
         self._file_manager.list_files.return_value = file_list
         message, snapshot = self.command.parse_command("/files")
+        print('\n' + message + '\n')
         self._file_manager.list_files.assert_called_once()
-        self.assertIn("List of files", message)
         self.assertIsNone(snapshot)
 
     def test_parse_command_print(self):
@@ -106,12 +106,14 @@ class TestCommand(TestCase):
     def test_parse_command_help(self):
         # Success: Printed help
         message, snapshot = self.command.parse_command("/help")
-        self.assertIn("List of commands", message)
+        print('\n' + message + '\n')
         for command, details in self.command.command_dict.items():
             self.assertIn(command, message)
             if details.get('params'):
-                self.assertIn(details.get('params'), message)
-            self.assertIn(details.get('description'), message)
+                for line in details.get('params').split('\n'):
+                    self.assertIn(line, message)
+            for line in details.get('description').split('\n'):
+                self.assertIn(line, message)
         self.assertIsNone(snapshot)
 
     def test_get_flat_file_list(self):
@@ -203,12 +205,13 @@ class TestCommand(TestCase):
         self.get_snapshot = mock.Mock()
         self.get_snapshot.return_value = mock.Mock()
         message, snapshot = self.command.parse_command('/status')
+        print('\n' + message + '\n')
         self.get_snapshot.assert_called_once()
         self.assertEqual(self.get_snapshot.return_value, snapshot)
 
         expected_terms = ['Status', 'Value', 'Operational', 'Current Z',
                           'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
-                          'Time Spent', 'Time Remaining', 'Printer Status',
+                          'Time Spent', 'Time Remaining',
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500)]
         for term in expected_terms:
             self.assertIn(term, message)
