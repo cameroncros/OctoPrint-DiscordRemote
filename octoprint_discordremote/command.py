@@ -1,3 +1,4 @@
+import collections
 import humanfriendly
 import re
 import time
@@ -13,18 +14,17 @@ class Command:
     def __init__(self, plugin):
         assert plugin
         self.plugin = plugin
-        self.command_dict = {
-            '/connect': {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer"},
-            '/disconnect': {'cmd': self.disconnect, 'description': "Disconnect to a printer"},
-            '/print': {'cmd': self.start_print, 'params': "{filename}", 'description': "print a file"},
-            '/files': {'cmd': self.list_files, 'description': "List all the files"},
-            '/abort': {'cmd': self.cancel_print, 'description': "Abort a print"},
-            '/snapshot': {'cmd': self.snapshot, 'description': "Take a snapshot with the camera"},
-            '/status': {'cmd': self.status, 'description': "Get the current status of the printer"},
-            '/help': {'cmd': self.help, 'description': "Print this help"},
-            '/pause': {'cmd': self.pause, 'description': "Pause current print"},
-            '/resume': {'cmd': self.resume, 'description': "Resume current print"},
-        }
+        self.command_dict = collections.OrderedDict()
+        self.command_dict['/connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer."}
+        self.command_dict['/disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
+        self.command_dict['/print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
+        self.command_dict['/files'] = {'cmd': self.list_files, 'description': "List all the files."}
+        self.command_dict['/abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
+        self.command_dict['/snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
+        self.command_dict['/status'] = {'cmd': self.status, 'description': "Get the current printer status."}
+        self.command_dict['/help'] = {'cmd': self.help, 'description': "Print this help."}
+        self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
+        self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -44,13 +44,14 @@ class Command:
 
     def help(self):
         data = [["Command",
-                 "Params",
-                 "Description"]]
+                 "Parameters and Description"]]
 
         for command, details in self.command_dict.items():
-            data.append([command, details.get('params') or "", details.get('description')])
+            data.append([command, details.get('params') or ""])
+            data.append(["", details.get('description')])
+            data.append([])
 
-        table = Table(data, title="List of commands")
+        table = Table(data)
         message = str(table.table)
         return message, None
 
@@ -68,7 +69,7 @@ class Command:
         if file is None:
             return "Failed to find the file", None
 
-        is_sdcard = (file['location']=='sdcard')
+        is_sdcard = (file['location'] == 'sdcard')
         try:
             file_path = self.plugin._file_manager.path_on_disk(file['location'], file['path'])
             self.plugin._printer.select_file(file_path, is_sdcard, printAfterSelect=True)
@@ -81,52 +82,39 @@ class Command:
 
     def list_files(self):
         file_list = self.get_flat_file_list()
-        data = [["Storage",
-                 "File Path",
-                 "Estimated Print Time",
-                 "Average Print Time",
-                 "Filament Required"]]
+        data = [["File", "Details"]]
         for details in file_list:
-
-            location = ""
             try:
-                location = details['location']
+                data.append([details['path']])
             except:
                 pass
 
-            file_path = ""
             try:
-                file_path = details['path']
+                data.append(["Location", details['location']])
             except:
                 pass
 
-            estimated_print_time = ""
             try:
-                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'])
+                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'], max_units=2)
+                data.append(["Estimated Print Time", estimated_print_time])
             except:
                 pass
 
-            average_print_time = ""
             try:
-                average_print_time = humanfriendly.format_timespan(details['statistics']['averagePrintTime']['_default'])
+                average_print_time = humanfriendly.format_timespan(details['statistics']['averagePrintTime']['_default'], max_units=2)
+                data.append(["Average Print Time", average_print_time])
             except:
                 pass
 
-            filament_required = ""
             try:
                 filament_required = humanfriendly.format_length(details['analysis']['filament']['tool0']['length']/1000)
+                data.append(["Filament Required", filament_required])
             except:
                 pass
 
-            data.append([
-                location,
-                file_path,
-                estimated_print_time,
-                average_print_time,
-                filament_required
-            ])
+            data.append([])  # Add a spacer.
 
-        table = Table(data, title="List of files")
+        table = Table(data)
         return str(table.table), None
 
     def snapshot(self):
@@ -221,19 +209,19 @@ class Command:
 
                 current_time_val = current_data['progress']['printTime']
                 if current_time_val:
-                    time_spent = humanfriendly.format_timespan(current_time_val)
+                    time_spent = humanfriendly.format_timespan(current_time_val, max_units=2)
                     data.append(['Time Spent', time_spent])
                 else:
                     data.append(['Time Spent', 'Unknown'])
 
                 remaining_time_val = current_data['progress']['printTimeLeft']
                 if remaining_time_val:
-                    time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'])
+                    time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'], max_units=2)
                     data.append(['Time Remaining', time_left])
                 else:
                     data.append(['Time Remaining', 'Unknown'])
 
-        table = Table(data, title="Printer Status")
+        table = Table(data)
         return str(table.table), self.plugin.get_snapshot()
 
     def pause(self):

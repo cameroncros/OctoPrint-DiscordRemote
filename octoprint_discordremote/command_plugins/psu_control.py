@@ -13,15 +13,15 @@ class PsuControl:
         if self.plugin._plugin_manager.get_plugin("psucontrol"):
             command.command_dict["/poweron"] = {
                                          'cmd': self.poweron,
-                                         'description': "Turn on the printers power supply. Uses PSUControl plugin."
+                                         'description': "Turn on the printers PSU.\nUses PSUControl plugin."
                                      }
             command.command_dict["/poweroff"] = {
                                          'cmd': self.poweroff,
-                                         'description': "Turn off the printers power supply. Uses PSUControl plugin."
+                                         'description': "Turn off the printers PSU.\nUses PSUControl plugin."
                                      }
             command.command_dict["/powerstatus"] = {
                                          'cmd': self.powerstatus,
-                                         'description': "Get the status of the power supply. Uses PSUControl plugin."
+                                         'description': "Get the status of the PSU.\nUses PSUControl plugin."
                                      }
 
     def poweron(self):
