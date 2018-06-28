@@ -71,6 +71,8 @@ class Discord:
     shutdown_event = Event()  # Set to stop all threads
 
     def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
+        self.shutdown_event.clear()
+        self.restart_event.clear()
         self.bot_token = bot_token
         self.channel_id = channel_id
         self.logger = logger
@@ -78,6 +80,12 @@ class Discord:
         self.status_callback = status_callback
         if self.status_callback:
             self.status_callback(connected="disconnected")
+
+        if self.channel_id is None or len(self.channel_id) != 18 or \
+                self.bot_token is None or len(self.bot_token) != 59:
+            self.shutdown_discord()
+            return
+
         self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
