@@ -191,6 +191,10 @@ class Command:
     def status(self):
         data = [['Status', 'Value']]
 
+        ip_addr = self.plugin.get_ip_address()
+        if ip_addr != "127.0.0.1":
+            data.append(['Server IP', ip_addr])
+
         operational = self.plugin._printer.is_operational()
         data.append(['Operational', 'Yes' if operational else 'No'])
         current_data = self.plugin._printer.get_current_data()

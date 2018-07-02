@@ -277,16 +277,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return False
 
         # Store IP address for message
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            data['ipaddr'] = s.getsockname()[0]
-        except Exception as e:
-            print(e)
-            data['ipaddr'] = '127.0.0.1'
-        finally:
-            s.close()
+        data['ipaddr'] = self.get_ip_address()
 
         # Special case for progress eventID : we check for progress and steps
         if not (not (event_id == 'printing_progress') or
@@ -295,6 +286,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return False
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
+
+    def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            return s.getsockname()[0]
+        except Exception as e:
+            print(e)
+            return '127.0.0.1'
+        finally:
+            s.close()
 
     def exec_script(self, event_name, which=""):
 
