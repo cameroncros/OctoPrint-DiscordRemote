@@ -11,6 +11,10 @@ import requests
 import websocket
 import logging
 
+
+# Constants
+MAX_ERRORS = 25
+
 # OP codes for web socket.
 DISPATCH = 0
 HEARTBEAT = 1
@@ -60,6 +64,7 @@ class Discord:
     queue = []  # Message queue, stores messages until the bot reconnects.
     command = None  # Command parser
     status_callback = None  # The callback to use when the status changes.
+    error_counter = 0  # The number of errors that have occured.
 
     # Threads:
     manager_thread = None
@@ -68,16 +73,25 @@ class Discord:
 
     # Events
     restart_event = Event()  # Set to restart discord bot.
-    shutdown_event = Event()  # Set to stop all threads
+    shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
     def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
+        self.shutdown_event.clear()
+        self.restart_event.clear()
         self.bot_token = bot_token
         self.channel_id = channel_id
         self.logger = logger
         self.command = command
         self.status_callback = status_callback
+        self.error_counter = 0
         if self.status_callback:
             self.status_callback(connected="disconnected")
+
+        if self.channel_id is None or len(self.channel_id) != 18 or \
+                self.bot_token is None or len(self.bot_token) != 59:
+            self.shutdown_discord()
+            return
+
         self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
@@ -154,6 +168,7 @@ class Discord:
 
     def heartbeat(self):
         self.shutdown_event.clear()
+        self.check_errors()
         while not self.shutdown_event.is_set():
             # Send heartbeat
             if self.heartbeat_sent > 1:
@@ -225,7 +240,6 @@ class Discord:
             (message, snapshot) = self.command.parse_command(data['content'])
             self.send(message=message, snapshot=snapshot)
 
-
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
         # Authenticate
@@ -273,6 +287,8 @@ class Discord:
         self.logger.info("Received HEARTBEAT_ACK message")
         if self.status_callback:
             self.status_callback(connected="connected")
+        if self.error_counter > 0:
+            self.error_counter -= 0
         self.heartbeat_sent = 0
         self.process_queue()
 
@@ -289,9 +305,12 @@ class Discord:
             self.send_identify()
 
     def process_queue(self):
-        while len(self.queue):
+        while not self.shutdown_event.is_set() and len(self.queue):
             (message, snapshot) = self.queue.pop()
-            self.send(message=message, snapshot=snapshot)
+            if self.send(message=message, snapshot=snapshot):
+                continue
+            else:
+                break
 
     def send(self, message=None, snapshot=None):
         if message:
@@ -299,12 +318,9 @@ class Discord:
             for chunk in chunks[0:-1]:
                 if not self._dispatch_message(message="`%s`" % chunk):
                     return False
-            if not self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot):
-                return False
+            return self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot)
         else:
-            if not self._dispatch_message(snapshot=snapshot):
-                return False
-        return True
+            return self._dispatch_message(snapshot=snapshot)
 
     def _dispatch_message(self, message=None, snapshot=None):
         data = None
@@ -330,6 +346,8 @@ class Discord:
                     return True
             except Exception as e:
                 self.logger.debug("Failed to send the message, exception occured: %s", e)
+                self.error_counter += 1
+                self.check_errors()
                 self.queue_message(message, snapshot)
                 return False
 
@@ -339,6 +357,8 @@ class Discord:
                 continue
             else:
                 self.logger.error("%s: %s - %s" % (str(r), r.content, r.headers))
+                self.error_counter += 1
+                self.check_errors()
                 self.queue_message(message, snapshot)
                 return False
 
@@ -352,5 +372,17 @@ class Discord:
 
     def queue_message(self, message, snapshot):
         if message is not None or snapshot is not None:
-            self.logger.info("Message queued 2")
+            self.logger.info("Message queued")
             self.queue.append((message, snapshot))
+
+    def check_errors(self):
+        if self.error_counter > MAX_ERRORS:
+            # More than MAX_ERRORS errors, in rapid succession,
+            # best to shutdown and let the user restart.
+            self.logger.error("Had %s/%s errors in rapid succession, this is bad sign. "
+                              "Shutting down bot to avoid spam" % (self.error_counter, MAX_ERRORS))
+            self.shutdown_event.set()
+            self.restart_event.set()
+
+            if self.status_callback:
+                self.status_callback(connected="disconnected")

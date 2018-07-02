@@ -222,27 +222,22 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
-        old_bot_settings = '{}{}'.format(self._settings.get(['bottoken'], merged=True),
-                                         self._settings.get(['channelid'], merged=True))
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        new_bot_settings = '{}{}'.format(self._settings.get(['bottoken'], merged=True),
-                                         self._settings.get(['channelid'], merged=True))
 
-        if old_bot_settings != new_bot_settings:
-            self._logger.info("Settings have changed. Send a test message...")
-            # Configure discord
-            if self.command is None:
-                self.command = Command(self)
+        self._logger.info("Settings have saved. Send a test message...")
+        # Configure discord
+        if self.command is None:
+            self.command = Command(self)
 
-            if self.discord is None:
-                self.discord = Discord()
+        if self.discord is None:
+            self.discord = Discord()
 
-            self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                           self._settings.get(['channelid'], merged=True),
-                                           self._logger,
-                                           self.command,
-                                           self.update_discord_status)
-            self.notify_event("test")
+        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                       self._settings.get(['channelid'], merged=True),
+                                       self._logger,
+                                       self.command,
+                                       self.update_discord_status)
+        self.notify_event("test")
 
     # SimpleApiPlugin mixin
     def get_api_commands(self):
@@ -360,7 +355,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             except ConnectionError:
                 return None
         if snapshot_url.startswith("file://"):
-            snapshot = open(snapshot_url.partition('file://')[2], "r")
+            snapshot = open(snapshot_url.partition('file://')[2], "rb")
 
         if snapshot is None:
             return None
