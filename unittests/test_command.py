@@ -82,6 +82,22 @@ class TestCommand(TestCase):
         """Mock snapshot function."""
         return open("unittests/test_pattern.png")
 
+    def test_parse_command_unknown(self):
+        self.command.help = mock.Mock()
+
+        self.command.parse_command("HELP")
+        self.command.help.assert_called_once()
+        self.command.help.reset_mock()
+
+        self.command.parse_command("/?")
+        self.command.help.assert_called_once()
+        self.command.help.reset_mock()
+
+        message, snapshot = self.command.parse_command("not a command")
+        self.assertIsNone(message)
+        self.assertIsNone(snapshot)
+        self.command.help.assert_not_called()
+
     def test_parse_command_snapshot(self):
         # Fail: Camera not working.
         # TODO

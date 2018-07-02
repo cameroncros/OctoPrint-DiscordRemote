@@ -35,7 +35,10 @@ class Command:
 
         command = self.command_dict.get(parts[0])
         if command is None:
-            return self.help()
+            if parts[0][0] == "/" or \
+                    parts[0].lower() == "help":
+                return self.help()
+            return None, None
 
         if command.get('params'):
             return command['cmd'](parts)
@@ -95,19 +98,22 @@ class Command:
                 pass
 
             try:
-                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'], max_units=2)
+                estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'],
+                                                                     max_units=2)
                 data.append(["Estimated Print Time", estimated_print_time])
             except:
                 pass
 
             try:
-                average_print_time = humanfriendly.format_timespan(details['statistics']['averagePrintTime']['_default'], max_units=2)
+                average_print_time = humanfriendly.format_timespan(
+                    details['statistics']['averagePrintTime']['_default'], max_units=2)
                 data.append(["Average Print Time", average_print_time])
             except:
                 pass
 
             try:
-                filament_required = humanfriendly.format_length(details['analysis']['filament']['tool0']['length']/1000)
+                filament_required = humanfriendly.format_length(
+                    details['analysis']['filament']['tool0']['length'] / 1000)
                 data.append(["Filament Required", filament_required])
             except:
                 pass
@@ -150,7 +156,7 @@ class Command:
     def connect(self, params):
         if len(params) > 3:
             return "Too many parameters. Should be: /connect [port] [baudrate]", None
-        if  self.plugin._printer.is_operational():
+        if self.plugin._printer.is_operational():
             return 'Printer already connected. Disconnect first', None
 
         port = None
