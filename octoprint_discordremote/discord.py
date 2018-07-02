@@ -10,6 +10,7 @@ import time
 import requests
 import websocket
 import logging
+import re
 
 
 # Constants
@@ -65,6 +66,7 @@ class Discord:
     command = None  # Command parser
     status_callback = None  # The callback to use when the status changes.
     error_counter = 0  # The number of errors that have occured.
+    allowed_users = []  # Users who the bot should listen to. If empty, listen to everyone.
 
     # Threads:
     manager_thread = None
@@ -75,7 +77,7 @@ class Discord:
     restart_event = Event()  # Set to restart discord bot.
     shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
-    def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
+    def configure_discord(self, bot_token, channel_id, allowed_users, logger, command, status_callback=None):
         self.shutdown_event.clear()
         self.restart_event.clear()
         self.bot_token = bot_token
@@ -84,6 +86,9 @@ class Discord:
         self.command = command
         self.status_callback = status_callback
         self.error_counter = 0
+        if allowed_users:
+            self.allowed_users = re.split("[^0-9]{1,}", allowed_users)
+
         if self.status_callback:
             self.status_callback(connected="disconnected")
 
@@ -227,8 +232,16 @@ class Discord:
 
         if "bot" in data['author']:
             # Only care about real people messages
-            # TODO: Add user authentication here?
             return
+
+        if len(self.allowed_users) != 0:
+            # If defined, only listen to messages from certain users.
+            authorised = False
+            for user in self.allowed_users:
+                if user == data['author']['id']:
+                    authorised = True
+            if not authorised:
+                return
 
         if 'attachments' in data:
             for upload in data['attachments']:

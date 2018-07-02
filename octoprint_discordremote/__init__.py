@@ -123,6 +123,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord = Discord()
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
@@ -136,6 +137,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return {
             'bottoken': "",
             'channelid': "",
+            'allowedusers': "",
             'events': self.events,
             'allow_scripts': False,
             'script_before': '',
@@ -147,7 +149,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # settings.events.tests is a false message, so we should never see it as configurable.
         # settings.bottoken and channelid are admin only.
         return dict(never=[["events", "test"]],
-                    admin=[["bottoken"], ["channelid"], ['script_before'], ['script_after']])
+                    admin=[["bottoken"], ["channelid"], ["allowedusers"], ['script_before'], ['script_after']])
 
     # AssetPlugin mixin
     def get_assets(self):
@@ -234,6 +236,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
