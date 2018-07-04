@@ -123,6 +123,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord = Discord()
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
@@ -136,6 +137,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return {
             'bottoken': "",
             'channelid': "",
+            'allowedusers': "",
             'events': self.events,
             'allow_scripts': False,
             'script_before': '',
@@ -147,7 +149,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # settings.events.tests is a false message, so we should never see it as configurable.
         # settings.bottoken and channelid are admin only.
         return dict(never=[["events", "test"]],
-                    admin=[["bottoken"], ["channelid"], ['script_before'], ['script_after']])
+                    admin=[["bottoken"], ["channelid"], ["allowedusers"], ['script_before'], ['script_after']])
 
     # AssetPlugin mixin
     def get_assets(self):
@@ -234,6 +236,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
@@ -274,16 +277,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return False
 
         # Store IP address for message
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            data['ipaddr'] = s.getsockname()[0]
-        except Exception as e:
-            print(e)
-            data['ipaddr'] = '127.0.0.1'
-        finally:
-            s.close()
+        data['ipaddr'] = self.get_ip_address()
 
         # Special case for progress eventID : we check for progress and steps
         if not (not (event_id == 'printing_progress') or
@@ -292,6 +286,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return False
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
+
+    def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            return s.getsockname()[0]
+        except Exception as e:
+            print(e)
+            return '127.0.0.1'
+        finally:
+            s.close()
 
     def exec_script(self, event_name, which=""):
 
