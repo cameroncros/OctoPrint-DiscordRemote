@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from datetime import timedelta
 
+import ipgetter as ipgetter
 import octoprint.plugin
 import octoprint.settings
 from octoprint.server import user_permission
@@ -37,7 +38,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "name": "Octoprint Startup",
                 "enabled": True,
                 "with_snapshot": False,
-                "message": "⏰ I just woke up! What are we gonna print today?"
+                "message": "⏰ I just woke up! What are we gonna print today?\n"
+                           "Local IP: {ipaddr} External IP: {externaddr}"
             },
             "shutdown": {
                 "name": "Octoprint Shutdown",
@@ -278,6 +280,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         # Store IP address for message
         data['ipaddr'] = self.get_ip_address()
+        data['externaddr'] = self.get_external_ip_address()
 
         # Special case for progress eventID : we check for progress and steps
         if not (not (event_id == 'printing_progress') or
@@ -287,7 +290,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 
-    def get_ip_address(self):
+    @staticmethod
+    def get_ip_address():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             # doesn't even have to be reachable
@@ -298,6 +302,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return '127.0.0.1'
         finally:
             s.close()
+
+    @staticmethod
+    def get_external_ip_address():
+        return str(ipgetter.myip())
 
     def exec_script(self, event_name, which=""):
 
