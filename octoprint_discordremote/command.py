@@ -193,7 +193,9 @@ class Command:
 
         ip_addr = self.plugin.get_ip_address()
         if ip_addr != "127.0.0.1":
-            data.append(['Server IP', ip_addr])
+            data.append(['Local IP', ip_addr])
+
+        data.append(['External IP', self.plugin.get_external_ip_address()])
 
         operational = self.plugin._printer.is_operational()
         data.append(['Operational', 'Yes' if operational else 'No'])

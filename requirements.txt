@@ -10,4 +10,5 @@ websocket-client
 requests
 terminaltables
 humanfriendly
+ipgetter
 .
