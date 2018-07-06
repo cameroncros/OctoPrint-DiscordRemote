@@ -320,7 +320,7 @@ class Discord:
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
             (message, snapshot) = self.queue.pop()
-            if self.send(message=message, snapshot=snapshot):
+            if self._dispatch_message(message=message, snapshot=snapshot):
                 continue
             else:
                 break
@@ -369,7 +369,14 @@ class Discord:
                 time.sleep(retry_after / 1000)
                 continue
             else:
-                self.logger.error("%s: %s - %s" % (str(r), r.content, r.headers))
+                self.logger.error("Failed to send message:")
+                self.logger.error("\tResponse: %s" % self.log_safe(r))
+                self.logger.error("\tResponse Content: %s" % self.log_safe(r.content))
+                self.logger.error("\tResponse Headers: %s" % self.log_safe(r.headers))
+                self.logger.error("\tURL: %s" % self.log_safe(self.postURL))
+                self.logger.error("\tHeaders: %s" % self.log_safe(self.headers))
+                self.logger.error("\tData: %s" % data)
+                self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
                 self.check_errors()
                 self.queue_message(message, snapshot)
@@ -399,3 +406,6 @@ class Discord:
 
             if self.status_callback:
                 self.status_callback(connected="disconnected")
+
+    def log_safe(self, message):
+        return str(message).replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
