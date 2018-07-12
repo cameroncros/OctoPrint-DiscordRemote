@@ -131,7 +131,7 @@ class Discord:
                                                      on_error=self.on_error,
                                                      on_close=self.on_close)
 
-            self.listener_thread = Thread(target=self.web_socket.run_forever)
+            self.listener_thread = Thread(target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
             self.listener_thread.start()
             self.logger.debug("WebSocket listener started")
             time.sleep(1)
@@ -156,8 +156,12 @@ class Discord:
                 self.web_socket = None
             if self.listener_thread:
                 self.logger.info("Waiting for listener thread to join.")
-                self.listener_thread.join()
-                self.logger.info("Listener thread joined.")
+
+                self.listener_thread.join(timeout=60)
+                if self.listener_thread.is_alive():
+                    self.logger.error("Listener thread has hung, leaking it now.")
+                else:
+                    self.logger.info("Listener thread joined.")
                 self.listener_thread = None
 
     def shutdown_discord(self):
