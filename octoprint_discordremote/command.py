@@ -191,11 +191,13 @@ class Command:
     def status(self):
         data = [['Status', 'Value']]
 
-        ip_addr = self.plugin.get_ip_address()
-        if ip_addr != "127.0.0.1":
-            data.append(['Local IP', ip_addr])
+        if self.plugin._settings.get(["show_local_ip"], merged=True):
+            ip_addr = self.plugin.get_ip_address()
+            if ip_addr != "127.0.0.1":
+                data.append(['Local IP', ip_addr])
 
-        data.append(['External IP', self.plugin.get_external_ip_address()])
+        if self.plugin._settings.get(["show_external_ip"], merged=True):
+            data.append(['External IP', self.plugin.get_external_ip_address()])
 
         operational = self.plugin._printer.is_operational()
         data.append(['Operational', 'Yes' if operational else 'No'])
