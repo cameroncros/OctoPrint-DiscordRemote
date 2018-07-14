@@ -22,6 +22,7 @@ class TestSend(TestCase):
             self.discord = Discord()
             self.discord.configure_discord(bot_token=config['bottoken'],
                                            channel_id=config['channelid'],
+                                           allowed_users="",
                                            logger=logging.getLogger(),
                                            command=None)
             time.sleep(5)
