@@ -140,6 +140,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'bottoken': "",
             'channelid': "",
             'allowedusers': "",
+            'show_local_ip': True,
+            'show_external_ip': True,
             'events': self.events,
             'allow_scripts': False,
             'script_before': '',
@@ -151,7 +153,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # settings.events.tests is a false message, so we should never see it as configurable.
         # settings.bottoken and channelid are admin only.
         return dict(never=[["events", "test"]],
-                    admin=[["bottoken"], ["channelid"], ["allowedusers"], ['script_before'], ['script_after']])
+                    admin=[["bottoken"],
+                           ["channelid"],
+                           ["allowedusers"],
+                           ["show_local_ip"],
+                           ["show_external_ip"],
+                           ['script_before'],
+                           ['script_after']])
 
     # AssetPlugin mixin
     def get_assets(self):
