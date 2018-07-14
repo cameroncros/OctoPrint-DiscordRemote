@@ -194,6 +194,16 @@ class TestCommand(TestCase):
         self._printer.disconnect.assert_called_once_with()
 
     def test_parse_command_status(self):
+        self._settings = mock.Mock()
+        self._settings.get = mock.Mock()
+        self._settings.get.return_value = True
+
+        self.get_ip_address = mock.Mock()
+        self.get_ip_address.return_value = "192.168.1.1"
+
+        self.get_external_ip_address = mock.Mock()
+        self.get_external_ip_address.return_value = "8.8.8.8"
+
         self._printer.is_operational = mock.Mock()
         self._printer.is_operational.return_value = True
 
@@ -228,7 +238,15 @@ class TestCommand(TestCase):
         expected_terms = ['Status', 'Value', 'Operational', 'Current Z',
                           'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
                           'Time Spent', 'Time Remaining',
-                          humanfriendly.format_timespan(300), humanfriendly.format_timespan(500)]
+                          humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
+                          self.get_ip_address.return_value, self.get_external_ip_address.return_value]
+
+        self.assertEqual(2, self._settings.get.call_count)
+
+        calls = [mock.call(["show_local_ip"], merged=True),
+                 mock.call(["show_external_ip"], merged=True)]
+        self._settings.get.assert_has_calls(calls)
+
         for term in expected_terms:
             self.assertIn(term, message)
 
