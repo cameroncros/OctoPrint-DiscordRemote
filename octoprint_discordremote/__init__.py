@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import ipgetter as ipgetter
 import octoprint.plugin
@@ -29,6 +29,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
     discord = None
+    command = None
+    last_progress_message = None
 
     def __init__(self):
         # Events definition here (better for intellisense in IDE)
@@ -114,7 +116,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "message": "Hello hello! If you see this message, it means that the settings are correct!"
             },
         }
-        self.command = None
 
     def on_after_startup(self):
         self._logger.info("DiscordRemote is started !")
@@ -291,10 +292,28 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['externaddr'] = self.get_external_ip_address()
 
         # Special case for progress eventID : we check for progress and steps
-        if not (not (event_id == 'printing_progress') or
-                not (int(data["progress"]) == 0 or
-                     int(data["progress"]) % int(tmp_config["step"]) != 0)):
-            return False
+        if event_id == 'printing_progress':
+            # Skip if just started
+            if int(data["progress"]) == 0:
+                return False
+
+            # Skip if not a multiple of the given interval
+            if int(data["progress"]) % int(tmp_config["step"]) != 0:
+                return False
+
+            # Always send last message, and reset timer.
+            if int(data["progress"]) == 100:
+                self.last_progress_message = None
+
+            # Otherwise work out if time since last message has passed.
+            elif tmp_config["timeout"]:
+                min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
+
+                if self.last_progress_message \
+                        and self.last_progress_message > (datetime.now() - min_progress_time):
+                    return False
+
+            self.last_progress_message = datetime.now()
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 

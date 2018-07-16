@@ -73,6 +73,12 @@
                     <input type="number" min="1" max="100" step="1" data-bind="value: $parent.settings.plugins.discordremote.events[$data].step"/>%
                 </div>
             </div>
+            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
+                <label class="control-label">{{ _("Minimum timeout between messages") }}</label>
+                <div class="controls">
+                    <input type="number" data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
+                </div>
+            </div>
         </div>
     </form>
     <h3>Scripts settings</h3>
