@@ -132,7 +132,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
+        self._logger.info("DiscordRemote is shutting down.")
         self.discord.shutdown_discord()
+        self._logger.info("Discord bot has excited cleanly.")
 
     # SettingsPlugin mixin
     def get_settings_defaults(self):
