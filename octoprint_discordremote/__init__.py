@@ -17,7 +17,7 @@ from requests import ConnectionError
 from flask import make_response
 
 from octoprint_discordremote.command import Command
-from .discord import Discord
+from .discord import Discord, WRAP_CODE, WRAP_NONE
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -268,11 +268,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def execute_command(self, data):
         args = ""
-        if 'args' in data:
-            args = data['args']
-
-        message, snapshot = self.command.parse_command(args)
-        self.discord.send(message=message, snapshot=snapshot)
+        if 'args' in data and data['args']:
+            message, snapshot = self.command.parse_command(data['args'])
+            self.discord.send(message=message, snapshot=snapshot, wrapping=WRAP_CODE)
 
     def notify_event(self, event_id, data=None):
         if data is None:
@@ -306,12 +304,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 self.last_progress_message = None
 
             # Otherwise work out if time since last message has passed.
-            elif tmp_config["timeout"]:
+            try:
                 min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
-
-                if self.last_progress_message \
+                if self.last_progress_message is not None \
                         and self.last_progress_message > (datetime.now() - min_progress_time):
                     return False
+            except ValueError:
+                pass
+            except KeyError:
+                pass
 
             self.last_progress_message = datetime.now()
 
@@ -375,7 +376,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(message=message, snapshot=snapshot)
+        out = self.discord.send(message=message, snapshot=snapshot, wrapping=WRAP_NONE)
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
