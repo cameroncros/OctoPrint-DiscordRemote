@@ -15,19 +15,6 @@ import re
 
 # Constants
 MAX_ERRORS = 25
-CHANNEL_ID_LENGTH = 18
-BOT_TOKEN_LENGTH = 59
-# The number of characters allowed in a single message.
-MAX_MESSAGE_LENGTH = 2000
-# Leave some characters to allow for wrapping.
-# Worst case is WRAP_SYNTAX_MD = 10
-WRAPPING_OVERHEAD = 10
-
-# Wrapping types
-WRAP_NONE = 0
-WRAP_CODE = 1
-WRAP_CODE_MULTILINE = 2
-WRAP_SYNTAX_MD = 3
 
 # OP codes for web socket.
 DISPATCH = 0
@@ -53,22 +40,11 @@ def split_text(text):
     parts = text.split('\n')
     chunks = [parts[0]]
     for part in parts[1:]:
-        if len(chunks[-1]) + len(part) + WRAPPING_OVERHEAD < MAX_MESSAGE_LENGTH:
+        if len(chunks[-1]) + len(part) + len('`')*2 + len('\n') < 2000:
             chunks[-1] = "%s\n%s" % (chunks[-1], part)
         else:
             chunks.append(part)
     return chunks
-
-
-def wrap_text(text, wrapping):
-    if wrapping is WRAP_CODE:
-        return "`%s`" % text
-    elif wrapping is WRAP_CODE_MULTILINE:
-        return "```\n%s\n```" % text
-    elif wrapping is WRAP_SYNTAX_MD:
-        return "```md\n%s\n```" % text
-    else:
-        return text
 
 
 class Discord:
@@ -275,11 +251,11 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                self.send(message=self.command.upload_file(filename, url), wrapping=WRAP_CODE)
+                self.send(message=self.command.upload_file(filename, url))
 
         if 'content' in data:
             (message, snapshot) = self.command.parse_command(data['content'])
-            self.send(message=message, snapshot=snapshot, wrapping=WRAP_CODE)
+            self.send(message=message, snapshot=snapshot)
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
@@ -353,13 +329,13 @@ class Discord:
             else:
                 break
 
-    def send(self, message=None, snapshot=None, wrapping=WRAP_NONE):
+    def send(self, message=None, snapshot=None):
         if message:
             chunks = split_text(message)
             for chunk in chunks[0:-1]:
-                if not self._dispatch_message(message=wrap_text(chunk, wrapping)):
+                if not self._dispatch_message(message="`%s`" % chunk):
                     return False
-            return self._dispatch_message(message=wrap_text(chunks[-1], wrapping), snapshot=snapshot)
+            return self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot)
         else:
             return self._dispatch_message(snapshot=snapshot)
 

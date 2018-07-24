@@ -17,7 +17,7 @@ from requests import ConnectionError
 from flask import make_response
 
 from octoprint_discordremote.command import Command
-from .discord import Discord, WRAP_CODE, WRAP_NONE
+from .discord import Discord
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -268,9 +268,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def execute_command(self, data):
         args = ""
-        if 'args' in data and data['args']:
-            message, snapshot = self.command.parse_command(data['args'])
-            self.discord.send(message=message, snapshot=snapshot, wrapping=WRAP_CODE)
+        if 'args' in data:
+            args = data['args']
+
+        message, snapshot = self.command.parse_command(args)
+        self.discord.send(message=message, snapshot=snapshot)
 
     def notify_event(self, event_id, data=None):
         if data is None:
@@ -373,7 +375,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(message=message, snapshot=snapshot, wrapping=WRAP_NONE)
+        out = self.discord.send(message=message, snapshot=snapshot)
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
