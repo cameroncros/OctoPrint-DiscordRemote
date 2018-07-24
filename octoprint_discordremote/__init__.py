@@ -133,7 +133,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
+        self._logger.info("DiscordRemote is shutting down.")
         self.discord.shutdown_discord()
+        self._logger.info("Discord bot has excited cleanly.")
 
     # SettingsPlugin mixin
     def get_settings_defaults(self):
@@ -306,12 +308,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 self.last_progress_message = None
 
             # Otherwise work out if time since last message has passed.
-            elif tmp_config["timeout"]:
+            try:
                 min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
-
-                if self.last_progress_message \
+                if self.last_progress_message is not None \
                         and self.last_progress_message > (datetime.now() - min_progress_time):
                     return False
+            except ValueError:
+                pass
+            except KeyError:
+                pass
 
             self.last_progress_message = datetime.now()
 

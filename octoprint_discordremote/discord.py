@@ -92,8 +92,12 @@ class Discord:
         if self.status_callback:
             self.status_callback(connected="disconnected")
 
-        if self.channel_id is None or len(self.channel_id) != 18 or \
-                self.bot_token is None or len(self.bot_token) != 59:
+        if self.channel_id is None or len(self.channel_id) != CHANNEL_ID_LENGTH:
+            self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
+            self.shutdown_discord()
+            return
+        if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
+            self.logger.error("Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             self.shutdown_discord()
             return
 
@@ -109,70 +113,85 @@ class Discord:
 
     def monitor_thread(self):
         while not self.shutdown_event.is_set():
-            socket_url = None
+            try:
+                socket_url = None
 
-            if self.status_callback:
-                self.status_callback(connected="connecting")
+                if self.status_callback:
+                    self.status_callback(connected="connecting")
 
-            while not self.shutdown_event.is_set() and socket_url is None:
-                try:
-                    r = requests.get(self.gateway_url, headers=self.headers)
-                    socket_url = json.loads(r.content)['url']
-                    self.logger.info("Socket URL is %s", socket_url)
-                    break
-                except Exception as e:
-                    self.logger.error("Failed to connect to gateway: %s" % e.message)
-                    time.sleep(5)
-                    continue
+                while not self.shutdown_event.is_set() and socket_url is None:
+                    try:
+                        r = requests.get(self.gateway_url, headers=self.headers)
+                        socket_url = json.loads(r.content)['url']
+                        self.logger.info("Socket URL is %s", socket_url)
+                        break
+                    except Exception as e:
+                        self.logger.error("Failed to connect to gateway: %s" % e.message)
+                        time.sleep(5)
+                        continue
 
-            self.heartbeat_sent = 0
-            self.web_socket = websocket.WebSocketApp(socket_url,
-                                                     on_message=self.on_message,
-                                                     on_error=self.on_error,
-                                                     on_close=self.on_close)
+                self.heartbeat_sent = 0
+                self.web_socket = websocket.WebSocketApp(socket_url,
+                                                         on_message=self.on_message,
+                                                         on_error=self.on_error,
+                                                         on_close=self.on_close)
 
-            self.listener_thread = Thread(target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
-            self.listener_thread.start()
-            self.logger.debug("WebSocket listener started")
-            time.sleep(1)
+                self.listener_thread = Thread(target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
+                self.listener_thread.start()
+                self.logger.debug("WebSocket listener started")
+                time.sleep(1)
 
-            if self.session_id:
-                self.send_resume()
+                if self.session_id:
+                    self.send_resume()
 
-            # Wait until we are told to restart
-            self.restart_event.clear()
-            self.restart_event.wait()
-            self.logger.info("Restart Triggered")
+                # Wait until we are told to restart
+                self.restart_event.clear()
+                self.restart_event.wait()
+                self.logger.info("Restart Triggered")
 
-            if self.status_callback:
-                self.status_callback(connected="disconnected")
+            except Exception as e:
+                self.logger.error("Exception occured, catching, ignoring, and restarting: %s", e.message)
 
-            # Clean up resources
-            if self.web_socket:
-                try:
-                    self.web_socket.close()
-                except websocket.WebSocketConnectionClosedException as e:
-                    self.logger.error("Failed to close websocket: %s" % e.message)
-                self.web_socket = None
-            if self.listener_thread:
-                self.logger.info("Waiting for listener thread to join.")
+            finally:
+                if self.status_callback:
+                    self.status_callback(connected="disconnected")
 
-                self.listener_thread.join(timeout=60)
-                if self.listener_thread.is_alive():
-                    self.logger.error("Listener thread has hung, leaking it now.")
-                else:
-                    self.logger.info("Listener thread joined.")
-                self.listener_thread = None
+                # Clean up resources
+                if self.web_socket:
+                    try:
+                        self.web_socket.close()
+                    except websocket.WebSocketConnectionClosedException as e:
+                        self.logger.error("Failed to close websocket: %s" % e.message)
+                    self.web_socket = None
+                if self.listener_thread:
+                    self.logger.info("Waiting for listener thread to join.")
+
+                    self.listener_thread.join(timeout=60)
+                    if self.listener_thread.is_alive():
+                        self.logger.error("Listener thread has hung, leaking it now.")
+                    else:
+                        self.logger.info("Listener thread joined.")
+                    self.listener_thread = None
 
     def shutdown_discord(self):
         # Shutdown event must be set first.
         self.shutdown_event.set()
         self.restart_event.set()
         if self.manager_thread:
-            self.manager_thread.join()
+            self.manager_thread.join(timeout=60)
+            if self.manager_thread.is_alive():
+                self.logger.error("Manager thread has hung, leaking it now.")
+            else:
+                self.logger.info("Manager thread joined.")
+            self.manager_thread = None
             self.manager_thread = None
         if self.heartbeat_thread:
-            self.heartbeat_thread.join()
+            self.heartbeat_thread.join(timeout=60)
+            if self.heartbeat_thread.is_alive():
+                self.logger.error("HeartBeat thread has hung, leaking it now.")
+            else:
+                self.logger.info("HeartBeat thread joined.")
+            self.heartbeat_thread = None
             self.heartbeat_thread = None
 
     def heartbeat(self):
@@ -405,8 +424,7 @@ class Discord:
             # best to shutdown and let the user restart.
             self.logger.error("Had %s/%s errors in rapid succession, this is bad sign. "
                               "Shutting down bot to avoid spam" % (self.error_counter, MAX_ERRORS))
-            self.shutdown_event.set()
-            self.restart_event.set()
+            Thread(target=self.shutdown_discord()).start()
 
             if self.status_callback:
                 self.status_callback(connected="disconnected")

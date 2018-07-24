@@ -1,4 +1,4 @@
-# OctoPrint-DiscordRemote 1.0.0
+# OctoPrint-DiscordRemote
 
 DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel via a discord bot. It also listens on the channel and can accept commands to control the printer.
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
@@ -27,6 +27,7 @@ See the following link for instructions on how to setup a Discord bot and get th
 ## Commands
 
 To get a list of available commands and arguments, type ``/help`` into the discord channel. The bot will return all available commands.
+Commands can also be sent via the web interface, by clicking the button in the top panel that looks like a game controller.
 
 ## Configuration
 
@@ -35,7 +36,8 @@ The plugin can be configured in the configuration panel, under the "DiscordRemot
 ### Discord Settings
 
 - Bot Token: The token for a discord bot.
-- Channel ID: The ID of a channel the bot will listen and post to. Ensure that this is locked down so that strangers cannot send commands to your printer.
+- Channel ID: The ID of a channel the bot will listen and post to. Ensure that this is locked down so that strangers cannot send commands to your printer, or whitelist users using the "Allowed Users" setting.
+- Allowed Users: A whitelist of the users that are allowed to interact with. The bot will only respond if the users _ID_ (Not user name) is in this list.
 
 In order for you to be sure these settings work, every time you change one of them, a test message will be sent to the corresponding Discord Channel. If you don't receive it, something is most likely wrong!
 
@@ -50,6 +52,7 @@ Here you can customize every message handled by DiscordRemote.
     - `10%` means you'll receive a message at 10%, 20%, 30%, 40% ... 80%, 90% of the printing process.
     - `5%` means you'll receive a message at 5%, 10%, 15%, 20% ... 80%, 85%, 90%, 95% of the printing process.
     - etc...
+- **Timeout** : for small prints, prevents discord spam by only sending progress messages after the timeout has passed since the previous message.
 
 
 ## Message format
