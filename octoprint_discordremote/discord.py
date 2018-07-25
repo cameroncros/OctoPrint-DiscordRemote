@@ -15,6 +15,8 @@ import re
 
 # Constants
 MAX_ERRORS = 25
+CHANNEL_ID_LENGTH = 18
+BOT_TOKEN_LENGTH = 59
 
 # OP codes for web socket.
 DISPATCH = 0
@@ -31,20 +33,6 @@ INVALIDATE_SESSION = 9
 HELLO = 10
 HEARTBEAT_ACK = 11
 GUILD_SYNC = 12
-
-
-def split_text(text):
-    if not text or len(text) == 0:
-        return []
-
-    parts = text.split('\n')
-    chunks = [parts[0]]
-    for part in parts[1:]:
-        if len(chunks[-1]) + len(part) + len('`')*2 + len('\n') < 2000:
-            chunks[-1] = "%s\n%s" % (chunks[-1], part)
-        else:
-            chunks.append(part)
-    return chunks
 
 
 class Discord:
@@ -270,11 +258,13 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                self.send(message=self.command.upload_file(filename, url))
+                snapshots, embeds = self.command.upload_file(filename, url)
+                self.send(embeds=embeds)
 
         if 'content' in data:
-            (message, snapshot) = self.command.parse_command(data['content'])
-            self.send(message=message, snapshot=snapshot)
+            snapshots, embeds = self.command.parse_command(data['content'])
+            self.send(snapshots=snapshots,
+                      embeds=embeds)
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
@@ -342,27 +332,29 @@ class Discord:
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
-            (message, snapshot) = self.queue.pop()
-            if self._dispatch_message(message=message, snapshot=snapshot):
+            snapshot, embed = self.queue.pop()
+            if self._dispatch_message(snapshot=snapshot, embed=embed):
                 continue
             else:
                 break
 
-    def send(self, message=None, snapshot=None):
-        if message:
-            chunks = split_text(message)
-            for chunk in chunks[0:-1]:
-                if not self._dispatch_message(message="`%s`" % chunk):
+    def send(self, snapshots=None, embeds=None):
+        if snapshots is not None:
+            for snapshot in snapshots:
+                if not self._dispatch_message(snapshot=snapshot):
                     return False
-            return self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot)
-        else:
-            return self._dispatch_message(snapshot=snapshot)
+        if embeds is not None:
+            for embed in embeds:
+                if not self._dispatch_message(embed=embed):
+                    return False
+        return True
 
-    def _dispatch_message(self, message=None, snapshot=None):
+    def _dispatch_message(self, snapshot=None, embed=None):
         data = None
         files = None
-        if message is not None and len(message) != 0:
-            json_str = json.dumps({"content": message})
+
+        if embed is not None:
+            json_str = json.dumps({'embed': embed})
             data = {"payload_json": json_str}
 
         if snapshot:
@@ -384,7 +376,7 @@ class Discord:
                 self.logger.debug("Failed to send the message, exception occured: %s", e)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(message, snapshot)
+                self.queue_message(snapshot, embed)
                 return False
 
             if int(r.status_code) == 429:  # HTTP 429: Too many requests.
@@ -402,7 +394,7 @@ class Discord:
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(message, snapshot)
+                self.queue_message(snapshot, embed)
                 return False
 
     def on_error(self, ws, error):
@@ -413,10 +405,10 @@ class Discord:
         self.logger.info("WebSocket Closed")
         self.restart_event.set()
 
-    def queue_message(self, message, snapshot):
-        if message is not None or snapshot is not None:
+    def queue_message(self, snapshot, embed):
+        if snapshot is not None or embed is not None:
             self.logger.info("Message queued")
-            self.queue.append((message, snapshot))
+            self.queue.append((snapshot, embed))
 
     def check_errors(self):
         if self.error_counter > MAX_ERRORS:

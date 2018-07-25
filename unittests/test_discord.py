@@ -54,19 +54,14 @@ class TestSend(TestCase):
 
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()
+        mock_snapshot = mock.Mock()
+        mock_embed = mock.Mock()
+        self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
 
-        with open("unittests/test_pattern.png", "rb") as f:
-            short_str = "x" * 1998
-            self.assertTrue(self.discord.send(short_str, f))
-            self.discord._dispatch_message.assert_called_once_with(message="`%s`" % short_str, snapshot=f)
-            self.discord._dispatch_message.reset_mock()
-
-            # split_text() doesnt properly deal with lines over 1998 chars long.
-            # Wont fix it til it comes up.
-            long_str = (short_str + '\n') * 5
-            self.assertTrue(self.discord.send(long_str, f))
-            self.assertEqual(6 , self.discord._dispatch_message.call_count)
-            self.discord._dispatch_message.reset_mock()
+        self.assertEqual(2, self.discord._dispatch_message.call_count)
+        calls = [mock.call(snapshot=mock_snapshot),
+                 mock.call(embed=mock_embed)]
+        self.discord._dispatch_message.assert_has_calls(calls=calls)
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")

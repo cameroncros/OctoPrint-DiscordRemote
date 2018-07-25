@@ -5,9 +5,9 @@ import time
 import requests
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
-from terminaltables import AsciiTable as Table
 
 from command_plugins import plugin_list
+from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
 
 
 class Command:
@@ -46,85 +46,85 @@ class Command:
             return command['cmd']()
 
     def help(self):
-        data = [["Command",
-                 "Parameters and Description"]]
+        builder = EmbedBuilder()
+        builder.set_title('Commands, Parameters and Description')
 
         for command, details in self.command_dict.items():
-            data.append([command, details.get('params') or ""])
-            data.append(["", details.get('description')])
-            data.append([])
+            builder.add_field(title='%s %s' % (command, details.get('params') or ''),
+                              text=details.get('description'))
 
-        table = Table(data)
-        message = str(table.table)
-        return message, None
+        return None, builder.get_embeds()
 
     def cancel_print(self):
         self.plugin._printer.cancel_print()
-        return "Print aborted", None
+        return None, error_embed(title='Print aborted')
 
     def start_print(self, params):
         if len(params) != 2:
-            return "Wrong number of arguments, try 'print [filename]'", None
+            return None, error_embed(title='Wrong number of arguments',
+                                     description='try "/print [filename]"')
         if not self.plugin._printer.is_ready():
-            return "Printer is not ready", None
+            return None, error_embed(title='Printer is not ready')
 
         file = self.find_file(params[1])
         if file is None:
-            return "Failed to find the file", None
+            return None, error_embed(title='Failed to find the file')
 
         is_sdcard = (file['location'] == 'sdcard')
         try:
             file_path = self.plugin._file_manager.path_on_disk(file['location'], file['path'])
             self.plugin._printer.select_file(file_path, is_sdcard, printAfterSelect=True)
         except InvalidFileType:
-            return "Invalid file type selected", None
+            return None, error_embed(title='Invalid file type selected')
         except InvalidFileLocation:
-            return "Invalid file location?", None
-
-        return "Successfully started print: %s" % file['path'], None
+            return None, error_embed(title='Invalid file location?')
+        return None, success_embed(title='Successfully started print',
+                                   description=file['path'])
 
     def list_files(self):
+        builder = EmbedBuilder()
+        builder.set_title('Files and Details')
         file_list = self.get_flat_file_list()
-        data = [["File", "Details"]]
         for details in file_list:
+            description = ''
+            title = ''
             try:
-                data.append([details['path']])
+                title = details['path']
             except:
                 pass
 
             try:
-                data.append(["Location", details['location']])
+                description += 'Location: %s\n' % details['location']
             except:
                 pass
 
             try:
                 estimated_print_time = humanfriendly.format_timespan(details['analysis']['estimatedPrintTime'],
                                                                      max_units=2)
-                data.append(["Estimated Print Time", estimated_print_time])
+                description += 'Estimated Print Time: %s\n' % estimated_print_time
             except:
                 pass
 
             try:
                 average_print_time = humanfriendly.format_timespan(
                     details['statistics']['averagePrintTime']['_default'], max_units=2)
-                data.append(["Average Print Time", average_print_time])
+                description += 'verage Print Time: %s\n' % average_print_time
             except:
                 pass
 
             try:
                 filament_required = humanfriendly.format_length(
                     details['analysis']['filament']['tool0']['length'] / 1000)
-                data.append(["Filament Required", filament_required])
+                description += 'Filament Required: %s\n' % filament_required
             except:
                 pass
 
-            data.append([])  # Add a spacer.
+            builder.add_field(title=title, text=description)
 
-        table = Table(data)
-        return str(table.table), None
+        return None, builder.get_embeds()
 
     def snapshot(self):
-        return None, self.plugin.get_snapshot()
+        return self.plugin.get_snapshot(), None
 
     def find_file(self, file_name):
         flat_filelist = self.get_flat_file_list()
@@ -137,7 +137,7 @@ class Command:
         file_list = self.plugin._file_manager.list_files(recursive=True)
         flat_filelist = []
         for (location, files) in file_list.items():
-            self.flatten_file_list_recursive(flat_filelist, location, files, "")
+            self.flatten_file_list_recursive(flat_filelist, location, files, '')
 
         return flat_filelist
 
@@ -147,17 +147,19 @@ class Command:
                 # This is a folder, recurse into it
                 self.flatten_file_list_recursive(file_array, location, details['children'], filename)
             else:
-                if path == "" or not path.endswith("/"):
-                    path += "/"
+                if path == '' or not path.endswith('/'):
+                    path += '/'
                 details['path'] = path + filename
                 details['location'] = location
                 file_array.append(details)
 
     def connect(self, params):
         if len(params) > 3:
-            return "Too many parameters. Should be: /connect [port] [baudrate]", None
+            return None, error_embed(title='Too many parameters',
+                                     description='Should be: /connect [port] [baudrate]')
         if self.plugin._printer.is_operational():
-            return 'Printer already connected. Disconnect first', None
+            return None, error_embed(title='Printer already connected',
+                                     description='Disconnect first')
 
         port = None
         baudrate = None
@@ -167,84 +169,87 @@ class Command:
             try:
                 baudrate = int(params[2])
             except ValueError:
-                return "Wrong format for baudrate, should be a number", None
+                return None, error_embed(title='Wrong format for baudrate',
+                                         description='should be a number')
 
         self.plugin._printer.connect(port=port, baudrate=baudrate, profile=None)
         # Sleep a while before checking if connected
         time.sleep(10)
         if not self.plugin._printer.is_operational():
-            return 'Failed to connect, try: "/connect [port] [baudrate]"', None
+            return None, error_embed(title='Failed to connect',
+                                     description='try: "/connect [port] [baudrate]"')
 
-        return 'Connected to printer', None
+        return None, success_embed('Connected to printer')
 
     def disconnect(self):
         if not self.plugin._printer.is_operational():
-            return 'Printer is not connected', None
+            return None, error_embed(title='Printer is not connected')
         self.plugin._printer.disconnect()
         # Sleep a while before checking if disconnected
         time.sleep(10)
         if self.plugin._printer.is_operational():
-            return 'Failed to disconnect', None
+            return None, error_embed(title='Failed to disconnect')
 
-        return 'Disconnected to printer', None
+        return None, success_embed(title='Disconnected to printer')
 
     def status(self):
-        data = [['Status', 'Value']]
+        builder = EmbedBuilder()
+        builder.set_title('Status')
 
-        if self.plugin._settings.get(["show_local_ip"], merged=True):
+        if self.plugin._settings.get(['show_local_ip'], merged=True):
             ip_addr = self.plugin.get_ip_address()
-            if ip_addr != "127.0.0.1":
-                data.append(['Local IP', ip_addr])
+            if ip_addr != '127.0.0.1':
+                builder.add_field(title='Local IP', text=ip_addr, inline=True)
 
-        if self.plugin._settings.get(["show_external_ip"], merged=True):
-            data.append(['External IP', self.plugin.get_external_ip_address()])
+        if self.plugin._settings.get(['show_external_ip'], merged=True):
+            builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
 
         operational = self.plugin._printer.is_operational()
-        data.append(['Operational', 'Yes' if operational else 'No'])
+        builder.add_field(title='Operational', text='Yes' if operational else 'No', inline=True)
         current_data = self.plugin._printer.get_current_data()
 
         if current_data.get('currentZ'):
-            data.append(['Current Z', current_data['currentZ']])
+            builder.add_field(title='Current Z', text=current_data['currentZ'], inline=True)
         if operational:
             temperatures = self.plugin._printer.get_current_temperatures()
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
-                data.append(['Extruder Temp (%s)' % heater, temperatures[heater]['actual']])
-            data.append(['Bed Temp', temperatures['bed']['actual']])
+                builder.add_field(title='Extruder Temp (%s)' % heater, text=temperatures[heater]['actual'], inline=True)
+
+            builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
 
             printing = self.plugin._printer.is_printing()
-            data.append(['Printing', 'Yes' if printing else 'No'])
+            builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
             if printing:
-                data.append(['File', current_data['job']['file']['name']])
+                builder.add_field(title='File', text=current_data['job']['file']['name'], inline=True)
                 completion = current_data['progress']['completion']
                 if completion:
-                    data.append(['Progress', "%d%%" % completion])
+                    builder.add_field(title='Progress', text='%d%%' % completion, inline=True)
 
                 current_time_val = current_data['progress']['printTime']
                 if current_time_val:
                     time_spent = humanfriendly.format_timespan(current_time_val, max_units=2)
-                    data.append(['Time Spent', time_spent])
+                    builder.add_field(title='Time Spent', text=time_spent, inline=True)
                 else:
-                    data.append(['Time Spent', 'Unknown'])
+                    builder.add_field(title='Time Spent', text='Unknown', inline=True)
 
                 remaining_time_val = current_data['progress']['printTimeLeft']
                 if remaining_time_val:
                     time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'], max_units=2)
-                    data.append(['Time Remaining', time_left])
+                    builder.add_field(title='Time Remaining', text=time_left, inline=True)
                 else:
-                    data.append(['Time Remaining', 'Unknown'])
+                    builder.add_field(title='Time Remaining', text='Unknown', inline=True)
 
-        table = Table(data)
-        return str(table.table), self.plugin.get_snapshot()
+        return self.plugin.get_snapshot(), builder.get_embeds()
 
     def pause(self):
         self.plugin._printer.pause_print()
-        return "Print paused", self.plugin.get_snapshot()
+        return self.plugin.get_snapshot(), success_embed(title='Print paused')
 
     def resume(self):
         self.plugin._printer.resume_print()
-        return "Print resumed", self.plugin.get_snapshot()
+        return self.plugin.get_snapshot(), success_embed(title='Print resumed')
 
     def upload_file(self, filename, url):
         upload_file = self.plugin._file_manager.path_on_disk('local', filename)
@@ -254,4 +259,5 @@ class Command:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
-        return "File Received: %s\n" % filename
+        return None, success_embed(title='File Received',
+                                   description=filename)
