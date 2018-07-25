@@ -17,6 +17,7 @@ from requests import ConnectionError
 from flask import make_response
 
 from octoprint_discordremote.command import Command
+from octoprint_discordremote.embedbuilder import info_embed
 from .discord import Discord
 
 
@@ -273,8 +274,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'args' in data:
             args = data['args']
 
-        message, snapshot = self.command.parse_command(args)
-        self.discord.send(message=message, snapshot=snapshot)
+        snapshots, embeds = self.command.parse_command(data['args'])
+        self.discord.send(snapshots=snapshots, embeds=embeds)
 
     def notify_event(self, event_id, data=None):
         if data is None:
@@ -372,15 +373,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.exec_script(event_id, "before")
 
         # Get snapshot if asked for
-        snapshot = None
+        snapshots = None
         if with_snapshot:
-            snapshot = self.get_snapshot()
+            snapshots = self.get_snapshot()
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(message=message, snapshot=snapshot)
+        out = self.discord.send(snapshots=snapshots, embeds=info_embed(message))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
@@ -430,8 +431,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             new_image = BytesIO()
             img.save(new_image, 'png')
 
-            return new_image
-        return snapshot
+            return [new_image]
+        return [snapshot]
 
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
