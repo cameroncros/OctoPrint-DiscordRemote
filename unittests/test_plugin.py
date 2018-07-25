@@ -28,10 +28,14 @@ class TestCommand(TestCase):
             mock_requests_get.return_value = mock.Mock()
             mock_requests_get.return_value.content = file_data
 
-            snapshot = plugin.get_snapshot()[0]
+            snapshots = plugin.get_snapshot()
 
-            self.assertIsNotNone(snapshot)
-            snapshot_data = snapshot.read()
+            self.assertIsNotNone(snapshots)
+            self.assertEqual(1, len(snapshots))
+            snapshot = snapshots[0]
+            self.assertEqual(2, len(snapshot))
+            self.assertEqual("snapshot.png", snapshot[0])
+            snapshot_data = snapshot[1].read()
             self.assertEqual(len(file_data), len(snapshot_data))
             self.assertEqual([file_data], [snapshot_data])
 
@@ -50,6 +54,9 @@ class TestCommand(TestCase):
 
         self.assertIsNotNone(snapshots)
         self.assertEqual(1, len(snapshots))
-        snapshot_data = snapshots[0].read()
+        snapshot = snapshots[0]
+        self.assertEqual(2, len(snapshot))
+        self.assertEqual("snapshot.png", snapshot[0])
+        snapshot_data = snapshot[1].read()
         self.assertEqual(len(file_data), len(snapshot_data))
         self.assertEqual([file_data], [snapshot_data])
