@@ -10,7 +10,9 @@ from unittest import TestCase
 
 import yaml
 
+from octoprint_discordremote import info_embed
 from octoprint_discordremote.discord import Discord
+from octoprint_discordremote.embedbuilder import EmbedBuilder
 
 
 class TestSend(TestCase):
@@ -46,11 +48,22 @@ class TestSend(TestCase):
         finally:
             s.close()
 
-        # Should result in 3 messages. 1 text only, 1 text+img and 1 image only
-        self.assertTrue(self.discord._dispatch_message("Test message 1"))
+        # Should result in 3 messages, one embed, one embed with photo, and one photo.
+        builder = EmbedBuilder()
+        builder.set_title("Test title")
+        builder.set_description("No snapshot")
+
+        self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
         with open("unittests/test_pattern.png", "rb") as f:
-            self.assertTrue(self.discord._dispatch_message("Test message 2", f))
-            self.assertTrue(self.discord._dispatch_message(None, f))
+            # builder.set_description("With snapshot")
+            # builder.set_image(("snapshot.png", f))
+            # self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
+            f.seek(0)
+            self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
+
+
 
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()

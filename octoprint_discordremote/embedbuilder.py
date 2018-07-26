@@ -11,7 +11,7 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(title=None, description=None, color=None):
+def embed_simple(title=None, description=None, color=None, snapshot=None):
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -19,6 +19,8 @@ def embed_simple(title=None, description=None, color=None):
         builder.set_title(title)
     if description:
         builder.set_description(description)
+    if snapshot:
+        builder.set_snapshot(snapshot)
     return builder.get_embeds()
 
 
@@ -35,13 +37,10 @@ def info_embed(title=None, description=None):
 
 
 class EmbedBuilder:
-
     def __init__(self):
         self.color = COLOR_INFO
-        self.title = None
-        self.description = None
+        self.embeds = [Embed()]
         self.timestamp = True
-        self.fields = []
 
     def set_color(self, color):
         self.color = color
@@ -49,23 +48,25 @@ class EmbedBuilder:
 
     def set_title(self, title):
         if title is None:
-            self.title = "ERROR: Title was None"
-            return self
-        if len(title) > MAX_TITLE:
-            self.title = "ERROR: Title was too long for an embed: %d > %d" % (len(title), MAX_TITLE)
-            return self
-        self.title = title
+            title = "ERROR: Title was None"
+        elif len(title) > MAX_TITLE:
+            title = "ERROR: Title was too long for an embed: %d > %d" % (len(title), MAX_TITLE)
+
+        while not self.embeds[-1].set_title(title):
+            self.embeds.append(Embed())
+
         return self
 
     def set_description(self, description):
         if description is None:
-            self.description = "ERROR: Description was None"
-            return self
-        if len(description) > MAX_DESCRIPTION:
-            self.description = "ERROR: Description was too long for an embed: %d > %d" % \
+            description = "ERROR: Description was None"
+        elif len(description) > MAX_DESCRIPTION:
+            description = "ERROR: Description was too long for an embed: %d > %d" % \
                                (len(description), MAX_DESCRIPTION)
-            return self
-        self.description = description
+
+        while not self.embeds[-1].set_description(description):
+            self.embeds.append(Embed())
+
         return self
 
     def add_field(self, title, text, inline=False):
@@ -73,41 +74,102 @@ class EmbedBuilder:
             title = "ERROR: Title was too long for an embed: %d > %d" % (len(str(title)), MAX_TITLE)
         if text and len(str(text)) > MAX_VALUE:
             text = "ERROR: Text was too long for an embed: %d > %d" % (len(str(text)), MAX_VALUE)
-        self.fields.append({'name': str(title), 'value': str(text), 'inline': inline})
+
+        while not self.embeds[-1].add_field({'name': str(title), 'value': str(text), 'inline': inline}):
+            self.embeds.append(Embed())
+
         return self
 
     def enable_timestamp(self, enable):
         self.timestamp = enable
+        return self
+
+    # def set_image(self, snapshot):
+    #     self.embeds[-1].set_image(snapshot)
+    #     return self
 
     def get_embeds(self):
-        embeds = [self.new_embed()]
-        current_embed_length = 0
+        # Finalise changes to embeds
+        self.embeds[-1].timestamp = self.timestamp
+
+        finalised = []
+        for embed in self.embeds:
+            embed.color = self.color
+
+            finalised.append(embed.get_embed())
+
+        return finalised
+
+
+class Embed:
+    def __init__(self):
+        self.embed_length = 0
+        self.color = COLOR_INFO
+        self.title = None
+        self.description = None
+        self.timestamp = True
+        self.fields = []
+        self.image = None
+        self.files = []
+
+    def set_title(self, title):
+        current_length = 0
         if self.title:
-            embeds[0]['title'] = self.title
-            current_embed_length += len(self.title)
+            current_length = len(self.title)
+        if self.embed_length - current_length + len(title) > MAX_EMBED_LENGTH:
+            return False
+        self.embed_length -= current_length
+        self.title = title
+        self.embed_length += len(self.title)
+        return True
 
+    def set_description(self, description):
+        current_length = 0
         if self.description:
-            embeds[0]['description'] = self.description
-            current_embed_length += len(self.description)
+            current_length = len(self.description)
+        if self.embed_length - current_length + len(description) > MAX_EMBED_LENGTH:
+            return False
+        self.embed_length -= current_length
+        self.description = description
+        self.embed_length += len(self.description)
+        return True
 
-        for field in self.fields:
-            if current_embed_length + len(field['name']) + len(field['value']) > MAX_EMBED_LENGTH:
-                embeds.append(self.new_embed())
-                current_embed_length = 0
+    def add_field(self, field):
+        if len(self.fields) == MAX_NUM_FIELDS:
+            return False
 
-            embeds[-1]['fields'].append(field)
-            current_embed_length += len(field['name']) + len(field['value'])
+        field_length = 0
+        if 'name' in field and field['name']:
+            field_length += len(field['name'])
+        if 'value' in field and field['value']:
+            field_length += len(field['value'])
 
-            if len(embeds[-1]['fields']) == MAX_NUM_FIELDS:
-                embeds.append(self.new_embed())
-                current_embed_length = 0
+        if self.embed_length + field_length > MAX_EMBED_LENGTH:
+            return False
 
-        return embeds
+        self.fields.append(field)
+        self.embed_length += field_length
+        return True
 
-    def new_embed(self):
-        embed = {'fields': []}
+    def set_image(self, snapshot):
+        self.image = {'url': "attachment://%s" % snapshot[0]}
+        self.files.append(snapshot)
+        pass
+
+    def get_embed(self):
+        embed = {'fields': self.fields}
+        if self.title:
+            embed['title'] = self.title
+        if self.description:
+            embed['description'] = self.description
         if self.timestamp:
             embed['timestamp'] = datetime.datetime.utcnow().isoformat()
         if self.color:
             embed['color'] = self.color
+        if self.image:
+            embed['image'] = self.image
         return embed
+
+    def get_files(self):
+        return self.files
+

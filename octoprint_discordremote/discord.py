@@ -358,7 +358,7 @@ class Discord:
             data = {"payload_json": json_str}
 
         if snapshot:
-            snapshot[0].seek(0)
+            snapshot[1].seek(0)
             files = [("file", snapshot)]
 
         if files is None and data is None:
