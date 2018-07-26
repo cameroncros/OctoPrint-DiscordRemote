@@ -74,7 +74,9 @@ class EmbedBuilder:
         if text and len(str(text)) > MAX_VALUE:
             text = text[0:MAX_VALUE - 3] + "..."
 
-        while not self.embeds[-1].add_field({'name': str(title), 'value': str(text), 'inline': inline}):
+        while not self.embeds[-1].add_field({'name': str(title),
+                                             'value': str(text),
+                                             'inline': inline}):
             self.embeds.append(Embed())
 
         return self
@@ -84,7 +86,8 @@ class EmbedBuilder:
         return self
 
     def set_image(self, snapshot):
-        self.embeds[-1].set_image(snapshot)
+        if snapshot and isinstance(tuple, snapshot):
+            self.embeds[-1].set_image(snapshot)
         return self
 
     def get_embeds(self):
@@ -100,6 +103,7 @@ class EmbedBuilder:
         string = ""
         for embed in self.get_embeds():
             string += str(embed)
+
 
 class Embed:
     def __init__(self):

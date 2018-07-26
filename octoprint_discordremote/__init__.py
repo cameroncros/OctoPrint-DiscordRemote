@@ -373,15 +373,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.exec_script(event_id, "before")
 
         # Get snapshot if asked for
-        snapshots = None
+        snapshot = None
         if with_snapshot:
             snapshots = self.get_snapshot()
+            if snapshots and len(snapshots) == 1:
+                snapshot = snapshots[0]
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(snapshots=snapshots, embeds=info_embed(message))
+        out = self.discord.send(embeds=info_embed(title=message,
+                                                  snapshot=snapshot))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")

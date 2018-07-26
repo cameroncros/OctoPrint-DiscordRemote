@@ -7,7 +7,7 @@ import requests
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from command_plugins import plugin_list
-from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
+from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed
 
 
 class Command:
@@ -124,7 +124,10 @@ class Command:
         return None, builder.get_embeds()
 
     def snapshot(self):
-        return self.plugin.get_snapshot(), None
+        snapshots = self.plugin.get_snapshot()
+        if snapshots and len(snapshots) == 1:
+            return None, info_embed(snapshot=[0])
+        return None, None
 
     def find_file(self, file_name):
         flat_filelist = self.get_flat_file_list()
@@ -241,15 +244,26 @@ class Command:
                 else:
                     builder.add_field(title='Time Remaining', text='Unknown', inline=True)
 
-        return self.plugin.get_snapshot(), builder.get_embeds()
+        snapshots = self.plugin.get_snapshot()
+        if snapshots and len(snapshots) == 1:
+            builder.set_image(snapshots[0])
+        return None, builder.get_embeds()
 
     def pause(self):
         self.plugin.get_printer().pause_print()
-        return self.plugin.get_snapshot(), success_embed(title='Print paused')
+        snapshot = None
+        snapshots = self.plugin.get_snapshot()
+        if snapshots and len(snapshots) == 1:
+            snapshot = snapshots[0]
+        return None, success_embed(title='Print paused', snapshot=snapshot)
 
     def resume(self):
         self.plugin.get_printer().resume_print()
-        return self.plugin.get_snapshot(), success_embed(title='Print resumed')
+        snapshot = None
+        snapshots = self.plugin.get_snapshot()
+        if snapshots and len(snapshots) == 1:
+            snapshot = snapshots[0]
+        return None, success_embed(title='Print resumed', snapshot=snapshot)
 
     def upload_file(self, filename, url):
         upload_file = self.plugin.get_file_manager().path_on_disk('local', filename)
