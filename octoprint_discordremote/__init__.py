@@ -437,6 +437,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
 
+    def get_file_manager(self):
+        return self._file_manager
+
+    def get_settings(self):
+        return self._settings
+
+    def get_printer(self):
+        return self._printer
+
+    def get_plugin_manager(self):
+        return self._plugin_manager
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

@@ -75,7 +75,7 @@ class Discord:
         self.status_callback = status_callback
         self.error_counter = 0
         if allowed_users:
-            self.allowed_users = re.split("[^0-9]{1,}", allowed_users)
+            self.allowed_users = re.split("[^0-9]+", allowed_users)
 
         if self.status_callback:
             self.status_callback(connected="disconnected")

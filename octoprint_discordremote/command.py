@@ -56,14 +56,14 @@ class Command:
         return None, builder.get_embeds()
 
     def cancel_print(self):
-        self.plugin._printer.cancel_print()
+        self.plugin.get_printer().cancel_print()
         return None, error_embed(title='Print aborted')
 
     def start_print(self, params):
         if len(params) != 2:
             return None, error_embed(title='Wrong number of arguments',
                                      description='try "/print [filename]"')
-        if not self.plugin._printer.is_ready():
+        if not self.plugin.get_printer().is_ready():
             return None, error_embed(title='Printer is not ready')
 
         file = self.find_file(params[1])
@@ -72,8 +72,8 @@ class Command:
 
         is_sdcard = (file['location'] == 'sdcard')
         try:
-            file_path = self.plugin._file_manager.path_on_disk(file['location'], file['path'])
-            self.plugin._printer.select_file(file_path, is_sdcard, printAfterSelect=True)
+            file_path = self.plugin.get_file_manager().path_on_disk(file['location'], file['path'])
+            self.plugin.get_printer().select_file(file_path, is_sdcard, printAfterSelect=True)
         except InvalidFileType:
             return None, error_embed(title='Invalid file type selected')
         except InvalidFileLocation:
@@ -134,7 +134,7 @@ class Command:
         return None
 
     def get_flat_file_list(self):
-        file_list = self.plugin._file_manager.list_files(recursive=True)
+        file_list = self.plugin.get_file_manager().list_files(recursive=True)
         flat_filelist = []
         for (location, files) in file_list.items():
             self.flatten_file_list_recursive(flat_filelist, location, files, '')
@@ -157,7 +157,7 @@ class Command:
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
                                      description='Should be: /connect [port] [baudrate]')
-        if self.plugin._printer.is_operational():
+        if self.plugin.get_printer().is_operational():
             return None, error_embed(title='Printer already connected',
                                      description='Disconnect first')
 
@@ -172,22 +172,22 @@ class Command:
                 return None, error_embed(title='Wrong format for baudrate',
                                          description='should be a number')
 
-        self.plugin._printer.connect(port=port, baudrate=baudrate, profile=None)
+        self.plugin.get_printer().connect(port=port, baudrate=baudrate, profile=None)
         # Sleep a while before checking if connected
         time.sleep(10)
-        if not self.plugin._printer.is_operational():
+        if not self.plugin.get_printer().is_operational():
             return None, error_embed(title='Failed to connect',
                                      description='try: "/connect [port] [baudrate]"')
 
         return None, success_embed('Connected to printer')
 
     def disconnect(self):
-        if not self.plugin._printer.is_operational():
+        if not self.plugin.get_printer().is_operational():
             return None, error_embed(title='Printer is not connected')
-        self.plugin._printer.disconnect()
+        self.plugin.get_printer().disconnect()
         # Sleep a while before checking if disconnected
         time.sleep(10)
-        if self.plugin._printer.is_operational():
+        if self.plugin.get_printer().is_operational():
             return None, error_embed(title='Failed to disconnect')
 
         return None, success_embed(title='Disconnected to printer')
@@ -196,22 +196,22 @@ class Command:
         builder = EmbedBuilder()
         builder.set_title('Status')
 
-        if self.plugin._settings.get(['show_local_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_local_ip'], merged=True):
             ip_addr = self.plugin.get_ip_address()
             if ip_addr != '127.0.0.1':
                 builder.add_field(title='Local IP', text=ip_addr, inline=True)
 
-        if self.plugin._settings.get(['show_external_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_external_ip'], merged=True):
             builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
 
-        operational = self.plugin._printer.is_operational()
+        operational = self.plugin.get_printer().is_operational()
         builder.add_field(title='Operational', text='Yes' if operational else 'No', inline=True)
-        current_data = self.plugin._printer.get_current_data()
+        current_data = self.plugin.get_printer().get_current_data()
 
         if current_data.get('currentZ'):
             builder.add_field(title='Current Z', text=current_data['currentZ'], inline=True)
         if operational:
-            temperatures = self.plugin._printer.get_current_temperatures()
+            temperatures = self.plugin.get_printer().get_current_temperatures()
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
@@ -219,7 +219,7 @@ class Command:
 
             builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
 
-            printing = self.plugin._printer.is_printing()
+            printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
             if printing:
                 builder.add_field(title='File', text=current_data['job']['file']['name'], inline=True)
@@ -244,15 +244,15 @@ class Command:
         return self.plugin.get_snapshot(), builder.get_embeds()
 
     def pause(self):
-        self.plugin._printer.pause_print()
+        self.plugin.get_printer().pause_print()
         return self.plugin.get_snapshot(), success_embed(title='Print paused')
 
     def resume(self):
-        self.plugin._printer.resume_print()
+        self.plugin.get_printer().resume_print()
         return self.plugin.get_snapshot(), success_embed(title='Print resumed')
 
     def upload_file(self, filename, url):
-        upload_file = self.plugin._file_manager.path_on_disk('local', filename)
+        upload_file = self.plugin.get_file_manager().path_on_disk('local', filename)
 
         r = requests.get(url, stream=True)
         with open(upload_file, 'wb') as f:

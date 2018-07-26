@@ -42,8 +42,21 @@ flatten_file_list = [
 
 class TestCommand(TestCase):
     _file_manager = mock.Mock()
+    _settings = mock.Mock()
     _printer = mock.Mock()
     _plugin_manager = mock.Mock()
+
+    def get_file_manager(self):
+        return self._file_manager
+
+    def get_settings(self):
+        return self._settings
+
+    def get_printer(self):
+        return self._printer
+
+    def get_plugin_manager(self):
+        return self._plugin_manager
 
     def setUp(self):
         self.command = Command(self)
@@ -97,20 +110,20 @@ class TestCommand(TestCase):
 
     def test_parse_command_list(self):
         # Success
-        self._file_manager.list_files = mock.Mock()
-        self._file_manager.list_files.return_value = file_list
+        self.get_file_manager().list_files = mock.Mock()
+        self.get_file_manager().list_files.return_value = file_list
         snapshots, embeds = self.command.parse_command("/files")
-        self._file_manager.list_files.assert_called_once()
+        self.get_file_manager().list_files.assert_called_once()
         self.assertIsNone(snapshots)
         self._print_embeds(embeds)
         self._validate_embeds(embeds, COLOR_INFO)
 
     def test_parse_command_print(self):
         # FAIL: Printer not ready
-        self._printer.is_ready = mock.Mock()
-        self._printer.is_ready.return_value = False
+        self.get_printer().is_ready = mock.Mock()
+        self.get_printer().is_ready.return_value = False
         snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self._printer.is_ready.assert_called_once()
+        self.get_printer().is_ready.assert_called_once()
         self._validate_simple_embed(embeds, COLOR_ERROR, title="Printer is not ready")
         self.assertIsNone(snapshots)
         # TODO
@@ -119,10 +132,10 @@ class TestCommand(TestCase):
         # TODO: Mock and validate the print started
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = flatten_file_list
-        self._printer.is_ready = mock.Mock()
-        self._printer.is_ready.return_value = True
+        self.get_printer().is_ready = mock.Mock()
+        self.get_printer().is_ready.return_value = True
         snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self._printer.is_ready.assert_called_once()
+        self.get_printer().is_ready.assert_called_once()
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -187,10 +200,10 @@ class TestCommand(TestCase):
         self.assertIsNone(snapshots)
 
     def test_get_flat_file_list(self):
-        self._file_manager.list_files = mock.Mock()
-        self._file_manager.list_files.return_value = file_list
+        self.get_file_manager().list_files = mock.Mock()
+        self.get_file_manager().list_files.return_value = file_list
         flat_file_list = self.command.get_flat_file_list()
-        self._file_manager.list_files.assert_called_once()
+        self.get_file_manager().list_files.assert_called_once()
         self.assertEqual(2, len(flat_file_list))
         self.assertEqual(flatten_file_list, flat_file_list)
 
@@ -205,68 +218,67 @@ class TestCommand(TestCase):
         self.assertIsNone(snapshots)
 
         # Fail: Printer already connected
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = True
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = True
         snapshots, embeds = self.command.parse_command("/connect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Printer already connected",
                                     description="Disconnect first")
         self.assertIsNone(snapshots)
-        self._printer.is_operational.assert_called_once()
+        self.get_printer().is_operational.assert_called_once()
 
         # Fail: wrong format for baudrate
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = False
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = False
         snapshots, embeds = self.command.parse_command("/connect port baudrate")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Wrong format for baudrate",
                                     description="should be a number")
         self.assertIsNone(snapshots)
-        self._printer.is_operational.assert_called_once()
+        self.get_printer().is_operational.assert_called_once()
 
         # Fail: connect failed.
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = False
-        self._printer.connect = mock.Mock()
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = False
+        self.get_printer().connect = mock.Mock()
         snapshots, embeds = self.command.parse_command("/connect port 1234")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Failed to connect",
                                     description='try: "/connect [port] [baudrate]"')
         self.assertIsNone(snapshots)
-        self.assertEqual(2, self._printer.is_operational.call_count)
-        self._printer.connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
+        self.assertEqual(2, self.get_printer().is_operational.call_count)
+        self.get_printer().connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
 
     @mock.patch("time.sleep")
     def test_parse_command_disconnect(self, mock_sleep):
         # Fail: Printer already disconnected
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = False
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = False
         snapshots, embeds = self.command.parse_command("/disconnect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Printer is not connected")
         self.assertIsNone(snapshots)
-        self._printer.is_operational.assert_called_once()
+        self.get_printer().is_operational.assert_called_once()
 
         # Fail: disconnect failed.
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = True
-        self._printer.disconnect = mock.Mock()
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = True
+        self.get_printer().disconnect = mock.Mock()
         snapshots, embeds = self.command.parse_command("/disconnect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Failed to disconnect")
         self.assertIsNone(snapshots)
-        self.assertEqual(2, self._printer.is_operational.call_count)
-        self._printer.disconnect.assert_called_once_with()
+        self.assertEqual(2, self.get_printer().is_operational.call_count)
+        self.get_printer().disconnect.assert_called_once_with()
 
     def test_parse_command_status(self):
-        self._settings = mock.Mock()
-        self._settings.get = mock.Mock()
-        self._settings.get.return_value = True
+        self.get_settings().get = mock.Mock()
+        self.get_settings().get.return_value = True
 
         self.get_ip_address = mock.Mock()
         self.get_ip_address.return_value = "192.168.1.1"
@@ -274,14 +286,14 @@ class TestCommand(TestCase):
         self.get_external_ip_address = mock.Mock()
         self.get_external_ip_address.return_value = "8.8.8.8"
 
-        self._printer.is_operational = mock.Mock()
-        self._printer.is_operational.return_value = True
+        self.get_printer().is_operational = mock.Mock()
+        self.get_printer().is_operational.return_value = True
 
-        self._printer.is_printing = mock.Mock()
-        self._printer.is_printing.return_value = True
+        self.get_printer().is_printing = mock.Mock()
+        self.get_printer().is_printing.return_value = True
 
-        self._printer.get_current_data = mock.Mock()
-        self._printer.get_current_data.return_value = {
+        self.get_printer().get_current_data = mock.Mock()
+        self.get_printer().get_current_data.return_value = {
             'currentZ': 10,
             'job': {'file': {'name': 'filename'}},
             'progress': {
@@ -291,8 +303,8 @@ class TestCommand(TestCase):
             }
         }
 
-        self._printer.get_current_temperatures = mock.Mock()
-        self._printer.get_current_temperatures.return_value = {
+        self.get_printer().get_current_temperatures = mock.Mock()
+        self.get_printer().get_current_temperatures.return_value = {
             'bed': {'actual': 100},
             'extruder0': {'actual': 250},
             'extruder1': {'actual': 350}
@@ -311,11 +323,11 @@ class TestCommand(TestCase):
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
                           self.get_ip_address.return_value, self.get_external_ip_address.return_value]
 
-        self.assertEqual(2, self._settings.get.call_count)
+        self.assertEqual(2, self.get_settings().get.call_count)
 
         calls = [mock.call(["show_local_ip"], merged=True),
                  mock.call(["show_external_ip"], merged=True)]
-        self._settings.get.assert_has_calls(calls)
+        self.get_settings().get.assert_has_calls(calls)
 
         message = str(embeds)
         for term in expected_terms:
@@ -324,7 +336,7 @@ class TestCommand(TestCase):
     def test_parse_command_pause(self):
         self.get_snapshot = mock.Mock()
         self.get_snapshot.return_value = mock.Mock()
-        self._printer.pause_print = mock.Mock()
+        self.get_printer().pause_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/pause")
 
         self._validate_simple_embed(embeds,
@@ -332,12 +344,12 @@ class TestCommand(TestCase):
                                     title="Print paused")
         self.get_snapshot.assert_called_once()
         self.assertEqual(self.get_snapshot.return_value, snapshots)
-        self._printer.pause_print.assert_called_once()
+        self.get_printer().pause_print.assert_called_once()
 
     def test_parse_command_resume(self):
         self.get_snapshot = mock.Mock()
         self.get_snapshot.return_value = mock.Mock()
-        self._printer.resume_print = mock.Mock()
+        self.get_printer().resume_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/resume")
 
         self._validate_simple_embed(embeds,
@@ -345,12 +357,12 @@ class TestCommand(TestCase):
                                     title="Print resumed")
         self.get_snapshot.assert_called_once()
         self.assertEqual(self.get_snapshot.return_value, snapshots)
-        self._printer.resume_print.assert_called_once()
+        self.get_printer().resume_print.assert_called_once()
 
     @mock.patch("requests.get")
     def test_upload_file(self, mock_get):
-        self._file_manager.path_on_disk = mock.Mock()
-        self._file_manager.path_on_disk.return_value = "./temp.file"
+        self.get_file_manager().path_on_disk = mock.Mock()
+        self.get_file_manager().path_on_disk.return_value = "./temp.file"
 
         mock_request_val = mock.Mock()
         mock_request_val.iter_content = mock.Mock()
@@ -359,7 +371,7 @@ class TestCommand(TestCase):
 
         self.command.upload_file("filename", "http://mock.url")
 
-        self._file_manager.path_on_disk.assert_called_once_with('local', 'filename')
+        self.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
         mock_get.assert_called_once_with("http://mock.url", stream=True)
 
         with open("./temp.file", 'rb') as f:

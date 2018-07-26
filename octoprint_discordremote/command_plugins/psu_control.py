@@ -12,7 +12,7 @@ class PsuControl:
 
     def setup(self, command, plugin):
         self.plugin = plugin
-        if self.plugin._plugin_manager.get_plugin("psucontrol"):
+        if self.plugin.get_plugin_manager().get_plugin("psucontrol"):
             command.command_dict["/poweron"] = {
                 'cmd': self.poweron,
                 'description': "Turn on the printers PSU.\nUses PSUControl plugin."
@@ -48,8 +48,8 @@ class PsuControl:
         return None, error_embed(title="Failed to get PSU status", description=str(result.content))
 
     def api_command(self, command):
-        api_key = self.plugin._settings.global_get(["api", "key"])
-        port = self.plugin._settings.global_get(["server", "port"])
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        port = self.plugin.get_settings().global_get(["server", "port"])
         header = {'X-Api-Key': api_key, 'Content-Type': "application/json"}
         data = json.dumps({'command': command})
         return requests.post("http://127.0.0.1:%s/api/plugin/psucontrol" % port, headers=header, data=data)

@@ -62,7 +62,8 @@ class EmbedBuilder:
             self.description = "ERROR: Description was None"
             return self
         if len(description) > MAX_DESCRIPTION:
-            self.description = "ERROR: Description was too long for an embed: %d > %d" % (len(description), MAX_DESCRIPTION)
+            self.description = "ERROR: Description was too long for an embed: %d > %d" % \
+                               (len(description), MAX_DESCRIPTION)
             return self
         self.description = description
         return self
