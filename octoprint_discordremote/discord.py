@@ -351,15 +351,20 @@ class Discord:
 
     def _dispatch_message(self, snapshot=None, embed=None):
         data = None
-        files = None
+        files = []
 
         if embed is not None:
-            json_str = json.dumps({'embed': embed})
+            json_str = json.dumps({'embed': embed.get_embed()})
             data = {"payload_json": json_str}
+            for attachment in embed.get_files():
+                files.append(("attachment", attachment))
 
         if snapshot:
             snapshot[1].seek(0)
-            files = [("file", snapshot)]
+            files.append(("file", snapshot))
+
+        if len(files) == 0:
+            files = None
 
         if files is None and data is None:
             return False

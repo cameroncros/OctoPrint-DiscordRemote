@@ -20,20 +20,20 @@ def embed_simple(title=None, description=None, color=None, snapshot=None):
     if description:
         builder.set_description(description)
     if snapshot:
-        builder.set_snapshot(snapshot)
+        builder.set_image(snapshot)
     return builder.get_embeds()
 
 
-def success_embed(title=None, description=None):
-    return embed_simple(title, description, COLOR_SUCCESS)
+def success_embed(title=None, description=None, snapshot=None):
+    return embed_simple(title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(title=None, description=None):
-    return embed_simple(title, description, COLOR_ERROR)
+def error_embed(title=None, description=None, snapshot=None):
+    return embed_simple(title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(title=None, description=None):
-    return embed_simple(title, description, COLOR_INFO)
+def info_embed(title=None, description=None, snapshot=None):
+    return embed_simple(title, description, COLOR_INFO, snapshot)
 
 
 class EmbedBuilder:
@@ -83,22 +83,23 @@ class EmbedBuilder:
         self.timestamp = enable
         return self
 
-    # def set_image(self, snapshot):
-    #     self.embeds[-1].set_image(snapshot)
-    #     return self
+    def set_image(self, snapshot):
+        self.embeds[-1].set_image(snapshot)
+        return self
 
     def get_embeds(self):
         # Finalise changes to embeds
         self.embeds[-1].timestamp = self.timestamp
 
-        finalised = []
         for embed in self.embeds:
             embed.color = self.color
 
-            finalised.append(embed.get_embed())
+        return self.embeds
 
-        return finalised
-
+    def __str__(self):
+        string = ""
+        for embed in self.get_embeds():
+            string += str(embed)
 
 class Embed:
     def __init__(self):
@@ -171,4 +172,27 @@ class Embed:
 
     def get_files(self):
         return self.files
+
+    def __str__(self):
+        embed = self.get_embed()
+        string = "\n---------------------------------\n"
+        if 'color' in embed:
+            string += "Color: %x\n" % embed['color']
+        if 'title' in embed:
+            string += "Title: %s\n" % embed['title']
+        if 'description' in embed:
+            string += "Description: %s\n" % embed['description']
+        for field in embed['fields']:
+            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+            if 'name' in field:
+                string += "\tField Name: %s\n" % field['name']
+            if 'value' in field:
+                string += "\tField Value: %s\n" % field['value']
+            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+        if 'image' in embed:
+            string += "Attached image: %s\n", embed['image']['url']
+        if 'timestamp' in embed:
+            string += "Timestamp: %s\n" % embed['timestamp']
+        string += "---------------------------------\n"
+        return string
 

@@ -65,6 +65,7 @@ class TestCommand(TestCase):
         self.assertIsNotNone(embeds)
         self.assertGreaterEqual(1, len(embeds))
         for embed in embeds:
+            embed = embed.get_embed()
             self.assertIn('color', embed)
             self.assertEqual(color, embed['color'])
             self.assertIn('timestamp', embed)
@@ -72,7 +73,7 @@ class TestCommand(TestCase):
     def _validate_simple_embed(self, embeds, color, title=None, description=None):
         self.assertIsNotNone(embeds)
         self.assertEqual(1, len(embeds))
-        embed = embeds[0]
+        embed = embeds[0].get_embed()
 
         self.assertIn('color', embed)
         self.assertEqual(color, embed['color'])
@@ -86,28 +87,6 @@ class TestCommand(TestCase):
             self.assertIn('description', embed)
             self.assertEqual(description, embed['description'])
 
-    @staticmethod
-    def _print_embeds(embeds):
-        print("\n\n")
-        for embed in embeds:
-            print("---------------------------------")
-            if 'color' in embed:
-                print("Color: %x" % embed['color'])
-            if 'title' in embed:
-                print("Title: %s" % embed['title'])
-            if 'description' in embed:
-                print("Description: %s" % embed['description'])
-            for field in embed['fields']:
-                print("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                if 'name' in field:
-                    print("\tField Name: %s" % field['name'])
-                if 'value' in field:
-                    print("\tField Value: %s" % field['value'])
-                print("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            if 'timestamp' in embed:
-                print("Timestamp: %s" % embed['timestamp'])
-            print("---------------------------------\n\n")
-
     def test_parse_command_list(self):
         # Success
         self.get_file_manager().list_files = mock.Mock()
@@ -115,7 +94,12 @@ class TestCommand(TestCase):
         snapshots, embeds = self.command.parse_command("/files")
         self.get_file_manager().list_files.assert_called_once()
         self.assertIsNone(snapshots)
-        self._print_embeds(embeds)
+
+        message = ""
+        for embed in embeds:
+            message += str(embed)
+        print(message)
+
         self._validate_embeds(embeds, COLOR_INFO)
 
     def test_parse_command_print(self):
@@ -188,8 +172,11 @@ class TestCommand(TestCase):
     def test_parse_command_help(self):
         # Success: Printed help
         snapshots, embeds = self.command.parse_command("/help")
-        self._print_embeds(embeds)
-        message = str(embeds)
+
+        message = ""
+        for embed in embeds:
+            message += str(embed)
+        print(message)
         for command, details in self.command.command_dict.items():
             self.assertIn(command, message)
             if details.get('params'):
@@ -313,7 +300,12 @@ class TestCommand(TestCase):
         self.get_snapshot = mock.Mock()
         self.get_snapshot.return_value = mock.Mock()
         snapshots, embeds = self.command.parse_command('/status')
-        self._print_embeds(embeds)
+
+        message = ""
+        for embed in embeds:
+            message += str(embed)
+        print(message)
+
         self.get_snapshot.assert_called_once()
         self.assertEqual(self.get_snapshot.return_value, snapshots)
 
@@ -329,7 +321,6 @@ class TestCommand(TestCase):
                  mock.call(["show_external_ip"], merged=True)]
         self.get_settings().get.assert_has_calls(calls)
 
-        message = str(embeds)
         for term in expected_terms:
             self.assertIn(term, message)
 

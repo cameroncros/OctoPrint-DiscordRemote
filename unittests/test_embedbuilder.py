@@ -47,13 +47,16 @@ class TestEmbedBuilder(TestCase):
                               "b" * MAX_VALUE)
         embeds = builder.get_embeds()
         self.assertEqual(8, len(embeds))
-        self.assertEqual("Test Title", embeds[0]['title'])
-        self.assertEqual("This is a description", embeds[0]['description'])
+
+        first_embed = embeds[0].get_embed()
+        self.assertEqual("Test Title", first_embed['title'])
+        self.assertEqual("This is a description", first_embed['description'])
         for embed in embeds:
-            self.assertEqual(COLOR_INFO, embed['color'])
-            self.assertIsNotNone(embed['timestamp'])
-            self.assertLessEqual(len(embed['fields']), MAX_NUM_FIELDS)
-            for field in embed['fields']:
+            embed_obj = embed.get_embed()
+            self.assertEqual(COLOR_INFO, embed_obj['color'])
+            self.assertIsNotNone(embed_obj['timestamp'])
+            self.assertLessEqual(len(embed_obj['fields']), MAX_NUM_FIELDS)
+            for field in embed_obj['fields']:
                 self.assertEqual("a" * MAX_TITLE, field['name'])
                 self.assertEqual("b" * MAX_VALUE, field['value'])
 
@@ -64,11 +67,12 @@ class TestEmbedBuilder(TestCase):
         embeds = success_embed(title="title", description="description")
 
         self.assertEqual(1, len(embeds))
-        self.assertEqual("title", embeds[0]['title'])
-        self.assertEqual("description", embeds[0]['description'])
-        self.assertEqual(COLOR_SUCCESS, embeds[0]['color'])
-        self.assertIsNotNone(embeds[0]['timestamp'])
-        self.assertEqual(0, len(embeds[0]['fields']))
+        first_embed = embeds[0].get_embed()
+        self.assertEqual("title", first_embed['title'])
+        self.assertEqual("description", first_embed['description'])
+        self.assertEqual(COLOR_SUCCESS, first_embed['color'])
+        self.assertIsNotNone(first_embed['timestamp'])
+        self.assertEqual(0, len(first_embed['fields']))
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
@@ -77,11 +81,12 @@ class TestEmbedBuilder(TestCase):
         embeds = error_embed(title="title", description="description")
 
         self.assertEqual(1, len(embeds))
-        self.assertEqual("title", embeds[0]['title'])
-        self.assertEqual("description", embeds[0]['description'])
-        self.assertEqual(COLOR_ERROR, embeds[0]['color'])
-        self.assertIsNotNone(embeds[0]['timestamp'])
-        self.assertEqual(0, len(embeds[0]['fields']))
+        first_embed = embeds[0].get_embed()
+        self.assertEqual("title", first_embed['title'])
+        self.assertEqual("description", first_embed['description'])
+        self.assertEqual(COLOR_ERROR, first_embed['color'])
+        self.assertIsNotNone(first_embed['timestamp'])
+        self.assertEqual(0, len(first_embed['fields']))
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
@@ -90,11 +95,12 @@ class TestEmbedBuilder(TestCase):
         embeds = info_embed(title="title", description="description")
 
         self.assertEqual(1, len(embeds))
-        self.assertEqual("title", embeds[0]['title'])
-        self.assertEqual("description", embeds[0]['description'])
-        self.assertEqual(COLOR_INFO, embeds[0]['color'])
-        self.assertIsNotNone(embeds[0]['timestamp'])
-        self.assertEqual(0, len(embeds[0]['fields']))
+        first_embed = embeds[0].get_embed()
+        self.assertEqual("title", first_embed['title'])
+        self.assertEqual("description", first_embed['description'])
+        self.assertEqual(COLOR_INFO, first_embed['color'])
+        self.assertIsNotNone(first_embed['timestamp'])
+        self.assertEqual(0, len(first_embed['fields']))
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))

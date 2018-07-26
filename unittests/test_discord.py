@@ -56,9 +56,9 @@ class TestSend(TestCase):
         self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
 
         with open("unittests/test_pattern.png", "rb") as f:
-            # builder.set_description("With snapshot")
-            # builder.set_image(("snapshot.png", f))
-            # self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+            builder.set_description("With snapshot")
+            builder.set_image(("snapshot.png", f))
+            self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
 
             f.seek(0)
             self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
