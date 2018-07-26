@@ -48,9 +48,9 @@ class EmbedBuilder:
 
     def set_title(self, title):
         if title is None:
-            title = "ERROR: Title was None"
+            title = ""
         elif len(title) > MAX_TITLE:
-            title = "ERROR: Title was too long for an embed: %d > %d" % (len(title), MAX_TITLE)
+            title = title[0:MAX_TITLE-3] + "..."
 
         while not self.embeds[-1].set_title(title):
             self.embeds.append(Embed())
@@ -59,10 +59,9 @@ class EmbedBuilder:
 
     def set_description(self, description):
         if description is None:
-            description = "ERROR: Description was None"
+            description = ""
         elif len(description) > MAX_DESCRIPTION:
-            description = "ERROR: Description was too long for an embed: %d > %d" % \
-                               (len(description), MAX_DESCRIPTION)
+            description = description[0:MAX_DESCRIPTION-3] + "..."
 
         while not self.embeds[-1].set_description(description):
             self.embeds.append(Embed())
@@ -71,9 +70,9 @@ class EmbedBuilder:
 
     def add_field(self, title, text, inline=False):
         if title and len(str(title)) > MAX_TITLE:
-            title = "ERROR: Title was too long for an embed: %d > %d" % (len(str(title)), MAX_TITLE)
+            title = title[0:MAX_TITLE-3] + "..."
         if text and len(str(text)) > MAX_VALUE:
-            text = "ERROR: Text was too long for an embed: %d > %d" % (len(str(text)), MAX_VALUE)
+            text = text[0:MAX_VALUE - 3] + "..."
 
         while not self.embeds[-1].add_field({'name': str(title), 'value': str(text), 'inline': inline}):
             self.embeds.append(Embed())
