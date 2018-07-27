@@ -357,6 +357,7 @@ class Discord:
             json_str = json.dumps({'embed': embed.get_embed()})
             data = {"payload_json": json_str}
             for attachment in embed.get_files():
+                attachment[1].seek(0)
                 files.append(("attachment", attachment))
 
         if snapshot:
