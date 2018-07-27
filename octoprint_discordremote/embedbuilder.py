@@ -86,7 +86,7 @@ class EmbedBuilder:
         return self
 
     def set_image(self, snapshot):
-        if snapshot and isinstance(tuple, snapshot):
+        if snapshot and len(snapshot) == 2:
             self.embeds[-1].set_image(snapshot)
         return self
 
