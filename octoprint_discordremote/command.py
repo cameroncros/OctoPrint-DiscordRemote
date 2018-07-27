@@ -126,7 +126,7 @@ class Command:
     def snapshot(self):
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
-            return None, info_embed(snapshot=[0])
+            return None, info_embed(snapshot=snapshots[0])
         return None, None
 
     def find_file(self, file_name):

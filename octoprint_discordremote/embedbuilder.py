@@ -194,7 +194,7 @@ class Embed:
                 string += "\tField Value: %s\n" % field['value']
             string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
         if 'image' in embed:
-            string += "Attached image: %s\n", embed['image']['url']
+            string += "Attached image: %s\n" % embed['image']['url']
         if 'timestamp' in embed:
             string += "Timestamp: %s\n" % embed['timestamp']
         string += "---------------------------------\n"

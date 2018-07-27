@@ -70,7 +70,7 @@ class TestCommand(TestCase):
             self.assertEqual(color, embed['color'])
             self.assertIn('timestamp', embed)
 
-    def _validate_simple_embed(self, embeds, color, title=None, description=None):
+    def _validate_simple_embed(self, embeds, color, title=None, description=None, image=None):
         self.assertIsNotNone(embeds)
         self.assertEqual(1, len(embeds))
         embed = embeds[0].get_embed()
@@ -86,6 +86,12 @@ class TestCommand(TestCase):
         if description:
             self.assertIn('description', embed)
             self.assertEqual(description, embed['description'])
+
+        if image:
+            self.assertIn('image', embed)
+            self.assertEqual({'url': "attachment://%s" % image[0][0]}, embed['image'])
+            self.assertIn(image[0], embeds[0].files)
+
 
     def test_parse_command_list(self):
         # Success
@@ -127,10 +133,6 @@ class TestCommand(TestCase):
                                     description="folder1/test.gcode")
         self.assertIsNone(snapshots)
 
-    def get_snapshot(self):
-        """Mock snapshot function."""
-        return open("unittests/test_pattern.png")
-
     def test_parse_command_unknown(self):
         self.command.help = mock.Mock()
 
@@ -152,15 +154,14 @@ class TestCommand(TestCase):
         # TODO
 
         # Success: Camera serving images
-        TestCommand.get_snapshot = mock.Mock()
+        self.get_snapshot = mock.Mock()
         with open("unittests/test_pattern.png") as input_file:
-            TestCommand.get_snapshot.return_value = [input_file]
+            self.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command("/snapshot")
 
-            self.assertIsNone(embeds)
-            with open("unittests/test_pattern.png") as image:
-                self.assertEqual([image.read()], [snapshots[0].read()])
+            self.assertIsNone(snapshots)
+            self._validate_simple_embed(embeds, COLOR_INFO, image=self.get_snapshot.return_value)
 
     def test_parse_command_abort(self):
         # Success: Print aborted
@@ -298,16 +299,19 @@ class TestCommand(TestCase):
         }
 
         self.get_snapshot = mock.Mock()
-        self.get_snapshot.return_value = mock.Mock()
-        snapshots, embeds = self.command.parse_command('/status')
+
+        with open("unittests/test_pattern.png") as input_file:
+            self.get_snapshot.return_value = [('snapshot.png', input_file)]
+
+            snapshots, embeds = self.command.parse_command('/status')
+
+            self.assertIsNone(snapshots)
+            self.get_snapshot.assert_called_once()
 
         message = ""
         for embed in embeds:
             message += str(embed)
         print(message)
-
-        self.get_snapshot.assert_called_once()
-        self.assertEqual(self.get_snapshot.return_value, snapshots)
 
         expected_terms = ['Status', 'Operational', 'Current Z',
                           'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
@@ -326,28 +330,30 @@ class TestCommand(TestCase):
 
     def test_parse_command_pause(self):
         self.get_snapshot = mock.Mock()
-        self.get_snapshot.return_value = mock.Mock()
+        self.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
         self.get_printer().pause_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/pause")
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
-                                    title="Print paused")
+                                    title="Print paused",
+                                    image=self.get_snapshot.return_value)
         self.get_snapshot.assert_called_once()
-        self.assertEqual(self.get_snapshot.return_value, snapshots)
+        self.assertIsNone(snapshots)
         self.get_printer().pause_print.assert_called_once()
 
     def test_parse_command_resume(self):
         self.get_snapshot = mock.Mock()
-        self.get_snapshot.return_value = mock.Mock()
+        self.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
         self.get_printer().resume_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/resume")
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
-                                    title="Print resumed")
+                                    title="Print resumed",
+                                    image=self.get_snapshot.return_value)
         self.get_snapshot.assert_called_once()
-        self.assertEqual(self.get_snapshot.return_value, snapshots)
+        self.assertIsNone(snapshots)
         self.get_printer().resume_print.assert_called_once()
 
     @mock.patch("requests.get")
