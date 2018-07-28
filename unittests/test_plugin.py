@@ -28,11 +28,15 @@ class TestCommand(TestCase):
             mock_requests_get.return_value = mock.Mock()
             mock_requests_get.return_value.content = file_data
 
-            snapshot = plugin.get_snapshot()
+            snapshots = plugin.get_snapshot()
 
-            self.assertIsNotNone(snapshot)
-            snapshot_data = snapshot.read()
-            self.assertEqual(len(file_data),len(snapshot_data))
+            self.assertIsNotNone(snapshots)
+            self.assertEqual(1, len(snapshots))
+            snapshot = snapshots[0]
+            self.assertEqual(2, len(snapshot))
+            self.assertEqual("snapshot.png", snapshot[0])
+            snapshot_data = snapshot[1].read()
+            self.assertEqual(len(file_data), len(snapshot_data))
             self.assertEqual([file_data], [snapshot_data])
 
     def test_plugin_get_snapshot_file(self):
@@ -46,9 +50,13 @@ class TestCommand(TestCase):
         with open("unittests/test_pattern.png", "rb") as f:
             file_data = f.read()
 
-        snapshot = plugin.get_snapshot()
+        snapshots = plugin.get_snapshot()
 
-        self.assertIsNotNone(snapshot)
-        snapshot_data = snapshot.read()
+        self.assertIsNotNone(snapshots)
+        self.assertEqual(1, len(snapshots))
+        snapshot = snapshots[0]
+        self.assertEqual(2, len(snapshot))
+        self.assertEqual("snapshot.png", snapshot[0])
+        snapshot_data = snapshot[1].read()
         self.assertEqual(len(file_data), len(snapshot_data))
         self.assertEqual([file_data], [snapshot_data])

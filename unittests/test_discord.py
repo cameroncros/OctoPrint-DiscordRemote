@@ -10,26 +10,29 @@ from unittest import TestCase
 
 import yaml
 
+from octoprint_discordremote import info_embed
 from octoprint_discordremote.discord import Discord
+from octoprint_discordremote.embedbuilder import EmbedBuilder
 
 
 class TestSend(TestCase):
     def setUp(self):
-        config_file = "config.yaml"
-        try:
-            with open(config_file, "r") as config:
-                config = yaml.load(config.read())
-            self.discord = Discord()
-            self.discord.configure_discord(bot_token=config['bottoken'],
-                                           channel_id=config['channelid'],
-                                           allowed_users="",
-                                           logger=logging.getLogger(),
-                                           command=None)
-            time.sleep(5)
-        except:
-            self.fail("To test discord bot posting, you need to create a file "
-                      "called config.yaml in the root directory with your bot "
-                      "details. NEVER COMMIT THIS FILE.")
+        self.discord = Discord()
+        if "NET_TEST" in os.environ:
+            config_file = "config.yaml"
+            try:
+                with open(config_file, "r") as config:
+                    config = yaml.load(config.read())
+                self.discord.configure_discord(bot_token=config['bottoken'],
+                                               channel_id=config['channelid'],
+                                               allowed_users="",
+                                               logger=logging.getLogger(),
+                                               command=None)
+                time.sleep(5)
+            except:
+                self.fail("To test discord bot posting, you need to create a file "
+                          "called config.yaml in the root directory with your bot "
+                          "details. NEVER COMMIT THIS FILE.")
 
     def tearDown(self):
         self.discord.shutdown_discord()
@@ -46,27 +49,33 @@ class TestSend(TestCase):
         finally:
             s.close()
 
-        # Should result in 3 messages. 1 text only, 1 text+img and 1 image only
-        self.assertTrue(self.discord._dispatch_message("Test message 1"))
+        # Should result in 3 messages, one embed, one embed with photo, and one photo.
+        builder = EmbedBuilder()
+        builder.set_title("Test title")
+        builder.set_description("No snapshot")
+
+        self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
         with open("unittests/test_pattern.png", "rb") as f:
-            self.assertTrue(self.discord._dispatch_message("Test message 2", f))
-            self.assertTrue(self.discord._dispatch_message(None, f))
+            builder.set_description("With snapshot")
+            builder.set_image(("snapshot.png", f))
+            self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
+            f.seek(0)
+            self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
+
+
 
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()
+        mock_snapshot = mock.Mock()
+        mock_embed = mock.Mock()
+        self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
 
-        with open("unittests/test_pattern.png", "rb") as f:
-            short_str = "x" * 1998
-            self.assertTrue(self.discord.send(short_str, f))
-            self.discord._dispatch_message.assert_called_once_with(message="`%s`" % short_str, snapshot=f)
-            self.discord._dispatch_message.reset_mock()
-
-            # split_text() doesnt properly deal with lines over 1998 chars long.
-            # Wont fix it til it comes up.
-            long_str = (short_str + '\n') * 5
-            self.assertTrue(self.discord.send(long_str, f))
-            self.assertEqual(6 , self.discord._dispatch_message.call_count)
-            self.discord._dispatch_message.reset_mock()
+        self.assertEqual(2, self.discord._dispatch_message.call_count)
+        calls = [mock.call(snapshot=mock_snapshot),
+                 mock.call(embed=mock_embed)]
+        self.discord._dispatch_message.assert_has_calls(calls=calls)
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")

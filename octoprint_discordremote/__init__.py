@@ -17,6 +17,7 @@ from requests import ConnectionError
 from flask import make_response
 
 from octoprint_discordremote.command import Command
+from octoprint_discordremote.embedbuilder import info_embed
 from .discord import Discord
 
 
@@ -133,7 +134,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
+        self._logger.info("DiscordRemote is shutting down.")
         self.discord.shutdown_discord()
+        self._logger.info("Discord bot has excited cleanly.")
 
     # SettingsPlugin mixin
     def get_settings_defaults(self):
@@ -271,8 +274,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'args' in data:
             args = data['args']
 
-        message, snapshot = self.command.parse_command(args)
-        self.discord.send(message=message, snapshot=snapshot)
+        snapshots, embeds = self.command.parse_command(data['args'])
+        self.discord.send(snapshots=snapshots, embeds=embeds)
 
     def notify_event(self, event_id, data=None):
         if data is None:
@@ -306,12 +309,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 self.last_progress_message = None
 
             # Otherwise work out if time since last message has passed.
-            elif tmp_config["timeout"]:
+            try:
                 min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
-
-                if self.last_progress_message \
+                if self.last_progress_message is not None \
                         and self.last_progress_message > (datetime.now() - min_progress_time):
                     return False
+            except ValueError:
+                pass
+            except KeyError:
+                pass
 
             self.last_progress_message = datetime.now()
 
@@ -369,13 +375,16 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Get snapshot if asked for
         snapshot = None
         if with_snapshot:
-            snapshot = self.get_snapshot()
+            snapshots = self.get_snapshot()
+            if snapshots and len(snapshots) == 1:
+                snapshot = snapshots[0]
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(message=message, snapshot=snapshot)
+        out = self.discord.send(embeds=info_embed(title=message,
+                                                  snapshot=snapshot))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
@@ -425,12 +434,23 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             new_image = BytesIO()
             img.save(new_image, 'png')
 
-            return new_image
-        return snapshot
+            return [("snapshot.png", new_image)]
+        return [("snapshot.png", snapshot)]
 
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
 
+    def get_file_manager(self):
+        return self._file_manager
+
+    def get_settings(self):
+        return self._settings
+
+    def get_printer(self):
+        return self._printer
+
+    def get_plugin_manager(self):
+        return self._plugin_manager
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

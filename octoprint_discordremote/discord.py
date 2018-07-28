@@ -15,6 +15,8 @@ import re
 
 # Constants
 MAX_ERRORS = 25
+CHANNEL_ID_LENGTH = 18
+BOT_TOKEN_LENGTH = 59
 
 # OP codes for web socket.
 DISPATCH = 0
@@ -31,20 +33,6 @@ INVALIDATE_SESSION = 9
 HELLO = 10
 HEARTBEAT_ACK = 11
 GUILD_SYNC = 12
-
-
-def split_text(text):
-    if not text or len(text) == 0:
-        return []
-
-    parts = text.split('\n')
-    chunks = [parts[0]]
-    for part in parts[1:]:
-        if len(chunks[-1]) + len(part) + len('`')*2 + len('\n') < 2000:
-            chunks[-1] = "%s\n%s" % (chunks[-1], part)
-        else:
-            chunks.append(part)
-    return chunks
 
 
 class Discord:
@@ -87,13 +75,17 @@ class Discord:
         self.status_callback = status_callback
         self.error_counter = 0
         if allowed_users:
-            self.allowed_users = re.split("[^0-9]{1,}", allowed_users)
+            self.allowed_users = re.split("[^0-9]+", allowed_users)
 
         if self.status_callback:
             self.status_callback(connected="disconnected")
 
-        if self.channel_id is None or len(self.channel_id) != 18 or \
-                self.bot_token is None or len(self.bot_token) != 59:
+        if self.channel_id is None or len(self.channel_id) != CHANNEL_ID_LENGTH:
+            self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
+            self.shutdown_discord()
+            return
+        if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
+            self.logger.error("Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             self.shutdown_discord()
             return
 
@@ -109,70 +101,85 @@ class Discord:
 
     def monitor_thread(self):
         while not self.shutdown_event.is_set():
-            socket_url = None
+            try:
+                socket_url = None
 
-            if self.status_callback:
-                self.status_callback(connected="connecting")
+                if self.status_callback:
+                    self.status_callback(connected="connecting")
 
-            while not self.shutdown_event.is_set() and socket_url is None:
-                try:
-                    r = requests.get(self.gateway_url, headers=self.headers)
-                    socket_url = json.loads(r.content)['url']
-                    self.logger.info("Socket URL is %s", socket_url)
-                    break
-                except Exception as e:
-                    self.logger.error("Failed to connect to gateway: %s" % e.message)
-                    time.sleep(5)
-                    continue
+                while not self.shutdown_event.is_set() and socket_url is None:
+                    try:
+                        r = requests.get(self.gateway_url, headers=self.headers)
+                        socket_url = json.loads(r.content)['url']
+                        self.logger.info("Socket URL is %s", socket_url)
+                        break
+                    except Exception as e:
+                        self.logger.error("Failed to connect to gateway: %s" % e.message)
+                        time.sleep(5)
+                        continue
 
-            self.heartbeat_sent = 0
-            self.web_socket = websocket.WebSocketApp(socket_url,
-                                                     on_message=self.on_message,
-                                                     on_error=self.on_error,
-                                                     on_close=self.on_close)
+                self.heartbeat_sent = 0
+                self.web_socket = websocket.WebSocketApp(socket_url,
+                                                         on_message=self.on_message,
+                                                         on_error=self.on_error,
+                                                         on_close=self.on_close)
 
-            self.listener_thread = Thread(target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
-            self.listener_thread.start()
-            self.logger.debug("WebSocket listener started")
-            time.sleep(1)
+                self.listener_thread = Thread(target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
+                self.listener_thread.start()
+                self.logger.debug("WebSocket listener started")
+                time.sleep(1)
 
-            if self.session_id:
-                self.send_resume()
+                if self.session_id:
+                    self.send_resume()
 
-            # Wait until we are told to restart
-            self.restart_event.clear()
-            self.restart_event.wait()
-            self.logger.info("Restart Triggered")
+                # Wait until we are told to restart
+                self.restart_event.clear()
+                self.restart_event.wait()
+                self.logger.info("Restart Triggered")
 
-            if self.status_callback:
-                self.status_callback(connected="disconnected")
+            except Exception as e:
+                self.logger.error("Exception occured, catching, ignoring, and restarting: %s", e.message)
 
-            # Clean up resources
-            if self.web_socket:
-                try:
-                    self.web_socket.close()
-                except websocket.WebSocketConnectionClosedException as e:
-                    self.logger.error("Failed to close websocket: %s" % e.message)
-                self.web_socket = None
-            if self.listener_thread:
-                self.logger.info("Waiting for listener thread to join.")
+            finally:
+                if self.status_callback:
+                    self.status_callback(connected="disconnected")
 
-                self.listener_thread.join(timeout=60)
-                if self.listener_thread.is_alive():
-                    self.logger.error("Listener thread has hung, leaking it now.")
-                else:
-                    self.logger.info("Listener thread joined.")
-                self.listener_thread = None
+                # Clean up resources
+                if self.web_socket:
+                    try:
+                        self.web_socket.close()
+                    except websocket.WebSocketConnectionClosedException as e:
+                        self.logger.error("Failed to close websocket: %s" % e.message)
+                    self.web_socket = None
+                if self.listener_thread:
+                    self.logger.info("Waiting for listener thread to join.")
+
+                    self.listener_thread.join(timeout=60)
+                    if self.listener_thread.is_alive():
+                        self.logger.error("Listener thread has hung, leaking it now.")
+                    else:
+                        self.logger.info("Listener thread joined.")
+                    self.listener_thread = None
 
     def shutdown_discord(self):
         # Shutdown event must be set first.
         self.shutdown_event.set()
         self.restart_event.set()
         if self.manager_thread:
-            self.manager_thread.join()
+            self.manager_thread.join(timeout=60)
+            if self.manager_thread.is_alive():
+                self.logger.error("Manager thread has hung, leaking it now.")
+            else:
+                self.logger.info("Manager thread joined.")
+            self.manager_thread = None
             self.manager_thread = None
         if self.heartbeat_thread:
-            self.heartbeat_thread.join()
+            self.heartbeat_thread.join(timeout=60)
+            if self.heartbeat_thread.is_alive():
+                self.logger.error("HeartBeat thread has hung, leaking it now.")
+            else:
+                self.logger.info("HeartBeat thread joined.")
+            self.heartbeat_thread = None
             self.heartbeat_thread = None
 
     def heartbeat(self):
@@ -251,11 +258,13 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                self.send(message=self.command.upload_file(filename, url))
+                snapshots, embeds = self.command.upload_file(filename, url)
+                self.send(embeds=embeds)
 
         if 'content' in data:
-            (message, snapshot) = self.command.parse_command(data['content'])
-            self.send(message=message, snapshot=snapshot)
+            snapshots, embeds = self.command.parse_command(data['content'])
+            self.send(snapshots=snapshots,
+                      embeds=embeds)
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
@@ -323,32 +332,40 @@ class Discord:
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
-            (message, snapshot) = self.queue.pop()
-            if self._dispatch_message(message=message, snapshot=snapshot):
+            snapshot, embed = self.queue.pop()
+            if self._dispatch_message(snapshot=snapshot, embed=embed):
                 continue
             else:
                 break
 
-    def send(self, message=None, snapshot=None):
-        if message:
-            chunks = split_text(message)
-            for chunk in chunks[0:-1]:
-                if not self._dispatch_message(message="`%s`" % chunk):
+    def send(self, snapshots=None, embeds=None):
+        if snapshots is not None:
+            for snapshot in snapshots:
+                if not self._dispatch_message(snapshot=snapshot):
                     return False
-            return self._dispatch_message(message="`%s`" % chunks[-1], snapshot=snapshot)
-        else:
-            return self._dispatch_message(snapshot=snapshot)
+        if embeds is not None:
+            for embed in embeds:
+                if not self._dispatch_message(embed=embed):
+                    return False
+        return True
 
-    def _dispatch_message(self, message=None, snapshot=None):
+    def _dispatch_message(self, snapshot=None, embed=None):
         data = None
-        files = None
-        if message is not None and len(message) != 0:
-            json_str = json.dumps({"content": message})
+        files = []
+
+        if embed is not None:
+            json_str = json.dumps({'embed': embed.get_embed()})
             data = {"payload_json": json_str}
+            for attachment in embed.get_files():
+                attachment[1].seek(0)
+                files.append(("attachment", attachment))
 
         if snapshot:
-            snapshot.seek(0)
-            files = [("file", ("snapshot.png", snapshot))]
+            snapshot[1].seek(0)
+            files.append(("file", snapshot))
+
+        if len(files) == 0:
+            files = None
 
         if files is None and data is None:
             return False
@@ -365,7 +382,7 @@ class Discord:
                 self.logger.debug("Failed to send the message, exception occured: %s", e)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(message, snapshot)
+                self.queue_message(snapshot, embed)
                 return False
 
             if int(r.status_code) == 429:  # HTTP 429: Too many requests.
@@ -383,7 +400,7 @@ class Discord:
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(message, snapshot)
+                self.queue_message(snapshot, embed)
                 return False
 
     def on_error(self, ws, error):
@@ -394,10 +411,10 @@ class Discord:
         self.logger.info("WebSocket Closed")
         self.restart_event.set()
 
-    def queue_message(self, message, snapshot):
-        if message is not None or snapshot is not None:
+    def queue_message(self, snapshot, embed):
+        if snapshot is not None or embed is not None:
             self.logger.info("Message queued")
-            self.queue.append((message, snapshot))
+            self.queue.append((snapshot, embed))
 
     def check_errors(self):
         if self.error_counter > MAX_ERRORS:
@@ -405,8 +422,7 @@ class Discord:
             # best to shutdown and let the user restart.
             self.logger.error("Had %s/%s errors in rapid succession, this is bad sign. "
                               "Shutting down bot to avoid spam" % (self.error_counter, MAX_ERRORS))
-            self.shutdown_event.set()
-            self.restart_event.set()
+            Thread(target=self.shutdown_discord()).start()
 
             if self.status_callback:
                 self.status_callback(connected="disconnected")
