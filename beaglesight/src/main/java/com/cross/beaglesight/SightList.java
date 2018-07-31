@@ -10,36 +10,46 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
-import com.cross.beaglesight.fragments.BowListItemFragment;
+import com.cross.beaglesight.fragments.BowListRecyclerViewAdapter;
 import com.cross.beaglesightlibs.BowConfig;
-import com.cross.beaglesight.AddSight;
 import com.cross.beaglesightlibs.BowManager;
 
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import static android.view.View.VISIBLE;
 import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
-public class SightList extends AppCompatActivity implements BowListItemFragment.OnListFragmentInteractionListener {
+public class SightList extends AppCompatActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
     Intent addIntent;
+    private ActionMode actionMode;
+    ArrayList<BowConfig> selectedBowConfigs;
 
     private static final int FILE_SELECT_CODE = 0;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+    private BowListRecyclerViewAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +66,17 @@ public class SightList extends AppCompatActivity implements BowListItemFragment.
                 startActivity(intent);
             }
         });
+
+        RecyclerView view = findViewById(R.id.bowlistrecyclerview);
+        // Set the adapter
+        if (view != null) {
+            Context context = view.getContext();
+            RecyclerView recyclerView = (RecyclerView) view;
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            adapter = new BowListRecyclerViewAdapter(BowManager.getInstance(getApplicationContext()).getBowList(), this);
+            recyclerView.setAdapter(adapter);
+        }
+
     }
 
     @Override
@@ -128,11 +149,77 @@ public class SightList extends AppCompatActivity implements BowListItemFragment.
     }
 
     @Override
-    public void onListFragmentInteraction(BowConfig bowConfig) {
-        Intent intent = new Intent(this, ShowSight.class);
-        intent.putExtra(CONFIG_TAG, bowConfig.getId());
-        startActivity(intent);
+    public Boolean onListFragmentInteraction(BowConfig bowConfig) {
+        if (selectedBowConfigs != null)
+        {
+            if (selectedBowConfigs.contains(bowConfig))
+            {
+                selectedBowConfigs.remove(bowConfig);
+                return false;
+            }
+            else
+            {
+                selectedBowConfigs.add(bowConfig);
+                return true;
+            }
+        }
+        else {
+            Intent intent = new Intent(this, ShowSight.class);
+            intent.putExtra(CONFIG_TAG, bowConfig.getId());
+            startActivity(intent);
+            return false;
+        }
     }
+
+    @Override
+    public void onListFragmentLongPress(BowConfig bowConfig) {
+        selectedBowConfigs = new ArrayList<>();
+        actionMode = startActionMode(selectedActionMode);
+        //TODO: Hide floating action button, and bring back after
+    }
+
+    private ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.menu_sight_list_selected, menu);
+
+            adapter.enableMultiSelectMode(true);
+            adapter.notifyDataSetChanged();
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+
+            switch (item.getItemId()) {
+                case R.id.action_delete:
+                    BowManager bm = BowManager.getInstance(getBaseContext());
+                    for (BowConfig config : selectedBowConfigs)
+                    {
+                        bm.deleteBowConfig(config);
+                    }
+                    adapter.notifyDataSetChanged();
+                    break;
+                case R.id.action_export:
+                    //TODO: Export the configs
+                    break;
+            }
+            mode.finish();
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            adapter.enableMultiSelectMode(false);
+            selectedBowConfigs = null;
+        }
+    };
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
