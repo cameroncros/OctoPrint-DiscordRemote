@@ -307,6 +307,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             # Always send last message, and reset timer.
             if int(data["progress"]) == 100:
                 self.last_progress_message = None
+                tmp_config = self._settings.get(["events", "printing_done"], merged=True)
+                # Don't send last message if the "printing_done" event is enabled.
+                if tmp_config["enabled"]:
+                    return
 
             # Otherwise work out if time since last message has passed.
             try:
