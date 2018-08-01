@@ -38,21 +38,19 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run:
-          name: Run Tests
-          command: |
-            set +e
-            ./gradlew lint test
-      - store_artifacts:
-          path: beaglesight/build/reports
-          destination: reports
-
-
       # Build
-      - run: ./gradlew assemble
+      - run: 
+          name: Build apk
+          command: ./gradlew assemble
 
       # Archive
       - store_artifacts:
           path: beaglesight/build/outputs/apk/debug/beaglesight-debug.apk
-
-
+      
+      # Run lint and tests
+      - run:
+          name: Run Tests
+          command: ./gradlew lint test
+      - store_artifacts:
+          path: beaglesight/build/reports
+          destination: reports
