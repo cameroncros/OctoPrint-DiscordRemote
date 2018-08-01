@@ -46,6 +46,7 @@ jobs:
       # Archive
       - store_artifacts:
           path: beaglesight/build/outputs/apk/debug/beaglesight-debug.apk
+          destination: beaglesight-debug.apk
       
       # Run lint and tests
       - run:
@@ -53,4 +54,8 @@ jobs:
           command: ./gradlew lint test
       - store_artifacts:
           path: beaglesight/build/reports
-          destination: reports
+          destination: reports/beaglesight
+      - store_artifacts:
+          path: beaglesightlibs/build/reports
+          destination: reports/beaglesightlibs
+

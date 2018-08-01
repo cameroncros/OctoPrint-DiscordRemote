@@ -27,8 +27,8 @@ public class BowConfig {
     private String id = "";
     private String name = "";
     private String description = "";
-    private List<PositionPair> positionArray = new ArrayList<>();
-    private PositionCalculator positionCalculator = new LineOfBestFitCalculator();
+    private final List<PositionPair> positionArray = new ArrayList<>();
+    private final PositionCalculator positionCalculator = new LineOfBestFitCalculator();
 
     public BowConfig(String name, String description) {
         this.id = UUID.randomUUID().toString();

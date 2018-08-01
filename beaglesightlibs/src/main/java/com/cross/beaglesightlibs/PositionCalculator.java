@@ -6,8 +6,8 @@ import java.util.List;
 public abstract class PositionCalculator
 {
     List<PositionPair> positions;
-    private static DecimalFormat hn = new DecimalFormat("#");
-    private static DecimalFormat df = new DecimalFormat("#.##");
+    private static final DecimalFormat hn = new DecimalFormat("#");
+    private static final DecimalFormat df = new DecimalFormat("#.##");
 
 	void setPositions(List<PositionPair> pos) {
 		positions = pos;
@@ -15,20 +15,6 @@ public abstract class PositionCalculator
 
 	public abstract float calcPosition(float distance);
 
-	public int precision() {
-		switch (positions.size()) {
-		case 0:
-		case 1:
-		case 2:
-			return 0;
-		default:
-			return positions.size()-2;
-		}
-	}
-
-    public List<PositionPair> getPositions() {
-        return positions;
-    }
     public static String getDisplayValue(float val, int numPlaces) {
         switch (numPlaces) {
             default:

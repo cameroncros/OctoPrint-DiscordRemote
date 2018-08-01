@@ -1,5 +1,6 @@
 package com.cross.beaglesight.fragments;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,15 +28,16 @@ public class BowListRecyclerViewAdapter extends RecyclerView.Adapter<BowListRecy
         mListener = listener;
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.bowlist_item, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
         holder.mNameView.setText(mValues.get(position).getName());
         holder.mDescriptionView.setText(mValues.get(position).getDescription());
@@ -62,10 +64,10 @@ public class BowListRecyclerViewAdapter extends RecyclerView.Adapter<BowListRecy
             @Override
             public boolean onLongClick(View v) {
                 if (mListener != null) {
+                    mListener.onListFragmentLongPress(holder.mItem);
                     CheckBox checkBox = holder.mView.findViewById(R.id.itemSelect);
                     checkBox.setSelected(true);
-                    mListener.onListFragmentLongPress(holder.mItem);
-                    holder.mSelectView.setSelected(true);
+                    checkBox.invalidate();
                 }
                 return true;
             }

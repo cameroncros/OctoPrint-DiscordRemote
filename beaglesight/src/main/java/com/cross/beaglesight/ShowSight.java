@@ -24,10 +24,10 @@ import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
 
 public class ShowSight extends AppCompatActivity implements SightGraph.SightGraphCallback {
     static final String CONFIG_TAG = "config";
-    SightGraph sightGraph = null;
+    private SightGraph sightGraph = null;
 
-    EditText distance;
-    EditText position;
+    private EditText distance;
+    private EditText position;
 
     private String id;
     private BowConfig bowConfig;
@@ -35,7 +35,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     private ActionMode actionMode;
     private PositionPair selectedPair;
 
-    private TextWatcher distanceListener = new TextWatcher() {
+    private final TextWatcher distanceListener = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -142,7 +142,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
         actionMode = startActionMode(selectedActionMode);
     }
 
-    private ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
+    private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater inflater = mode.getMenuInflater();

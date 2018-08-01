@@ -8,7 +8,8 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.cross.beaglesight.AddSight"
     tools:layout_editor_absoluteY="81dp"
-    tools:showIn="@layout/activity_add_sight">
+    tools:showIn="@layout/activity_add_sight"
+    tools:ignore="PrivateResource">
 
     <TextView
         android:id="@+id/nameLabel"
@@ -20,10 +21,10 @@
         android:layout_marginTop="8dp"
         android:text="@string/name"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        app:layout_constraintBottom_toBottomOf="@+id/name"
-        app:layout_constraintEnd_toEndOf="@+id/descriptionLabel"
+        app:layout_constraintBottom_toBottomOf="@id/name"
+        app:layout_constraintEnd_toEndOf="@id/descriptionLabel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/name" />
+        app:layout_constraintTop_toTopOf="@id/name" />
 
     <TextView
         android:id="@+id/descriptionLabel"

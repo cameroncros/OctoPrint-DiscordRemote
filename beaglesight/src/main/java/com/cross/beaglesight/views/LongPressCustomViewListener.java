@@ -6,9 +6,9 @@ interface LongPressCustomView {
     void onLongTouchEvent(MotionEvent event);
 }
 
-public class LongPressCustomViewListener {
+class LongPressCustomViewListener {
     private final float touchRadius;
-    private LongPressCustomView view;
+    private final LongPressCustomView view;
     private MotionEvent lastEvent = null;
     private MotionEvent firstEvent = null;
     private boolean longPressed;

@@ -23,7 +23,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="0px"
-                android:layout_margin="8dp">
+                android:layout_margin="8dp"
+                android:baselineAligned="false">
+
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -43,7 +45,7 @@
                         android:id="@+id/distanceText"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
+                        android:inputType="numberDecimal|numberSigned"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/distanceLabel" />
                 </android.support.constraint.ConstraintLayout>
@@ -66,7 +68,7 @@
                         android:id="@+id/positionText"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
+                        android:inputType="numberDecimal|numberSigned"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/positionLabel" />
                 </android.support.constraint.ConstraintLayout>
@@ -81,7 +83,8 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:ignore="PrivateResource">
 
         <LinearLayout
             android:id="@+id/linearLayout"

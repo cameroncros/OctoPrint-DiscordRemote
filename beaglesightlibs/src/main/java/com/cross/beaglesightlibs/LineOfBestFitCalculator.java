@@ -95,10 +95,4 @@ public class LineOfBestFitCalculator extends PositionCalculator {
 		return val;
 	}
 
-	@Override
-	public int precision() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
 }

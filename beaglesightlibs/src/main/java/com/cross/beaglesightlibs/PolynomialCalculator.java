@@ -10,7 +10,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;
-import java.util.Map;
 
 @Deprecated
 public class PolynomialCalculator extends PositionCalculator
@@ -73,14 +72,4 @@ public class PolynomialCalculator extends PositionCalculator
 		
 	}
 
-	public int precision() {
-		switch (positions.size()) {
-		case 0:
-		case 1:
-		case 2:
-			return 0;
-		default:
-			return positions.size()-2;
-		}
-	}
 }

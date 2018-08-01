@@ -8,9 +8,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Toast;
 
 import com.cross.beaglesight.fragments.BowListRecyclerViewAdapter;
@@ -35,17 +34,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import static android.view.View.VISIBLE;
 import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
 public class SightList extends AppCompatActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
-    Intent addIntent;
-    private ActionMode actionMode;
-    ArrayList<BowConfig> selectedBowConfigs;
+    private Intent addIntent;
+    private ArrayList<BowConfig> selectedBowConfigs;
 
     private static final int FILE_SELECT_CODE = 0;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
@@ -59,11 +55,11 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        final Intent intent = new Intent(this, AddSight.class);
+        addIntent = new Intent(this, AddSight.class);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(intent);
+                startActivity(addIntent);
             }
         });
 
@@ -71,10 +67,9 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         // Set the adapter
         if (view != null) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            view.setLayoutManager(new LinearLayoutManager(context));
             adapter = new BowListRecyclerViewAdapter(BowManager.getInstance(getApplicationContext()).getBowList(), this);
-            recyclerView.setAdapter(adapter);
+            view.setAdapter(adapter);
         }
 
     }
@@ -134,7 +129,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
                 // If request is cancelled, the result arrays are empty.
@@ -174,11 +169,12 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
     @Override
     public void onListFragmentLongPress(BowConfig bowConfig) {
         selectedBowConfigs = new ArrayList<>();
-        actionMode = startActionMode(selectedActionMode);
+        selectedBowConfigs.add(bowConfig);
+        startActionMode(selectedActionMode);
         //TODO: Hide floating action button, and bring back after
     }
 
-    private ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
+    private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater inflater = mode.getMenuInflater();
@@ -227,16 +223,18 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
             case FILE_SELECT_CODE:
                 if (resultCode == RESULT_OK) {
                     // Get the Uri of the selected file
-                    Uri uri = data.getData();
-                    Log.d("BeagleSight", "File Uri: " + uri.toString());
-                    // Get the path
-
-                    File fname = new File(getRealPathFromURI(uri));
                     try {
+                        Uri uri = data.getData();
+
+                        Log.d("BeagleSight", "File Uri: " + uri.toString());
+                        // Get the path
+
+                        File fname = new File(getRealPathFromURI(uri));
+
                         FileInputStream fis = new FileInputStream(fname);
                         BowConfig bowConfig = new BowConfig(fis);
                         BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig);
-                    } catch (SAXException | ParserConfigurationException | IOException e) {
+                    } catch (SAXException | ParserConfigurationException | IOException | NullPointerException e) {
                         Toast.makeText(this, "Failed to load BowConfig: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }

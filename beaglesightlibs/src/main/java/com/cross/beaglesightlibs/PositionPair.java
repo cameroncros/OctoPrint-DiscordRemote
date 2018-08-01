@@ -3,8 +3,8 @@ package com.cross.beaglesightlibs;
 import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 public class PositionPair {
-    private String positionString;
-    private String distanceString;
+    private final String positionString;
+    private final String distanceString;
     private float positionFloat;
     private float distanceFloat;
 
@@ -30,14 +30,6 @@ public class PositionPair {
         {
             throw new InvalidNumberFormatException(nfe);
         }
-    }
-
-    public String getDistanceString() {
-        return distanceString;
-    }
-
-    public String getPositionString() {
-        return positionString;
     }
 
     public float getDistanceFloat() {

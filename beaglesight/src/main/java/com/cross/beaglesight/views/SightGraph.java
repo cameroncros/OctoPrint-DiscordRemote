@@ -1,5 +1,6 @@
 package com.cross.beaglesight.views;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -36,21 +37,21 @@ public class SightGraph extends View implements LongPressCustomView {
     private BowConfig bowConfig;
     private PositionCalculator pc;
 
-    float minDist = 0;
-    float maxDist = 100;
-    float minPos = 0;
-    float maxPos = 100;
+    private final float minDist = 0;
+    private final float maxDist = 100;
+    private float minPos = 0;
+    private float maxPos = 100;
 
-    float contentWidthStart;
-    float contentWidthEnd;
+    private float contentWidthStart;
+    private float contentWidthEnd;
 
-    float contentHeightStart;
-    float contentHeightEnd;
+    private float contentHeightStart;
+    private float contentHeightEnd;
 
-    float selectedDistance;
+    private float selectedDistance;
 
-    PositionPair selectedPairPixel;
-    Map<PositionPair, PositionPair> positionPairMap;
+    private PositionPair selectedPairPixel;
+    private Map<PositionPair, PositionPair> positionPairMap;
 
     private SightGraphCallback updateCallback;
     private float lineWidth;
@@ -141,7 +142,7 @@ public class SightGraph extends View implements LongPressCustomView {
         axisLabelPaint.setTextSize(textSize/2);
 
         pointSelectedPaint = new Paint(pointPaint);
-        pointSelectedPaint.setColor(manipulateColor(pointPaint.getColor(), 0.8f));
+        pointSelectedPaint.setColor(manipulateColor(pointPaint.getColor()));
 
         if (!isInEditMode() && a != null) {
             a.recycle();
@@ -151,11 +152,11 @@ public class SightGraph extends View implements LongPressCustomView {
         longTouchEventListener = new LongPressCustomViewListener(this, touchRadius);
     }
 
-    public static int manipulateColor(int color, float factor) {
+    private static int manipulateColor(int color) {
         int a = Color.alpha(color);
-        int r = Math.round(Color.red(color) * factor);
-        int g = Math.round(Color.green(color) * factor);
-        int b = Math.round(Color.blue(color) * factor);
+        int r = Math.round(Color.red(color) * 0.8f);
+        int g = Math.round(Color.green(color) * 0.8f);
+        int b = Math.round(Color.blue(color) * 0.8f);
         return Color.argb(a,
                 Math.min(r,255),
                 Math.min(g,255),
@@ -218,7 +219,7 @@ public class SightGraph extends View implements LongPressCustomView {
         }
     }
 
-    float pixelToDistance(float pixel)
+    private float pixelToDistance(float pixel)
     {
         // 20m == contentWidthStart
         // 100m == contentWidthEnd.
@@ -226,25 +227,19 @@ public class SightGraph extends View implements LongPressCustomView {
         return minDist + percent * (maxDist - minDist);
     }
 
-    float distanceToPixel(float distance)
+    private float distanceToPixel(float distance)
     {
         float percent = (distance - minDist) / (maxDist - minDist);
         return Math.round(contentWidthStart + percent * (contentWidthEnd - contentWidthStart));
     }
 
-    float pixelToPosition(float pixel)
-    {
-        float percent = (pixel - contentHeightStart) / (contentHeightEnd - contentHeightStart);
-        return minPos + percent * (maxPos - minPos);
-    }
-
-    float positionToPixel(float position)
+    private float positionToPixel(float position)
     {
         float percent = (position - minPos) / (maxPos - minPos);
         return Math.round(contentHeightStart + percent * (contentHeightEnd - contentHeightStart));
     }
 
-    float calculateYVal(float xVal)
+    private float calculateYVal(float xVal)
     {
         float distance = pixelToDistance(xVal);
         float position = pc.calcPosition(distance);
@@ -346,6 +341,7 @@ public class SightGraph extends View implements LongPressCustomView {
         this.invalidate();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {

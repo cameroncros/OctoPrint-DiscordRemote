@@ -8,8 +8,6 @@
     <string name="name">Name:</string>
     <string name="title_activity_add_sight">Add Sight</string>
     <string name="title_activity_add_distance">Add Distance</string>
-    <string name="simple">Simple</string>
-    <string name="advanced">Advanced</string>
     <string name="calc_description">To use the calculator, take two shots at the target, and note this pin setting and the distance from the middle. The app will then calculate the correct pin setting.</string>
     <string name="calculator">Calculator</string>
     <string name="pin_setting_1">Pin Setting 1</string>
@@ -19,6 +17,4 @@
     <string name="add">Add</string>
     <string name="failed_find_bow_settings">Failed to find bow settings</string>
     <string name="delete_position">Delete Position</string>
-    <string name="delete">Delete</string>
-    <string name="export">Export</string>
 </resources>

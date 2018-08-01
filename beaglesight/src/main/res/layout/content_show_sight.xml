@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.cross.beaglesight.ShowSight"
-    tools:showIn="@layout/activity_show_sight">
+    tools:showIn="@layout/activity_show_sight"
+    tools:ignore="PrivateResource">
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -28,7 +29,7 @@
                 android:layout_width="144dp"
                 android:layout_height="wrap_content"
                 android:ems="8"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
                 android:text="@string/distance"/>
 
             <TextView
@@ -42,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="8"
-                android:inputType="none"
+                android:inputType="numberDecimal|numberSigned"
                 android:text="@string/pin_setting"/>
 
         </LinearLayout>
@@ -59,4 +60,4 @@
     </LinearLayout>
 
 
-</android.support.constraint.ConstraintLayout>
+</ConstraintLayout>

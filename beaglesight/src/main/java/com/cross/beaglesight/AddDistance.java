@@ -22,19 +22,19 @@ import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
 public class AddDistance extends AppCompatActivity {
 
-    Button add = null;
+    private Button add = null;
 
-    EditText simpleDistance = null;
-    EditText simplePin = null;
+    private EditText simpleDistance = null;
+    private EditText simplePin = null;
 
-    EditText pinSetting1 = null;
-    EditText offset1 = null;
+    private EditText pinSetting1 = null;
+    private EditText offset1 = null;
 
-    EditText pinSetting2 = null;
-    EditText offset2 = null;
+    private EditText pinSetting2 = null;
+    private EditText offset2 = null;
 
-    BowManager bowManager = null;
-    BowConfig bowConfig = null;
+    private BowManager bowManager = null;
+    private BowConfig bowConfig = null;
 
 
     private void updateAddStatus()
@@ -43,7 +43,9 @@ public class AddDistance extends AppCompatActivity {
         String pinSetting = simplePin.getText().toString();
 
         try {
+            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(distance);
+            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(pinSetting);
             add.setEnabled(true);
             add.invalidate();
@@ -84,7 +86,7 @@ public class AddDistance extends AppCompatActivity {
         }
     }
 
-    void updateEstimates()
+    private void updateEstimates()
     {
         String distance = simpleDistance.getText().toString();
         try {
@@ -119,7 +121,7 @@ public class AddDistance extends AppCompatActivity {
         }
     }
 
-    TextWatcher simpleListener = new TextWatcher() {
+    private final TextWatcher simpleListener = new TextWatcher() {
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -139,7 +141,7 @@ public class AddDistance extends AppCompatActivity {
         }
     };
 
-    TextWatcher calcPinListener = new TextWatcher() {
+    private final TextWatcher calcPinListener = new TextWatcher() {
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -157,8 +159,9 @@ public class AddDistance extends AppCompatActivity {
         }
     };
 
-    View.OnClickListener addPinSetting = new View.OnClickListener() {
+    private final View.OnClickListener addPinSetting = new View.OnClickListener() {
 
+        @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
         public void onClick(View v) {
             String distance = simpleDistance.getText().toString();
