@@ -40,7 +40,9 @@ jobs:
 
       - run:
           name: Run Tests
-          command: ./gradlew lint test
+          command: |
+            set +e
+            ./gradlew lint test
       - store_artifacts:
           path: beaglesight/build/reports
           destination: reports
