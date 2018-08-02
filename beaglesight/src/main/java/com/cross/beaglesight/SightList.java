@@ -1,6 +1,7 @@
 package com.cross.beaglesight;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -42,6 +43,7 @@ import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 public class SightList extends AppCompatActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
     private Intent addIntent;
     private ArrayList<BowConfig> selectedBowConfigs;
+    private FloatingActionButton fab;
 
     private static final int FILE_SELECT_CODE = 0;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
@@ -54,8 +56,9 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
         addIntent = new Intent(this, AddSight.class);
+
+        fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -166,12 +169,14 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         }
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void onListFragmentLongPress(BowConfig bowConfig) {
         selectedBowConfigs = new ArrayList<>();
         selectedBowConfigs.add(bowConfig);
         startActionMode(selectedActionMode);
-        //TODO: Hide floating action button, and bring back after
+        fab.setVisibility(View.GONE);
+        fab.invalidate();
     }
 
     private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
@@ -210,9 +215,12 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
             return true;
         }
 
+        @SuppressLint("RestrictedApi")
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             adapter.enableMultiSelectMode(false);
+            fab.setVisibility(View.VISIBLE);
+            fab.invalidate();
             selectedBowConfigs = null;
         }
     };
