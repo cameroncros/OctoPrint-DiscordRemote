@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -48,6 +49,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
     private static final int FILE_SELECT_CODE = 0;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     private BowListRecyclerViewAdapter adapter;
+    private AppBarLayout appBarLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,8 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         setContentView(R.layout.activity_sight_list);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        appBarLayout = findViewById(R.id.app_bar);
 
         addIntent = new Intent(this, AddSight.class);
 
@@ -174,9 +178,14 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
     public void onListFragmentLongPress(BowConfig bowConfig) {
         selectedBowConfigs = new ArrayList<>();
         selectedBowConfigs.add(bowConfig);
+
         startActionMode(selectedActionMode);
+
         fab.setVisibility(View.GONE);
         fab.invalidate();
+
+        appBarLayout.setExpanded(false, true);
+        appBarLayout.invalidate();
     }
 
     private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
@@ -219,8 +228,13 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             adapter.enableMultiSelectMode(false);
+
             fab.setVisibility(View.VISIBLE);
             fab.invalidate();
+
+            appBarLayout.setExpanded(true, true);
+            appBarLayout.invalidate();
+
             selectedBowConfigs = null;
         }
     };
