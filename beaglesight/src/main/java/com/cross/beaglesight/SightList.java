@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -184,8 +185,8 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         fab.setVisibility(View.GONE);
         fab.invalidate();
 
-        appBarLayout.setExpanded(false, true);
-        appBarLayout.invalidate();
+        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams)appBarLayout.getLayoutParams();
+        lp.height = (int) getResources().getDimension(R.dimen.toolbar_height);
     }
 
     private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
@@ -232,8 +233,8 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
             fab.setVisibility(View.VISIBLE);
             fab.invalidate();
 
-            appBarLayout.setExpanded(true, true);
-            appBarLayout.invalidate();
+            CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams)appBarLayout.getLayoutParams();
+            lp.height = (int) getResources().getDimension(R.dimen.app_bar_height);
 
             selectedBowConfigs = null;
         }
