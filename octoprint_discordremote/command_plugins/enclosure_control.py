@@ -1,7 +1,7 @@
 import json
 import requests
 
-from octoprint_discordremote.embedbuilder import success_embed, error_embed, info_embed
+from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed
 
 
 class EnclosureControl:
@@ -13,21 +13,21 @@ class EnclosureControl:
     def setup(self, command, plugin):
         self.plugin = plugin
         if self.plugin.get_plugin_manager().get_plugin("enclosure"):
-            command.command_dict["/encOn"] = {
+            command.command_dict["/outputon"] = {
                 'cmd': self.on,
                 'params': "[ID]",
                 'description': ("Turn on the selected output.\nUses OctoPrint-Enclosure plugin. "
                                 "\nThe ID number can be found in the Enclosure tab in OctoPrint settings. "
                                 "\nThis only supports basic GPIO outputs.")
             }
-            command.command_dict["/encOff"] = {
+            command.command_dict["/outputoff"] = {
                 'cmd': self.off,
                 'params': "[ID]",
                 'description': ("Turn off the selected output.\nUses OctoPrint-Enclosure plugin. "
                                 "\nThe ID number can be found in the Enclosure tab in OctoPrint settings. "
                                 "\nThis only supports basic GPIO outputs.")
             }
-            command.command_dict["/encStatus"] = {
+            command.command_dict["/outputstatus"] = {
                 'cmd': self.encStatus,
                 'description': "Get the status of all configured outputs.\nUses OctoPrint-Enclosure plugin."
             }
@@ -35,7 +35,7 @@ class EnclosureControl:
     def on(self, params):
         if len(params) > 2:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /encOn [ID]')
+                                     description='Should be: /outputon [ID]')
 
         result = self.api_command("on", params[1])
 
@@ -46,9 +46,9 @@ class EnclosureControl:
         return None, error_embed(title="Failed to turn ID " + params[1] + " on.", description=str(result.content))
 
     def off(self, params):
-        if len(params) > 1:
+        if len(params) > 2:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /encOff [ID]')
+                                     description='Should be: /outputoff [ID]')
 
         result = self.api_command("off", params[1])
         data = result.json()
@@ -61,13 +61,19 @@ class EnclosureControl:
         result = self.api_command("state", -1)
         data = result.json()
 
-        status = ""
+        builder = EmbedBuilder()
+        builder.set_title('Enclosure Status')
+        title = ""
+        description = ""
 
         for x in data:
-            status += ("ID " + str(x['index_id']) + ": " + str(x['status']) + "\n")
+            title = ("ID: " + str(x['index_id']))
+            description = str(x['status'])
+
+            builder.add_field(title=title, text=description)
 
         # Use data in status to build an embed
-        return None, info_embed(title="Enclosure Status", description=status)
+        return None, builder.get_embeds()
 
     def api_command(self, command, id):
         api_key = self.plugin.get_settings().global_get(["api", "key"])
