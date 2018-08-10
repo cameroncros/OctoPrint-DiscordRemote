@@ -63,6 +63,8 @@ class EnclosureControl:
 
         builder = EmbedBuilder()
         builder.set_title('Enclosure Status')
+        title = ""
+        description = ""
 
         for x in data:
             title = ("ID: " + str(x['index_id']))
