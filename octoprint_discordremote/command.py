@@ -89,7 +89,7 @@ class Command:
             description = ''
             title = ''
             try:
-                title = (details['path'])[1:]
+                title = details['path']
             except:
                 pass
 
