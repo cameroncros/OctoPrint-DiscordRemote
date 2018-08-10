@@ -108,7 +108,7 @@ class Command:
             try:
                 average_print_time = humanfriendly.format_timespan(
                     details['statistics']['averagePrintTime']['_default'], max_units=2)
-                description += 'verage Print Time: %s\n' % average_print_time
+                description += 'Average Print Time: %s\n' % average_print_time
             except:
                 pass
 
