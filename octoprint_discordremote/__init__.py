@@ -15,7 +15,6 @@ from PIL import Image
 from io import BytesIO
 from requests import ConnectionError
 from flask import make_response
-
 from octoprint_discordremote import shared_vars
 
 from octoprint_discordremote.command import Command
@@ -120,358 +119,359 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             },
         }
 
-        def on_after_startup(self):
-            self._logger.info("DiscordRemote is started !")
-            if self.command is None:
-                self.command = Command(self)
-            # Configure discord
-            if self.discord is None:
-                self.discord = Discord()
-            self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                           self._settings.get(['channelid'], merged=True),
-                                           self._settings.get(['allowedusers'], merged=True),
-                                           self._logger,
-                                           self.command,
-                                           self.update_discord_status)
-            shared_vars.init(self._settings.get(['baseurl']))
+    def on_after_startup(self):
+        self._logger.info("DiscordRemote is started !")
+        if self.command is None:
+            self.command = Command(self)
+        # Configure discord
+        if self.discord is None:
+            self.discord = Discord()
+        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                       self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
+                                       self._logger,
+                                       self.command,
+                                       self.update_discord_status)
+        shared_vars.init(self._settings.get(['baseurl']))
 
-        # ShutdownPlugin mixin
-        def on_shutdown(self):
-            self._logger.info("DiscordRemote is shutting down.")
-            self.discord.shutdown_discord()
-            self._logger.info("Discord bot has excited cleanly.")
+    # ShutdownPlugin mixin
+    def on_shutdown(self):
+        self._logger.info("DiscordRemote is shutting down.")
+        self.discord.shutdown_discord()
+        self._logger.info("Discord bot has excited cleanly.")
 
-        # SettingsPlugin mixin
-        def get_settings_defaults(self):
-            return {
-                'bottoken': "",
-                'channelid': "",
-                'allowedusers': "",
-                'baseurl': "",
-                'show_local_ip': True,
-                'show_external_ip': True,
-                'events': self.events,
-                'allow_scripts': False,
-                'script_before': '',
-                'script_after': ''
-            }
+    # SettingsPlugin mixin
+    def get_settings_defaults(self):
+        return {
+            'bottoken': "",
+            'channelid': "",
+            'allowedusers': "",
+            'baseurl': "",
+            'show_local_ip': True,
+            'show_external_ip': True,
+            'events': self.events,
+            'allow_scripts': False,
+            'script_before': '',
+            'script_after': ''
+        }
 
-        # Restricts some paths to some roles only
-        def get_settings_restricted_paths(self):
-            # settings.events.tests is a false message, so we should never see it as configurable.
-            # settings.bottoken and channelid are admin only.
-            return dict(never=[["events", "test"]],
-                        admin=[["bottoken"],
-                               ["channelid"],
-                               ["allowedusers"],
-                               ["baseurl"],
-                               ["show_local_ip"],
-                               ["show_external_ip"],
-                               ['script_before'],
-                               ['script_after']])
+    # Restricts some paths to some roles only
+    def get_settings_restricted_paths(self):
+        # settings.events.tests is a false message, so we should never see it as configurable.
+        # settings.bottoken and channelid are admin only.
+        return dict(never=[["events", "test"]],
+                    admin=[["bottoken"],
+                           ["channelid"],
+                           ["allowedusers"],
+                           ['baseurl'],
+                           ["show_local_ip"],
+                           ["show_external_ip"],
+                           ['script_before'],
+                           ['script_after']])
 
-        # AssetPlugin mixin
-        def get_assets(self):
-            # Define your plugin's asset files to automatically include in the
-            # core UI here.
-            return dict(
-                js=["js/discordremote.js"],
-                css=["css/discordremote.css"],
-                less=["less/discordremote.less"]
+    # AssetPlugin mixin
+    def get_assets(self):
+        # Define your plugin's asset files to automatically include in the
+        # core UI here.
+        return dict(
+            js=["js/discordremote.js"],
+            css=["css/discordremote.css"],
+            less=["less/discordremote.less"]
+        )
+
+    # TemplatePlugin mixin
+    def get_template_configs(self):
+        return [
+            dict(type="settings", custom_bindings=False)
+        ]
+
+    # Softwareupdate hook
+    def get_update_information(self):
+        # Define the configuration for your plugin to use with the Software Update
+        # Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
+        # for details.
+        return dict(
+            discordremote=dict(
+                displayName="DiscordRemote Plugin",
+                displayVersion=self._plugin_version,
+
+                # version check: github repository
+                type="github_release",
+                user="cameroncros",
+                repo="OctoPrint-DiscordRemote",
+                current=self._plugin_version,
+
+                # update method: pip
+                pip="https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/{target_version}.zip"
             )
+        )
 
-        # TemplatePlugin mixin
-        def get_template_configs(self):
-            return [
-                dict(type="settings", custom_bindings=False)
-            ]
+    # EventHandlerPlugin hook
+    def on_event(self, event, payload):
 
-        # Softwareupdate hook
-        def get_update_information(self):
-            # Define the configuration for your plugin to use with the Software Update
-            # Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
-            # for details.
-            return dict(
-                discordremote=dict(
-                    displayName="DiscordRemote Plugin",
-                    displayVersion=self._plugin_version,
+        if event == "Startup":
+            return self.notify_event("startup")
 
-                    # version check: github repository
-                    type="github_release",
-                    user="cameroncros",
-                    repo="OctoPrint-DiscordRemote",
-                    current=self._plugin_version,
+        if event == "Shutdown":
+            return self.notify_event("shutdown")
 
-                    # update method: pip
-                    pip="https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/{target_version}.zip"
-                )
-            )
+        if event == "PrinterStateChanged":
+            if payload["state_id"] == "OPERATIONAL":
+                return self.notify_event("printer_state_operational")
+            elif payload["state_id"] == "ERROR":
+                return self.notify_event("printer_state_error")
+            elif payload["state_id"] == "UNKNOWN":
+                return self.notify_event("printer_state_unknown")
 
-        # EventHandlerPlugin hook
-        def on_event(self, event, payload):
+        if event == "PrintStarted":
+            return self.notify_event("printing_started", payload)
+        if event == "PrintPaused":
+            return self.notify_event("printing_paused", payload)
+        if event == "PrintResumed":
+            return self.notify_event("printing_resumed", payload)
+        if event == "PrintCancelled":
+            return self.notify_event("printing_cancelled", payload)
 
-            if event == "Startup":
-                return self.notify_event("startup")
+        if event == "PrintDone":
+            payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
+            return self.notify_event("printing_done", payload)
 
-            if event == "Shutdown":
-                return self.notify_event("shutdown")
+        return True
 
-            if event == "PrinterStateChanged":
-                if payload["state_id"] == "OPERATIONAL":
-                    return self.notify_event("printer_state_operational")
-                elif payload["state_id"] == "ERROR":
-                    return self.notify_event("printer_state_error")
-                elif payload["state_id"] == "UNKNOWN":
-                    return self.notify_event("printer_state_unknown")
+    def on_print_progress(self, location, path, progress):
+        self.notify_event("printing_progress", {"progress": progress})
 
-            if event == "PrintStarted":
-                return self.notify_event("printing_started", payload)
-            if event == "PrintPaused":
-                return self.notify_event("printing_paused", payload)
-            if event == "PrintResumed":
-                return self.notify_event("printing_resumed", payload)
-            if event == "PrintCancelled":
-                return self.notify_event("printing_cancelled", payload)
+    def on_settings_save(self, data):
+        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
-            if event == "PrintDone":
-                payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
-                return self.notify_event("printing_done", payload)
+        self._logger.info("Settings have saved. Send a test message...")
+        # Configure discord
+        if self.command is None:
+            self.command = Command(self)
 
-            return True
+        if self.discord is None:
+            self.discord = Discord()
 
-        def on_print_progress(self, location, path, progress):
-            self.notify_event("printing_progress", {"progress": progress})
+        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                       self._settings.get(['channelid'], merged=True),
+                                       self._settings.get(['allowedusers'], merged=True),
+                                       self._logger,
+                                       self.command,
+                                       self.update_discord_status)
+        shared_vars.init(self._settings.get(['baseurl']))
+        self.notify_event("test")
 
-        def on_settings_save(self, data):
-            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+    # SimpleApiPlugin mixin
+    def get_api_commands(self):
+        return dict(
+            executeCommand=['args']
+        )
 
-            self._logger.info("Settings have saved. Send a test message...")
-            # Configure discord
-            if self.command is None:
-                self.command = Command(self)
+    def on_api_command(self, command, data):
+        if not user_permission.can():
+            return make_response("Insufficient rights", 403)
 
-            if self.discord is None:
-                self.discord = Discord()
+        if command == 'executeCommand':
+            self.execute_command(data)
 
-            self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                           self._settings.get(['channelid'], merged=True),
-                                           self._settings.get(['allowedusers'], merged=True),
-                                           self._logger,
-                                           self.command,
-                                           self.update_discord_status)
-            shared_vars.init(self._settings.get(['baseurl']))
-            self.notify_event("test")
+    def execute_command(self, data):
+        args = ""
+        if 'args' in data:
+            args = data['args']
 
-        # SimpleApiPlugin mixin
-        def get_api_commands(self):
-            return dict(
-                executeCommand=['args']
-            )
+        snapshots, embeds = self.command.parse_command(data['args'])
+        self.discord.send(snapshots=snapshots, embeds=embeds)
 
-        def on_api_command(self, command, data):
-            if not user_permission.can():
-                return make_response("Insufficient rights", 403)
+    def notify_event(self, event_id, data=None):
+        if data is None:
+            data = {}
+        if event_id not in self.events:
+            self._logger.error("Tried to notify on non-existant eventID : ", event_id)
+            return False
 
-            if command == 'executeCommand':
-                self.execute_command(data)
+        tmp_config = self._settings.get(["events", event_id], merged=True)
 
-        def execute_command(self, data):
-            args = ""
-            if 'args' in data:
-                args = data['args']
+        if not tmp_config["enabled"]:
+            self._logger.debug("Event {} is not enabled. Returning gracefully".format(event_id))
+            return False
 
-            snapshots, embeds = self.command.parse_command(data['args'])
-            self.discord.send(snapshots=snapshots, embeds=embeds)
+        # Store IP address for message
+        data['ipaddr'] = self.get_ip_address()
+        data['externaddr'] = self.get_external_ip_address()
 
-        def notify_event(self, event_id, data=None):
-            if data is None:
-                data = {}
-            if event_id not in self.events:
-                self._logger.error("Tried to notify on non-existant eventID : ", event_id)
+        # Special case for progress eventID : we check for progress and steps
+        if event_id == 'printing_progress':
+            # Skip if just started
+            if int(data["progress"]) == 0:
                 return False
 
-            tmp_config = self._settings.get(["events", event_id], merged=True)
-
-            if not tmp_config["enabled"]:
-                self._logger.debug("Event {} is not enabled. Returning gracefully".format(event_id))
+            # Skip if not a multiple of the given interval
+            if int(data["progress"]) % int(tmp_config["step"]) != 0:
                 return False
 
-            # Store IP address for message
-            data['ipaddr'] = self.get_ip_address()
-            data['externaddr'] = self.get_external_ip_address()
+            # Always send last message, and reset timer.
+            if int(data["progress"]) == 100:
+                self.last_progress_message = None
+                done_config = self._settings.get(["events", "printing_done"], merged=True)
+                # Don't send last message if the "printing_done" event is enabled.
+                if done_config["enabled"]:
+                    return
 
-            # Special case for progress eventID : we check for progress and steps
-            if event_id == 'printing_progress':
-                # Skip if just started
-                if int(data["progress"]) == 0:
-                    return False
-
-                # Skip if not a multiple of the given interval
-                if int(data["progress"]) % int(tmp_config["step"]) != 0:
-                    return False
-
-                # Always send last message, and reset timer.
-                if int(data["progress"]) == 100:
-                    self.last_progress_message = None
-                    done_config = self._settings.get(["events", "printing_done"], merged=True)
-                    # Don't send last message if the "printing_done" event is enabled.
-                    if done_config["enabled"]:
-                        return
-
-                # Otherwise work out if time since last message has passed.
-                try:
-                    min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
-                    if self.last_progress_message is not None \
-                            and self.last_progress_message > (datetime.now() - min_progress_time):
-                        return False
-                except ValueError:
-                    pass
-                except KeyError:
-                    pass
-
-                self.last_progress_message = datetime.now()
-
-            return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
-
-        @staticmethod
-        def get_ip_address():
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Otherwise work out if time since last message has passed.
             try:
-                # doesn't even have to be reachable
-                s.connect(('10.255.255.255', 1))
-                return s.getsockname()[0]
-            except Exception as e:
-                print(e)
-                return '127.0.0.1'
-            finally:
-                s.close()
+                min_progress_time = timedelta(seconds=int(tmp_config["timeout"]))
+                if self.last_progress_message is not None \
+                        and self.last_progress_message > (datetime.now() - min_progress_time):
+                    return False
+            except ValueError:
+                pass
+            except KeyError:
+                pass
 
-        @staticmethod
-        def get_external_ip_address():
-            return str(ipgetter.myip())
+            self.last_progress_message = datetime.now()
 
-        def exec_script(self, event_name, which=""):
+        return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 
-            # I want to be sure that the scripts are allowed by the special configuration flag
-            scripts_allowed = self._settings.get(["allow_scripts"], merged=True)
-            if scripts_allowed is None or scripts_allowed is False:
-                return ""
+    @staticmethod
+    def get_ip_address():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            return s.getsockname()[0]
+        except Exception as e:
+            print(e)
+            return '127.0.0.1'
+        finally:
+            s.close()
 
-            # Finding which one should be used.
-            script_to_exec = None
-            if which == "before":
-                script_to_exec = self._settings.get(["script_before"], merged=True)
+    @staticmethod
+    def get_external_ip_address():
+        return str(ipgetter.myip())
 
-            elif which == "after":
-                script_to_exec = self._settings.get(["script_after"], merged=True)
+    def exec_script(self, event_name, which=""):
 
-            # Finally exec the script
-            out = ""
-            self._logger.info("{}:{} File to start: '{}'".format(event_name, which, script_to_exec))
+        # I want to be sure that the scripts are allowed by the special configuration flag
+        scripts_allowed = self._settings.get(["allow_scripts"], merged=True)
+        if scripts_allowed is None or scripts_allowed is False:
+            return ""
 
-            try:
-                if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
-                    out = subprocess.check_output(script_to_exec)
-            except (OSError, subprocess.CalledProcessError) as err:
-                out = err
-            finally:
-                self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
-                return out
+        # Finding which one should be used.
+        script_to_exec = None
+        if which == "before":
+            script_to_exec = self._settings.get(["script_before"], merged=True)
 
-        def send_message(self, event_id, message, with_snapshot=False):
-            # exec "before" script if any
-            self.exec_script(event_id, "before")
+        elif which == "after":
+            script_to_exec = self._settings.get(["script_after"], merged=True)
 
-            # Get snapshot if asked for
-            snapshot = None
-            if with_snapshot:
-                snapshots = self.get_snapshot()
-                if snapshots and len(snapshots) == 1:
-                    snapshot = snapshots[0]
+        # Finally exec the script
+        out = ""
+        self._logger.info("{}:{} File to start: '{}'".format(event_name, which, script_to_exec))
 
-            # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
-            if self.discord is None:
-                self.discord = Discord()
-
-            out = self.discord.send(embeds=info_embed(title=message,
-                                                      snapshot=snapshot))
-
-            # exec "after" script if any
-            self.exec_script(event_id, "after")
-
+        try:
+            if script_to_exec is not None and len(script_to_exec) > 0 and os.path.exists(script_to_exec):
+                out = subprocess.check_output(script_to_exec)
+        except (OSError, subprocess.CalledProcessError) as err:
+            out = err
+        finally:
+            self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
             return out
 
-        def get_snapshot(self):
-            snapshot = None
-            snapshot_url = self._settings.global_get(["webcam", "snapshot"])
-            if snapshot_url is None:
-                return None
-            if "http" in snapshot_url:
-                try:
-                    snapshot_call = requests.get(snapshot_url)
-                    if not snapshot_call:
-                        return None
-                    snapshot = BytesIO(snapshot_call.content)
-                except ConnectionError:
+    def send_message(self, event_id, message, with_snapshot=False):
+        # exec "before" script if any
+        self.exec_script(event_id, "before")
+
+        # Get snapshot if asked for
+        snapshot = None
+        if with_snapshot:
+            snapshots = self.get_snapshot()
+            if snapshots and len(snapshots) == 1:
+                snapshot = snapshots[0]
+
+        # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
+        if self.discord is None:
+            self.discord = Discord()
+
+        out = self.discord.send(embeds=info_embed(title=message,
+                                                  snapshot=snapshot))
+
+        # exec "after" script if any
+        self.exec_script(event_id, "after")
+
+        return out
+
+    def get_snapshot(self):
+        snapshot = None
+        snapshot_url = self._settings.global_get(["webcam", "snapshot"])
+        if snapshot_url is None:
+            return None
+        if "http" in snapshot_url:
+            try:
+                snapshot_call = requests.get(snapshot_url)
+                if not snapshot_call:
                     return None
-            if snapshot_url.startswith("file://"):
-                snapshot = open(snapshot_url.partition('file://')[2], "rb")
-
-            if snapshot is None:
+                snapshot = BytesIO(snapshot_call.content)
+            except ConnectionError:
                 return None
+        if snapshot_url.startswith("file://"):
+            snapshot = open(snapshot_url.partition('file://')[2], "rb")
 
-            # Get the settings used for streaming to know if we should transform the snapshot
-            must_flip_h = self._settings.global_get_boolean(["webcam", "flipH"])
-            must_flip_v = self._settings.global_get_boolean(["webcam", "flipV"])
-            must_rotate = self._settings.global_get_boolean(["webcam", "rotate90"])
+        if snapshot is None:
+            return None
 
-            # Only call Pillow if we need to transpose anything
-            if must_flip_h or must_flip_v or must_rotate:
-                img = Image.open(snapshot)
+        # Get the settings used for streaming to know if we should transform the snapshot
+        must_flip_h = self._settings.global_get_boolean(["webcam", "flipH"])
+        must_flip_v = self._settings.global_get_boolean(["webcam", "flipV"])
+        must_rotate = self._settings.global_get_boolean(["webcam", "rotate90"])
 
-                self._logger.info(
-                    "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
+        # Only call Pillow if we need to transpose anything
+        if must_flip_h or must_flip_v or must_rotate:
+            img = Image.open(snapshot)
 
-                if must_flip_h:
-                    img = img.transpose(Image.FLIP_LEFT_RIGHT)
+            self._logger.info(
+                "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
 
-                if must_flip_v:
-                    img = img.transpose(Image.FLIP_TOP_BOTTOM)
+            if must_flip_h:
+                img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-                if must_rotate:
-                    img = img.transpose(Image.ROTATE_90)
+            if must_flip_v:
+                img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
-                new_image = BytesIO()
-                img.save(new_image, 'png')
+            if must_rotate:
+                img = img.transpose(Image.ROTATE_90)
 
-                return [("snapshot.png", new_image)]
-            return [("snapshot.png", snapshot)]
+            new_image = BytesIO()
+            img.save(new_image, 'png')
 
-        def update_discord_status(self, connected):
-            self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
+            return [("snapshot.png", new_image)]
+        return [("snapshot.png", snapshot)]
 
-        def get_file_manager(self):
-            return self._file_manager
+    def update_discord_status(self, connected):
+        self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
 
-        def get_settings(self):
-            return self._settings
+    def get_file_manager(self):
+        return self._file_manager
 
-        def get_printer(self):
-            return self._printer
+    def get_settings(self):
+        return self._settings
 
-        def get_plugin_manager(self):
-            return self._plugin_manager
+    def get_printer(self):
+        return self._printer
 
-    # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
-    # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
-    # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-    __plugin_name__ = "DiscordRemote"
+    def get_plugin_manager(self):
+        return self._plugin_manager
 
-    def __plugin_load__():
-        global __plugin_implementation__
-        __plugin_implementation__ = DiscordRemotePlugin()
+# If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
+# ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
+# can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
+__plugin_name__ = "DiscordRemote"
 
-        global __plugin_hooks__
-        __plugin_hooks__ = {
-            "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
-        }
+
+def __plugin_load__():
+    global __plugin_implementation__
+    __plugin_implementation__ = DiscordRemotePlugin()
+
+    global __plugin_hooks__
+    __plugin_hooks__ = {
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+    }
