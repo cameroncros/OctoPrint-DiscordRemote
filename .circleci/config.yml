@@ -28,7 +28,7 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: install dependencies
+          name: Install Dependencies
           command: |
             python -m virtualenv venv
             . venv/bin/activate
@@ -47,7 +47,7 @@ jobs:
       # https://pytest.org
       # https://nose.readthedocs.io
       - run:
-          name: run tests
+          name: Run tests
           command: |
             . venv/bin/activate
             python setup.py test
