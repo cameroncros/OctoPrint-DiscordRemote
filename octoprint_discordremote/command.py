@@ -25,6 +25,7 @@ class Command:
         self.command_dict['/help'] = {'cmd': self.help, 'description': "Print this help."}
         self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
+        self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -44,7 +45,45 @@ class Command:
             return command['cmd'](parts)
         else:
             return command['cmd']()
+        
+    def timelapse(self):
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        port = self.plugin.get_settings().global_get(["server", "port"])
+        header = {'X-Api-Key': api_key}
 
+        builder = EmbedBuilder()
+        builder.set_title('Files and Details')
+
+        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
+        data = response.json()
+
+        for x in data['files']:
+            description = ''
+            title = ''
+            try:
+                title = x['name']
+            except:
+                pass
+
+            try:
+                description += 'Size: %s\n' % x['size']
+            except:
+                pass
+
+            try:
+                description += 'Date of Creation: %s\n' % x['date']
+            except:
+                pass
+
+            try:
+                description += 'Download Path: %s\n' % x['url']
+            except:
+                pass
+
+            builder.add_field(title=title, text=description)
+
+        return None, builder.get_embeds()
+    
     def help(self):
         builder = EmbedBuilder()
         builder.set_title('Commands, Parameters and Description')
