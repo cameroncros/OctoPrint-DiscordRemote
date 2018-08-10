@@ -3,6 +3,9 @@ import humanfriendly
 import re
 import time
 import requests
+from requests import ConnectionError
+
+from octoprint_discordremote import shared_vars
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
@@ -26,6 +29,10 @@ class Command:
         self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
         self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses."}
+        self.command_dict['/gettimelapse'] = {'cmd': self.get_timelapse, 'params': "[filename]",
+                                              'description': "Gets the download link for the specified timelapse."}
+        self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "[location] [filename]",
+                                         'description': "Gets the download link for the specified file."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -45,7 +52,53 @@ class Command:
             return command['cmd'](parts)
         else:
             return command['cmd']()
-        
+
+    def get_timelapse(self, params):
+        if len(params) > 2:
+            return None, error_embed(title='Too many parameters',
+                                     description='Should be: /gettimelapse [filename]')
+        if shared_vars.base_url is None or shared_vars.base_url == "":
+            return None, error_embed(title="Base URL Setting",
+                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set."
+                                                 "\nbase_url: " + str(shared_vars.base_url))
+
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        port = self.plugin.get_settings().global_get(["server", "port"])
+        header = {'X-Api-Key': api_key}
+
+        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
+        data = response.json()
+
+        for x in data['files']:
+            if x['name'] == params[1]:
+                return None, info_embed(title=params[1], description=("http://" + str(shared_vars.base_url) + x['url']))
+        return None, error_embed(title="File Not Found", description=params[1])
+
+    def get_file(self, params):
+        if len(params) > 3:
+            return None, error_embed(title='Too many parameters',
+                                     description='Should be: /getfile [location] [filename]. Location is either local or sdcard.')
+        if shared_vars.base_url is None or shared_vars.base_url == "":
+            return None, error_embed(title="Base URL Setting",
+                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set.")
+
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        port = self.plugin.get_settings().global_get(["server", "port"])
+        header = {'X-Api-Key': api_key}
+        url = "http://" + str(shared_vars.base_url) + "/api/files/" + params[1] + "/" + params[2]
+        try:
+            response = requests.get(
+                url,
+                headers=header)
+            if not response:
+                return None, error_embed(title="ConnectionError", description="URL: " + str(url))
+        except ConnectionError:
+            return None, error_embed(title="ConnectionError", description="URL: " + str(url))
+        data = response.json()
+        if response.status_code == 200:
+            return None, info_embed(title=params[2], description=(data['refs'])['download'])
+        return None, error_embed(title="File Not Found", description=params[2])
+
     def timelapse(self):
         api_key = self.plugin.get_settings().global_get(["api", "key"])
         port = self.plugin.get_settings().global_get(["server", "port"])

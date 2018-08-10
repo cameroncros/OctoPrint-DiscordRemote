@@ -27,6 +27,18 @@
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
         </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Base URL') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.baseurl"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("The base URL should be an address that you can access your octoprint installation from. Keep in
+                        mind that if you do not have port forwarding set up, you can only download files from Discord on
+                        your local network.") }}</small>
+        </div>
     </form>
 
     <h3>{{ _('Command settings') }}</h3>
