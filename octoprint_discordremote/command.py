@@ -29,9 +29,9 @@ class Command:
         self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
         self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses."}
-        self.command_dict['/gettimelapse'] = {'cmd': self.get_timelapse, 'params': "[filename]",
+        self.command_dict['/gettimelapse'] = {'cmd': self.get_timelapse, 'params': "{filename}",
                                               'description': "Gets the download link for the specified timelapse."}
-        self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "[location] [filename]",
+        self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
                                          'description': "Gets the download link for the specified file."}
 
         # Load plugins
@@ -56,7 +56,10 @@ class Command:
     def get_timelapse(self, params):
         if len(params) > 2:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /gettimelapse [filename]')
+                                     description='Should be: /gettimelapse {filename}')
+        elif len(params) < 2:
+            return None, error_embed(title='MIssing parameters',
+                                     description='Should be: /gettimelapse {filename}')
         if shared_vars.base_url is None or shared_vars.base_url == "":
             return None, error_embed(title="Base URL Setting",
                                      description="Check the Base URL setting in the settings dialog. It may be incorrectly set."
@@ -77,7 +80,10 @@ class Command:
     def get_file(self, params):
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /getfile [location] [filename]. Location is either local or sdcard.')
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
+        elif len(params) < 3:
+            return None, error_embed(title='MIssing parameters',
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         if shared_vars.base_url is None or shared_vars.base_url == "":
             return None, error_embed(title="Base URL Setting",
                                      description="Check the Base URL setting in the settings dialog. It may be incorrectly set.")
