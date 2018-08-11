@@ -5,8 +5,6 @@ import time
 import requests
 from requests import ConnectionError
 
-from octoprint_discordremote import shared_vars
-
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from command_plugins import plugin_list
@@ -61,10 +59,10 @@ class Command:
         elif len(params) < 3:
             return None, error_embed(title='Missing parameters',
                                      description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
-        if shared_vars.base_url is None or shared_vars.base_url == "":
+        if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
             url = "http://" + self.plugin.get_ip_address() + "/api/files/" + params[1] + "/" + params[2]
         else:
-            url = "http://" + str(shared_vars.base_url) + "/api/files/" + params[1] + "/" + params[2]
+            url = "http://" + str(self.plugin.get_settings().get(["baseurl"])) + "/api/files/" + params[1] + "/" + params[2]
         try:
             response = requests.get(
                 url,
@@ -109,10 +107,10 @@ class Command:
                 pass
 
             try:
-                if shared_vars.base_url is None or shared_vars.base_url == "":
+                if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
                     description += 'Download Path: \n' + ("http://" + self.plugin.get_ip_address() + file['url'])
                 else:
-                    description += 'Download Path: \n' + ("http://" + shared_vars.base_url + file['url'])
+                    description += 'Download Path: \n' + ("http://" + self.plugin.get_settings().get(["baseurl"]) + file['url'])
             except:
                 pass
 

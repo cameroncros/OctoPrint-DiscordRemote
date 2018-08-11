@@ -15,7 +15,6 @@ from PIL import Image
 from io import BytesIO
 from requests import ConnectionError
 from flask import make_response
-from octoprint_discordremote import shared_vars
 
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
@@ -132,7 +131,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
-        shared_vars.init(self._settings.get(['baseurl']))
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
@@ -258,7 +256,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
-        shared_vars.init(self._settings.get(['baseurl']))
         self.notify_event("test")
 
     # SimpleApiPlugin mixin
