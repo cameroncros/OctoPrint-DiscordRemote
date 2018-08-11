@@ -146,11 +146,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'bottoken': "",
             'channelid': "",
             'allowedusers': "",
-<<<<<<< HEAD
             'baseurl': self.get_ip_address(),
-=======
-            'baseurl': "",
->>>>>>> parent of 1e87967... Added support to change command prefixes
             'show_local_ip': True,
             'show_external_ip': True,
             'events': self.events,
