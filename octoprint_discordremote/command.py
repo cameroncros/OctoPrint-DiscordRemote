@@ -18,18 +18,18 @@ class Command:
         assert plugin
         self.plugin = plugin
         self.command_dict = collections.OrderedDict()
-        self.command_dict['connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer."}
-        self.command_dict['disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
-        self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
-        self.command_dict['files'] = {'cmd': self.list_files, 'description': "List all the files."}
-        self.command_dict['abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
-        self.command_dict['snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
-        self.command_dict['status'] = {'cmd': self.status, 'description': "Get the current printer status."}
-        self.command_dict['help'] = {'cmd': self.help, 'description': "Print this help."}
-        self.command_dict['pause'] = {'cmd': self.pause, 'description': "Pause current print."}
-        self.command_dict['resume'] = {'cmd': self.resume, 'description': "Resume current print."}
-        self.command_dict['timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses and download links."}
-        self.command_dict['getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
+        self.command_dict['/connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]", 'description': "Connect to a printer."}
+        self.command_dict['/disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
+        self.command_dict['/print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
+        self.command_dict['/files'] = {'cmd': self.list_files, 'description': "List all the files."}
+        self.command_dict['/abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
+        self.command_dict['/snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
+        self.command_dict['/status'] = {'cmd': self.status, 'description': "Get the current printer status."}
+        self.command_dict['/help'] = {'cmd': self.help, 'description': "Print this help."}
+        self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
+        self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
+        self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses and download links."}
+        self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
                                          'description': "Gets the download link for the specified file."}
 
         # Load plugins
@@ -39,9 +39,9 @@ class Command:
     def parse_command(self, string):
         parts = re.split('\s+', string)
 
-        command = self.command_dict.get(parts[0][len(shared_vars.prefix):])
+        command = self.command_dict.get(parts[0])
         if command is None:
-            if parts[0][0] == shared_vars.prefix or \
+            if parts[0][0] == "/" or \
                     parts[0].lower() == "help":
                 return self.help()
             return None, None
@@ -54,12 +54,10 @@ class Command:
     def get_file(self, params):
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
-                                     description=("Should be: %sgetfile {location} {filename}.\n"
-                                                  "Location is either local or sdcard.") % shared_vars.prefix)
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         elif len(params) < 3:
             return None, error_embed(title='Missing parameters',
-                                     description=("Should be: %sgetfile {location} {filename}.\n"
-                                                  "Location is either local or sdcard.") % shared_vars.prefix)
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         if shared_vars.base_url is None or shared_vars.base_url == "":
             return None, error_embed(title="Base URL Setting",
                                      description="Check the Base URL setting in the settings dialog. It may be incorrectly set.")
@@ -127,10 +125,9 @@ class Command:
     def help(self):
         builder = EmbedBuilder()
         builder.set_title('Commands, Parameters and Description')
-        #builder.set_description("All commands should be prefaced with the bot prefix: '%s'" % shared_vars.prefix)
 
         for command, details in self.command_dict.items():
-            builder.add_field(title='%s %s' % (shared_vars.prefix + command, details.get('params') or ''),
+            builder.add_field(title='%s %s' % (command, details.get('params') or ''),
                               text=details.get('description'))
 
         return None, builder.get_embeds()
@@ -142,7 +139,7 @@ class Command:
     def start_print(self, params):
         if len(params) != 2:
             return None, error_embed(title='Wrong number of arguments',
-                                     description='try "%sprint [filename]"' % shared_vars.prefix)
+                                     description='try "/print [filename]"')
         if not self.plugin.get_printer().is_ready():
             return None, error_embed(title='Printer is not ready')
 
@@ -239,7 +236,7 @@ class Command:
     def connect(self, params):
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: %sconnect [port] [baudrate]' % shared_vars.prefix)
+                                     description='Should be: /connect [port] [baudrate]')
         if self.plugin.get_printer().is_operational():
             return None, error_embed(title='Printer already connected',
                                      description='Disconnect first')
@@ -260,7 +257,7 @@ class Command:
         time.sleep(10)
         if not self.plugin.get_printer().is_operational():
             return None, error_embed(title='Failed to connect',
-                                     description='try: "%sconnect [port] [baudrate]"' % shared_vars.prefix)
+                                     description='try: "/connect [port] [baudrate]"')
 
         return None, success_embed('Connected to printer')
 

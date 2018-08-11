@@ -132,8 +132,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
-        shared_vars.init_baseurl(self._settings.get(['baseurl']))
-        shared_vars.init_prefix(self._settings.get(['prefix']))
+        shared_vars.init(self._settings.get(['baseurl']))
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
@@ -148,7 +147,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'channelid': "",
             'allowedusers': "",
             'baseurl': self.get_ip_address(),
-            'prefix': "/",
             'show_local_ip': True,
             'show_external_ip': True,
             'events': self.events,
@@ -166,7 +164,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ["channelid"],
                            ["allowedusers"],
                            ['baseurl'],
-                           ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],
                            ['script_before'],
@@ -261,8 +258,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
-        shared_vars.init_baseurl(self._settings.get(['baseurl']))
-        shared_vars.init_prefix(self._settings.get(['prefix']))
+        shared_vars.init(self._settings.get(['baseurl']))
         self.notify_event("test")
 
     # SimpleApiPlugin mixin
