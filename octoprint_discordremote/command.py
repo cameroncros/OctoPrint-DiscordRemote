@@ -69,9 +69,9 @@ class Command:
         response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
         data = response.json()
 
-        for x in data['files']:
-            if x['name'] == params[1]:
-                return None, info_embed(title=params[1], description=("http://" + str(shared_vars.base_url) + x['url']))
+        for file in data['files']:
+            if file['name'] == params[1]:
+                return None, info_embed(title=params[1], description=("http://" + str(shared_vars.base_url) + file['url']))
         return None, error_embed(title="File Not Found", description=params[1])
 
     def get_file(self, params):
