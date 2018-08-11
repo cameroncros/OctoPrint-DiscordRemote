@@ -28,9 +28,7 @@ class Command:
         self.command_dict['/help'] = {'cmd': self.help, 'description': "Print this help."}
         self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
-        self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses."}
-        self.command_dict['/gettimelapse'] = {'cmd': self.get_timelapse, 'params': "{filename}",
-                                              'description': "Gets the download link for the specified timelapse."}
+        self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses and download links."}
         self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
                                          'description': "Gets the download link for the specified file."}
 
@@ -53,36 +51,12 @@ class Command:
         else:
             return command['cmd']()
 
-    def get_timelapse(self, params):
-        if len(params) > 2:
-            return None, error_embed(title='Too many parameters',
-                                     description='Should be: /gettimelapse {filename}')
-        elif len(params) < 2:
-            return None, error_embed(title='MIssing parameters',
-                                     description='Should be: /gettimelapse {filename}')
-        if shared_vars.base_url is None or shared_vars.base_url == "":
-            return None, error_embed(title="Base URL Setting",
-                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set."
-                                                 "\nbase_url: " + str(shared_vars.base_url))
-
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
-        port = self.plugin.get_settings().global_get(["server", "port"])
-        header = {'X-Api-Key': api_key}
-
-        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
-        data = response.json()
-
-        for file in data['files']:
-            if file['name'] == params[1]:
-                return None, info_embed(title=params[1], description=("http://" + str(shared_vars.base_url) + file['url']))
-        return None, error_embed(title="File Not Found", description=params[1])
-
     def get_file(self, params):
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
                                      description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         elif len(params) < 3:
-            return None, error_embed(title='MIssing parameters',
+            return None, error_embed(title='Missing parameters',
                                      description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         if shared_vars.base_url is None or shared_vars.base_url == "":
             return None, error_embed(title="Base URL Setting",
@@ -106,6 +80,11 @@ class Command:
         return None, error_embed(title="File Not Found", description=params[2])
 
     def timelapse(self):
+        if shared_vars.base_url is None or shared_vars.base_url == "":
+            return None, error_embed(title="Base URL Setting",
+                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set."
+                                                 "\nbase_url: " + str(shared_vars.base_url))
+
         api_key = self.plugin.get_settings().global_get(["api", "key"])
         port = self.plugin.get_settings().global_get(["server", "port"])
         header = {'X-Api-Key': api_key}
@@ -116,26 +95,26 @@ class Command:
         response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
         data = response.json()
 
-        for x in data['files']:
+        for file in data['files']:
             description = ''
             title = ''
             try:
-                title = x['name']
+                title = file['name']
             except:
                 pass
 
             try:
-                description += 'Size: %s\n' % x['size']
+                description += 'Size: %s\n' % file['size']
             except:
                 pass
 
             try:
-                description += 'Date of Creation: %s\n' % x['date']
+                description += 'Date of Creation: %s\n' % file['date']
             except:
                 pass
 
             try:
-                description += 'Download Path: %s\n' % x['url']
+                description += 'Download Path: \n' + ("http://" + str(shared_vars.base_url) + file['url'])
             except:
                 pass
 
