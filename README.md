@@ -8,7 +8,9 @@ This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
 License : MIT
 
 ## Credits
+
 [Benjamin Chanudet](https://github.com/bchanudet) for their initial plugin, which this is based on.
+
 [OctopusProteins](https://github.com/OctopusProteins) for their work on the enclosure plugin, and file upload capabilities.
 
 ## Changelog
