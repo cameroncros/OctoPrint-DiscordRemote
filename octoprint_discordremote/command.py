@@ -52,6 +52,9 @@ class Command:
             return command['cmd']()
 
     def get_file(self, params):
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        header = {'X-Api-Key': api_key}
+
         if len(params) > 3:
             return None, error_embed(title='Too many parameters',
                                      description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
@@ -59,13 +62,9 @@ class Command:
             return None, error_embed(title='Missing parameters',
                                      description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
         if shared_vars.base_url is None or shared_vars.base_url == "":
-            return None, error_embed(title="Base URL Setting",
-                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set.")
-
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
-        port = self.plugin.get_settings().global_get(["server", "port"])
-        header = {'X-Api-Key': api_key}
-        url = "http://" + str(shared_vars.base_url) + "/api/files/" + params[1] + "/" + params[2]
+            url = "http://" + self.plugin.get_ip_address() + "/api/files/" + params[1] + "/" + params[2]
+        else:
+            url = "http://" + str(shared_vars.base_url) + "/api/files/" + params[1] + "/" + params[2]
         try:
             response = requests.get(
                 url,
@@ -80,10 +79,6 @@ class Command:
         return None, error_embed(title="File Not Found", description=params[2])
 
     def timelapse(self):
-        if shared_vars.base_url is None or shared_vars.base_url == "":
-            return None, error_embed(title="Base URL Setting",
-                                     description="Check the Base URL setting in the settings dialog. It may be incorrectly set."
-                                                 "\nbase_url: " + str(shared_vars.base_url))
 
         api_key = self.plugin.get_settings().global_get(["api", "key"])
         port = self.plugin.get_settings().global_get(["server", "port"])
@@ -114,7 +109,10 @@ class Command:
                 pass
 
             try:
-                description += 'Download Path: \n' + ("http://" + str(shared_vars.base_url) + file['url'])
+                if shared_vars.base_url is None or shared_vars.base_url == "":
+                    description += 'Download Path: \n' + ("http://" + self.plugin.get_ip_address() + file['url'])
+                else:
+                    description += 'Download Path: \n' + ("http://" + shared_vars.base_url + file['url'])
             except:
                 pass
 
