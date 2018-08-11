@@ -1,7 +1,7 @@
 import requests
 
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
-
+from octoprint_discordremote import shared_vars
 
 class EnclosureControl:
     plugin = None
@@ -12,23 +12,23 @@ class EnclosureControl:
     def setup(self, command, plugin):
         self.plugin = plugin
         if self.plugin.get_plugin_manager().get_plugin("enclosure"):
-            command.command_dict["/outputon"] = {
+            command.command_dict["outputon"] = {
                 'cmd': self.on,
-                'params': "[ID]",
+                'params': "{ID}",
                 'description': ("Turn on the selected output.\n"
                                 "Uses OctoPrint-Enclosure plugin.\n"
                                 "The ID number can be found in the Enclosure tab in OctoPrint settings.\n"
                                 "This only supports basic GPIO outputs.")
             }
-            command.command_dict["/outputoff"] = {
+            command.command_dict["outputoff"] = {
                 'cmd': self.off,
-                'params': "[ID]",
+                'params': "{ID}",
                 'description': ("Turn off the selected output.\n"
                                 "Uses OctoPrint-Enclosure plugin.\n"
                                 "The ID number can be found in the Enclosure tab in OctoPrint settings.\n"
                                 "This only supports basic GPIO outputs.")
             }
-            command.command_dict["/outputstatus"] = {
+            command.command_dict["outputstatus"] = {
                 'cmd': self.enc_status,
                 'description': "Get the status of all configured outputs.\n"
                                "Uses OctoPrint-Enclosure plugin."
@@ -37,7 +37,10 @@ class EnclosureControl:
     def on(self, params):
         if len(params) > 2:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /outputon [ID]')
+                                     description='Should be: %soutputon {ID}' % shared_vars.prefix)
+        elif len(params) < 2:
+            return None, error_embed(title='Missing parameters',
+                                     description='Should be: %soutputon {ID}' % shared_vars.prefix)
 
         result = self.api_command("on", params[1])
 
@@ -51,7 +54,10 @@ class EnclosureControl:
     def off(self, params):
         if len(params) > 2:
             return None, error_embed(title='Too many parameters',
-                                     description='Should be: /outputoff [ID]')
+                                     description='Should be: %soutputoff {ID}' % shared_vars.prefix)
+        elif len(params) < 2:
+            return None, error_embed(title='Missing parameters',
+                                     description='Should be: %soutputoff {ID}' % shared_vars.prefix)
 
         result = self.api_command("off", params[1])
         data = result.json()
