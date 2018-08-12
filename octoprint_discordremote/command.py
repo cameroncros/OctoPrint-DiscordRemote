@@ -29,8 +29,6 @@ class Command:
         self.command_dict['resume'] = {'cmd': self.resume, 'description': "Resume current print."}
         self.command_dict['timelapse'] = {'cmd': self.timelapse,
                                           'description': "List all timelapses and download links."}
-        self.command_dict['getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
-                                        'description': "Gets the download link for the specified file."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -39,7 +37,7 @@ class Command:
     def parse_command(self, string):
         parts = re.split('\s+', string)
 
-        command = self.command_dict.get(parts[0][len(self.plugin.get_settings().get(["prefix"]))])
+        command = self.command_dict.get(parts[0][len(self.plugin.get_settings().get(["prefix"])):])
         if command is None:
             if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
                     parts[0].lower() == "help":
