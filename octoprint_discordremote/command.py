@@ -20,7 +20,7 @@ class Command:
                                         'description': "Connect to a printer."}
         self.command_dict['disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
         self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
-        self.command_dict['files'] = {'cmd': self.list_files, 'description': "List all the files."}
+        self.command_dict['files'] = {'cmd': self.list_files, 'description': "List all files and respective download links."}
         self.command_dict['abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
         self.command_dict['snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
         self.command_dict['status'] = {'cmd': self.status, 'description': "Get the current printer status."}
@@ -28,7 +28,7 @@ class Command:
         self.command_dict['pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['resume'] = {'cmd': self.resume, 'description': "Resume current print."}
         self.command_dict['timelapse'] = {'cmd': self.timelapse,
-                                          'description': "List all timelapses and download links."}
+                                          'description': "List all timelapses and respective download links."}
 
         # Load plugins
         for command_plugin in plugin_list:
