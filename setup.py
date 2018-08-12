@@ -1,5 +1,23 @@
 # coding=utf-8
 
+import os
+from distutils.cmd import Command
+
+
+class CoverageCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        os.system("python -m coverage run --source octoprint_discordremote/ setup.py test")
+        os.system("python -m coverage html")
+
+
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
 
@@ -59,7 +77,11 @@ plugin_ignored_packages = []
 # Example:
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {}
+additional_setup_parameters = {
+    'cmdclass': {
+        'coverage': CoverageCommand
+    }
+}
 
 ########################################################################################################################
 

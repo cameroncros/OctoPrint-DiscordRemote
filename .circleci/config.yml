@@ -34,7 +34,7 @@ jobs:
             . venv/bin/activate
             pip install https://get.octoprint.org/latest
             pip install -r requirements.txt
-            pip install mock
+            pip install mock coverage
 
       - save_cache:
           paths:
@@ -50,4 +50,8 @@ jobs:
           name: Run tests
           command: |
             . venv/bin/activate
-            python setup.py test
+            python setup.py test coverage
+
+      - store_artifacts:
+          path: htmlcov/
+          destination: coverage-report
