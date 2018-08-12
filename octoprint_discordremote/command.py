@@ -3,6 +3,7 @@ import humanfriendly
 import re
 import time
 import requests
+from requests import ConnectionError
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
@@ -25,6 +26,9 @@ class Command:
         self.command_dict['/help'] = {'cmd': self.help, 'description': "Print this help."}
         self.command_dict['/pause'] = {'cmd': self.pause, 'description': "Pause current print."}
         self.command_dict['/resume'] = {'cmd': self.resume, 'description': "Resume current print."}
+        self.command_dict['/timelapse'] = {'cmd': self.timelapse, 'description': "List all timelapses and download links."}
+        self.command_dict['/getfile'] = {'cmd': self.get_file, 'params': "{location} {filename}",
+                                         'description': "Gets the download link for the specified file."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -45,6 +49,75 @@ class Command:
         else:
             return command['cmd']()
 
+    def get_file(self, params):
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        header = {'X-Api-Key': api_key}
+
+        if len(params) > 3:
+            return None, error_embed(title='Too many parameters',
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
+        elif len(params) < 3:
+            return None, error_embed(title='Missing parameters',
+                                     description='Should be: /getfile {location} {filename}. Location is either local or sdcard.')
+        if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
+            url = "http://" + self.plugin.get_ip_address() + "/api/files/" + params[1] + "/" + params[2]
+        else:
+            url = "http://" + str(self.plugin.get_settings().get(["baseurl"])) + "/api/files/" + params[1] + "/" + params[2]
+        try:
+            response = requests.get(
+                url,
+                headers=header)
+            if not response:
+                return None, error_embed(title="ConnectionError", description="URL: " + str(url))
+        except ConnectionError:
+            return None, error_embed(title="ConnectionError", description="URL: " + str(url))
+        data = response.json()
+        if response.status_code == 200:
+            return None, info_embed(title=params[2], description=(data['refs'])['download'])
+        return None, error_embed(title="File Not Found", description=params[2])
+
+    def timelapse(self):
+
+        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        port = self.plugin.get_settings().global_get(["server", "port"])
+        header = {'X-Api-Key': api_key}
+
+        builder = EmbedBuilder()
+        builder.set_title('Files and Details')
+
+        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
+        data = response.json()
+
+        for file in data['files']:
+            description = ''
+            title = ''
+            try:
+                title = file['name']
+            except:
+                pass
+
+            try:
+                description += 'Size: %s\n' % file['size']
+            except:
+                pass
+
+            try:
+                description += 'Date of Creation: %s\n' % file['date']
+            except:
+                pass
+
+            try:
+                if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
+                    description += 'Download Path: \n' + ("http://" + self.plugin.get_ip_address() + file['url'])
+                else:
+                    description += 'Download Path: \n' + ("http://" + self.plugin.get_settings().get(["baseurl"]) + file['url'])
+            except:
+                pass
+
+            builder.add_field(title=title, text=description)
+
+        return None, builder.get_embeds()
+    
     def help(self):
         builder = EmbedBuilder()
         builder.set_title('Commands, Parameters and Description')
@@ -89,7 +162,7 @@ class Command:
             description = ''
             title = ''
             try:
-                title = details['path']
+                title = details['path'][1:]
             except:
                 pass
 
