@@ -58,6 +58,10 @@ class TestCommand(TestCase):
     def get_plugin_manager(self):
         return self._plugin_manager
 
+    @staticmethod
+    def get_port():
+        return 80
+
     def setUp(self):
         self.command = Command(self)
 

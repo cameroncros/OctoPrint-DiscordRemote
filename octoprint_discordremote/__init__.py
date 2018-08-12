@@ -348,6 +348,16 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def get_external_ip_address():
         return str(ipgetter.myip())
 
+    def get_port(self):
+        port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
+        if port:
+            return port
+        port = self.get_settings().global_get(["server", "port"])
+        if port:
+            return port
+
+        return 5000  # Default to a sane value
+
     def exec_script(self, event_name, which=""):
 
         # I want to be sure that the scripts are allowed by the special configuration flag

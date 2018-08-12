@@ -51,39 +51,13 @@ class Command:
         else:
             return command['cmd']()
 
-    def get_file(self, params):
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
-        header = {'X-Api-Key': api_key}
-
-        if len(params) > 3:
-            return None, error_embed(title='Too many parameters',
-                                     description=("Should be: %sgetfile {location} {filename}.\n"
-                                                  "Location is either local or sdcard.") % self.plugin.get_settings().get(["prefix"]))
-        elif len(params) < 3:
-            return None, error_embed(title='Missing parameters',
-                                     description=("Should be: %sgetfile {location} {filename}.\n"
-                                                  "Location is either local or sdcard.") % self.plugin.get_settings().get(["prefix"]))
-        if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
-            url = "http://" + self.plugin.get_ip_address() + "/api/files/" + params[1] + "/" + params[2]
-        else:
-            url = "http://" + str(self.plugin.get_settings().get(["baseurl"])) + "/api/files/" + params[1] + "/" + params[2]
-        try:
-            response = requests.get(
-                url,
-                headers=header)
-            if not response:
-                return None, error_embed(title="ConnectionError", description="URL: " + str(url))
-        except ConnectionError:
-            return None, error_embed(title="ConnectionError", description="URL: " + str(url))
-        data = response.json()
-        if response.status_code == 200:
-            return None, info_embed(title=params[2], description=(data['refs'])['download'])
-        return None, error_embed(title="File Not Found", description=params[2])
-
     def timelapse(self):
 
         api_key = self.plugin.get_settings().global_get(["api", "key"])
-        port = self.plugin.get_settings().global_get(["server", "port"])
+        baseurl = self.plugin.get_settings().get(["baseurl"])
+        port = self.plugin.get_port()
+        if baseurl is None or baseurl == "":
+            baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
         header = {'X-Api-Key': api_key}
 
         builder = EmbedBuilder()
@@ -92,29 +66,26 @@ class Command:
         response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
         data = response.json()
 
-        for file in data['files']:
+        for video in data['files']:
             description = ''
             title = ''
             try:
-                title = file['name']
+                title = video['name']
             except:
                 pass
 
             try:
-                description += 'Size: %s\n' % file['size']
+                description += 'Size: %s\n' % video['size']
             except:
                 pass
 
             try:
-                description += 'Date of Creation: %s\n' % file['date']
+                description += 'Date of Creation: %s\n' % video['date']
             except:
                 pass
 
             try:
-                if self.plugin.get_settings().get(["baseurl"]) is None or self.plugin.get_settings().get(["baseurl"]) == "":
-                    description += 'Download Path: \n' + ("http://" + self.plugin.get_ip_address() + file['url'])
-                else:
-                    description += 'Download Path: \n' + ("http://" + self.plugin.get_settings().get(["baseurl"]) + file['url'])
+                description += 'Download Path: %s\n' % ("http://" + baseurl + video['url'])
             except:
                 pass
 
@@ -160,6 +131,11 @@ class Command:
                                    description=file['path'])
 
     def list_files(self):
+        port = self.plugin.get_port()
+        baseurl = self.plugin.get_settings().get(["baseurl"])
+        if baseurl is None or baseurl == "":
+            baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
+
         builder = EmbedBuilder()
         builder.set_title('Files and Details')
         file_list = self.get_flat_file_list()
@@ -194,6 +170,12 @@ class Command:
                 filament_required = humanfriendly.format_length(
                     details['analysis']['filament']['tool0']['length'] / 1000)
                 description += 'Filament Required: %s\n' % filament_required
+            except:
+                pass
+
+            try:
+                url = "http://" + baseurl + "/downloads/files/" + details['location'] + "/" + details['path'][1:]
+                description += 'Download Path: %s\n' % url
             except:
                 pass
 
