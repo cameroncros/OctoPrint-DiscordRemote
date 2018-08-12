@@ -37,7 +37,8 @@ class Command:
     def parse_command(self, string):
         parts = re.split('\s+', string)
 
-        command = self.command_dict.get(parts[0][len(self.plugin.get_settings().get(["prefix"])):])
+        prefix_len = len(self.plugin.get_settings().get(["prefix"]))
+        command = self.command_dict.get(parts[0][prefix_len:])
         if command is None:
             if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
                     parts[0].lower() == "help":
