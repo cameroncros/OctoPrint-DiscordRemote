@@ -53,7 +53,7 @@ class Command:
 
         api_key = self.plugin.get_settings().global_get(["api", "key"])
         baseurl = self.plugin.get_settings().get(["baseurl"])
-        port = self.plugin.get_settings().global_get(["server", "port"])
+        port = self.plugin.get_port()
         if baseurl is None or baseurl == "":
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
         header = {'X-Api-Key': api_key}
@@ -128,7 +128,7 @@ class Command:
                                    description=file['path'])
 
     def list_files(self):
-        port = self.plugin.get_settings().global_get(["server", "port"])
+        port = self.plugin.get_port()
         baseurl = self.plugin.get_settings().get(["baseurl"])
         if baseurl is None or baseurl == "":
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
