@@ -347,7 +347,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return str(ipgetter.myip())
 
     def get_port(self):
-        port = self.get_settings().global_get(["discovery", "publicPort"])
+        port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
         if port:
             return port
         port = self.get_settings().global_get(["server", "port"])
