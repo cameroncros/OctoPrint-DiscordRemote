@@ -94,7 +94,6 @@ class Command:
     def help(self):
         builder = EmbedBuilder()
         builder.set_title('Commands, Parameters and Description')
-        # builder.set_description("All commands should be prefaced with the bot prefix: '%s'" % self.plugin.get_settings().get(["prefix"]))
 
         for command, details in self.command_dict.items():
             builder.add_field(title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
