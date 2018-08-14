@@ -9,3 +9,5 @@ dist
 *.zip
 testenv/
 config.yaml
+.coverage
+htmlcov/

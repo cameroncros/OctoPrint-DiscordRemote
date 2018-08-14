@@ -41,10 +41,35 @@ flatten_file_list = [
 
 
 class TestCommand(TestCase):
-    _file_manager = mock.Mock()
-    _settings = mock.Mock()
-    _printer = mock.Mock()
-    _plugin_manager = mock.Mock()
+
+    def _mock_settings_get(self, *args, **kwards):
+        if args[0] == ["prefix"]:
+            return "/"
+        elif args[0] == ['show_local_ip']:
+            return True
+        elif args[0] == ['show_external_ip']:
+            return True
+        elif args[0] == ['baseurl']:
+            return None
+        else:
+            self.assertFalse(True, "Not mocked: %s" % args[0])
+
+    def __init__(self, *args, **kwargs):
+        super(TestCommand, self).__init__(*args, **kwargs)
+        self._file_manager = mock.Mock()
+
+        self._settings = mock.Mock()
+        self._settings.get = mock.Mock()
+        self._settings.get.side_effect = self._mock_settings_get
+
+        self.get_ip_address = mock.Mock()
+        self.get_ip_address.return_value = "192.168.1.1"
+
+        self.get_external_address = mock.Mock()
+        self.get_external_address.return_value = "1.2.3.4"
+
+        self._printer = mock.Mock()
+        self._plugin_manager = mock.Mock()
 
     def get_file_manager(self):
         return self._file_manager
@@ -269,9 +294,6 @@ class TestCommand(TestCase):
         self.get_printer().disconnect.assert_called_once_with()
 
     def test_parse_command_status(self):
-        self.get_settings().get = mock.Mock()
-        self.get_settings().get.return_value = True
-
         self.get_ip_address = mock.Mock()
         self.get_ip_address.return_value = "192.168.1.1"
 
@@ -323,7 +345,7 @@ class TestCommand(TestCase):
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
                           self.get_ip_address.return_value, self.get_external_ip_address.return_value]
 
-        self.assertEqual(2, self.get_settings().get.call_count)
+        self.assertEqual(3, self.get_settings().get.call_count)
 
         calls = [mock.call(["show_local_ip"], merged=True),
                  mock.call(["show_external_ip"], merged=True)]
