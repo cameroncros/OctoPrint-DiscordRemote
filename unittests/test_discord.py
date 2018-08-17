@@ -64,8 +64,6 @@ class TestSend(TestCase):
             f.seek(0)
             self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
 
-
-
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()
         mock_snapshot = mock.Mock()

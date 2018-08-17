@@ -129,9 +129,6 @@ class Discord:
                 self.logger.debug("WebSocket listener started")
                 time.sleep(1)
 
-                if self.session_id:
-                    self.send_resume()
-
                 # Wait until we are told to restart
                 self.restart_event.clear()
                 self.restart_event.wait()
@@ -268,8 +265,12 @@ class Discord:
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
-        # Authenticate
-        self.send_identify()
+        
+        # Authenticate/Resume
+        if self.session_id:
+            self.send_resume()
+        else:
+            self.send_identify()
 
         # Setup heartbeat_interval
         self.heartbeat_interval = js['d']['heartbeat_interval']
