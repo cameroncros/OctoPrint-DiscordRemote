@@ -47,6 +47,10 @@ jobs:
       - store_artifacts:
           path: beaglesight/build/outputs/apk/debug/beaglesight-debug.apk
           destination: beaglesight-debug.apk
+
+      - store_artifacts:
+          path: beaglesightwear/build/outputs/apk/debug/beaglesightwear-debug.apk
+          destination: beaglesightwear-debug.apk
       
       # Run lint and tests
       - run:
@@ -58,4 +62,6 @@ jobs:
       - store_artifacts:
           path: beaglesightlibs/build/reports
           destination: reports/beaglesightlibs
-
+      - store_artifacts:
+          path: beaglesightwear/build/reports
+          destination: reports/beaglesightwear
