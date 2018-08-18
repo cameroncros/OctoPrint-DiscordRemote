@@ -256,7 +256,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
 
                         FileInputStream fis = new FileInputStream(fname);
                         BowConfig bowConfig = new BowConfig(fis);
-                        BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig);
+                        BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig, true);
                     } catch (SAXException | ParserConfigurationException | IOException | NullPointerException e) {
                         Toast.makeText(this, "Failed to load BowConfig: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }

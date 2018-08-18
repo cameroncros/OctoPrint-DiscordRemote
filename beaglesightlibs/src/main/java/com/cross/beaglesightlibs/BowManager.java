@@ -3,9 +3,14 @@ package com.cross.beaglesightlibs;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.widget.Toast;
 
 import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
+import com.google.android.gms.wearable.Asset;
+import com.google.android.gms.wearable.PutDataMapRequest;
+import com.google.android.gms.wearable.PutDataRequest;
+import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +25,7 @@ public class BowManager {
     private static volatile BowManager instance = null;
     private SharedPreferences savedConfigs = null;
     private Context cont;
+    public static String configkey = "configKey";
 
     private BowManager(Context cont) {
         setContext(cont);
@@ -34,21 +40,59 @@ public class BowManager {
         synchronized (BowManager.class) {
             if (instance == null && cont != null) {
                 instance = new BowManager(cont);
+                if (instance.getBowList().size() == 0 && Build.FINGERPRINT.contains("generic"))
+                {
+                    loadFakeBows();
+                }
             }
         }
         return instance;
     }
 
-	public void addBowConfig(BowConfig bowConfig)
-	{
-	    if (bowConfig != null) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bowConfig.save(baos);
-            String configString =
-                    new String(baos.toByteArray(), Charset.forName("UTF-8"));
-            savedConfigs.edit().putString(bowConfig.getId(), configString).apply();
+    private static void loadFakeBows() {
+        {
+            BowConfig bc = new BowConfig("Fake bow1", "This is a testing bow, if you see this in a live app, i fucked up.");
+            bc.addPosition(new PositionPair(10, 10));
+            bc.addPosition(new PositionPair(20, 15));
+            bc.addPosition(new PositionPair(30, 40));
+            instance.addBowConfig(bc, false);
         }
-	}
+        {
+            BowConfig bc = new BowConfig("Fake bow2", "This is a testing bow, if you see this in a live app, i fucked up.");
+            bc.addPosition(new PositionPair(10, 40));
+            bc.addPosition(new PositionPair(20, 15));
+            bc.addPosition(new PositionPair(30, 10));
+            instance.addBowConfig(bc, false);
+        }
+        for (int i = 0; i < 10; i++)
+        {
+            BowConfig bc = new BowConfig("Fake bow" + (i+2), "This is a testing bow, if you see this in a live app, i fucked up.");
+            bc.addPosition(new PositionPair((float)Math.random()*40-10, (float)Math.random()*40-10));
+            bc.addPosition(new PositionPair((float)Math.random()*40-10, (float)Math.random()*40-10));
+            bc.addPosition(new PositionPair((float)Math.random()*40-10, (float)Math.random()*40-10));
+            instance.addBowConfig(bc, false);
+        }
+    }
+
+    public void addBowConfig(BowConfig bowConfig, boolean sendToWear)
+    {
+        if (bowConfig == null) {
+            return;
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bowConfig.save(baos);
+        String configString =
+                new String(baos.toByteArray(), Charset.forName("UTF-8"));
+        savedConfigs.edit().putString(bowConfig.getId(), configString).apply();
+
+        if (sendToWear) {
+            Asset asset = Asset.createFromBytes(baos.toByteArray());
+            PutDataMapRequest dataMap = PutDataMapRequest.create(bowConfig.getId());
+            dataMap.getDataMap().putAsset(configkey, asset);
+            PutDataRequest request = dataMap.asPutDataRequest();
+            Wearable.getDataClient(this.cont).putDataItem(request);
+        }
+    }
 
     public BowConfig getBowConfig(String id) throws InvalidBowConfigIdException {
         String configString = this.savedConfigs.getString(id, "");

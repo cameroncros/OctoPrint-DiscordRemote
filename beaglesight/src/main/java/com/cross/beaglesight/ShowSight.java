@@ -160,7 +160,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
             switch (item.getItemId()) {
                 case R.id.delete_position:
                     bowConfig.deletePosition(selectedPair);
-                    BowManager.getInstance(getBaseContext()).addBowConfig(bowConfig);
+                    BowManager.getInstance(getBaseContext()).addBowConfig(bowConfig, true);
                     mode.finish();
                     recreate();
                     break;
