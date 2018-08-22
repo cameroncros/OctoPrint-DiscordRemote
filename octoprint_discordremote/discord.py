@@ -22,14 +22,13 @@ BOT_TOKEN_LENGTH = 59
 DISPATCH = 0
 HEARTBEAT = 1
 IDENTIFY = 2
-READY = 2
 PRESENCE = 3
 VOICE_STATE = 4
 VOICE_PING = 5
 RESUME = 6
 RECONNECT = 7
 REQUEST_MEMBERS = 8
-INVALIDATE_SESSION = 9
+INVALID_SESSION = 9
 HELLO = 10
 HEARTBEAT_ACK = 11
 GUILD_SYNC = 12
@@ -144,7 +143,8 @@ class Discord:
                 # Clean up resources
                 if self.web_socket:
                     try:
-                        self.web_socket.close()
+                        # Shutdown with status 4000 to prevent the session being closed.
+                        self.web_socket.close(status=4000)
                     except websocket.WebSocketConnectionClosedException as e:
                         self.logger.error("Failed to close websocket: %s" % e.message)
                     self.web_socket = None
@@ -169,14 +169,12 @@ class Discord:
             else:
                 self.logger.info("Manager thread joined.")
             self.manager_thread = None
-            self.manager_thread = None
         if self.heartbeat_thread:
             self.heartbeat_thread.join(timeout=60)
             if self.heartbeat_thread.is_alive():
                 self.logger.error("HeartBeat thread has hung, leaking it now.")
             else:
                 self.logger.info("HeartBeat thread joined.")
-            self.heartbeat_thread = None
             self.heartbeat_thread = None
 
     def heartbeat(self):
@@ -190,7 +188,7 @@ class Discord:
                     self.status_callback(connected="disconnected")
                 self.restart_event.set()
             elif self.web_socket:
-                out = {'op': 1, 'd': self.last_sequence}
+                out = {'op': HEARTBEAT, 'd': self.last_sequence}
                 js = json.dumps(out)
                 self.web_socket.send(js)
                 self.heartbeat_sent += 1
@@ -205,19 +203,19 @@ class Discord:
 
         if js['op'] == HELLO:
             self.handle_hello(js)
-        elif js['op'] == READY:
-            self.handle_ready(js)
         elif js['op'] == DISPATCH:
             self.handle_dispatch(js)
         elif js['op'] == HEARTBEAT_ACK:
             self.handle_heartbeat_ack()
-        elif js['op'] == INVALIDATE_SESSION:
+        elif js['op'] == INVALID_SESSION:
             self.handle_invalid_session(js)
         else:
             self.logger.debug("Unhandled message: %s" % json.dumps(js))
 
     def handle_dispatch(self, js):
-        self.last_sequence = js['s']
+        if 's' in js and js['s'] is not None:
+            self.last_sequence = js['s']
+
         data = js['d']
         dispatch_type = js['t']
 
@@ -225,8 +223,12 @@ class Discord:
             self.logger.debug("Invalid message type: %s" % json.dumps(js))
             return
 
-        if 'session_id' in data:
-            self.session_id = data['session_id']
+        if dispatch_type == "READY":
+            return self.handle_ready(js)
+
+        if dispatch_type == "RESUMED":
+            self.logger.info("Successfully resumed")
+            return
 
         self.logger.debug("Message was: %s" % json.dumps(js))
 
@@ -321,15 +323,15 @@ class Discord:
 
     def handle_ready(self, js):
         self.logger.info("Received READY message")
-        self.session_id = js['session_id']
+        self.last_sequence = js['s']
+        self.session_id = js['d']['session_id']
 
     def handle_invalid_session(self, js):
         self.logger.info("Received INVALID_SESSION message")
+        self.session_id = None
+        self.last_sequence = None
         time.sleep(5)
-        if js['d']:
-            self.send_resume()
-        else:
-            self.send_identify()
+        self.send_identify()
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):

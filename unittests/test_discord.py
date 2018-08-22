@@ -15,6 +15,32 @@ from octoprint_discordremote.discord import Discord
 from octoprint_discordremote.embedbuilder import EmbedBuilder
 
 
+class TestLogger(logging.Logger):
+    def __init__(self):
+        super(TestLogger, self).__init__(name=None)
+
+    def setLevel(self, level):
+        pass
+
+    def debug(self, msg, *args):
+        print("DEBUG: %s" % msg, args)
+
+    def info(self, msg, *args):
+        print("INFO: %s" % msg, args)
+
+    def warning(self, msg, *args):
+        print("WARNING: %s" % msg, args)
+
+    def error(self, msg, *args):
+        print("ERROR: %s" % msg, args)
+
+    def exception(self, msg, *args):
+        print("EXCEPTION: %s" % msg, args)
+
+    def critical(self, msg, *args):
+        print("CRITICAL: %s" % msg, args)
+
+
 class TestSend(TestCase):
     def setUp(self):
         self.discord = Discord()
@@ -26,7 +52,7 @@ class TestSend(TestCase):
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
                                                allowed_users="",
-                                               logger=logging.getLogger(),
+                                               logger=TestLogger(),
                                                command=None)
                 time.sleep(5)
             except:
@@ -88,19 +114,33 @@ class TestSend(TestCase):
         self.discord.send_resume = mock.Mock()
         self.discord.send_resume.side_effect = orig_send_resume
 
+        orig_handle_invalid = self.discord.handle_invalid_session
+        self.discord.handle_invalid_session = mock.Mock()
+        self.discord.handle_invalid_session.side_effect = orig_handle_invalid
+
         while self.discord.restart_event.is_set():
             time.sleep(0.001)
 
+        self.discord.web_socket = None
         self.discord.restart_event.set()
 
-        resume_called_count = 0
+        resume_succeeded = 0
         for i in range(0, 1100):
             self.discord.send_resume.reset_mock()
+            while self.discord.restart_event.is_set():
+                time.sleep(1)
             self.discord.restart_event.set()
-            time.sleep(60)
             # Wait til resume is called
-            if self.discord.send_resume.called:
-                resume_called_count += 1
-                print("Resumed: %i" % i)
+            while not self.discord.send_resume.called:
+                time.sleep(1)
+            self.discord.send_resume.reset_mock()
 
-        print("Total Successful Resumes: %i" % resume_called_count)
+            # Check if invalid session occurred. Might not receive it til the next iteration.
+            if self.discord.handle_invalid_session.called:
+                resume_succeeded -= 1
+                self.discord.handle_invalid_session.reset_mock()
+
+            resume_succeeded += 1
+            print("Resumed: %i, Succeeded: %i" % (i, resume_succeeded))
+
+        print("Total Successful Resumes: %i" % resume_succeeded)
