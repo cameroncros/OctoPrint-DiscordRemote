@@ -159,26 +159,27 @@ class Discord:
                     self.listener_thread = None
 
     def shutdown_discord(self):
-        # Shutdown event must be set first.
+        self.logger.info("Shutdown has been triggered")
         self.shutdown_event.set()
         self.restart_event.set()
+
         if self.manager_thread:
             self.manager_thread.join(timeout=60)
             if self.manager_thread.is_alive():
                 self.logger.error("Manager thread has hung, leaking it now.")
             else:
                 self.logger.info("Manager thread joined.")
-            self.manager_thread = None
+        self.manager_thread = None
+
         if self.heartbeat_thread:
             self.heartbeat_thread.join(timeout=60)
             if self.heartbeat_thread.is_alive():
                 self.logger.error("HeartBeat thread has hung, leaking it now.")
             else:
                 self.logger.info("HeartBeat thread joined.")
-            self.heartbeat_thread = None
+        self.heartbeat_thread = None
 
     def heartbeat(self):
-        self.shutdown_event.clear()
         self.check_errors()
         while not self.shutdown_event.is_set():
             # Send heartbeat
@@ -277,8 +278,14 @@ class Discord:
         # Setup heartbeat_interval
         self.heartbeat_interval = js['d']['heartbeat_interval']
 
+        # Debug output status of heartbeat thread.
+        self.logger.info("Heartbeat thread: %s", self.heartbeat_thread)
+        if self.heartbeat_thread:
+            self.logger.info("Heartbeat thread is_alive(): %s", self.heartbeat_thread.is_alive())
+
         # Setup heartbeat_thread
-        if not self.heartbeat_thread:
+        if not self.heartbeat_thread or not self.heartbeat_thread.is_alive():
+            self.logger.info("Starting Heartbeat thread")
             self.heartbeat_thread = Thread(target=self.heartbeat)
             self.heartbeat_thread.start()
 
