@@ -191,9 +191,12 @@ class Discord:
             elif self.web_socket:
                 out = {'op': HEARTBEAT, 'd': self.last_sequence}
                 js = json.dumps(out)
-                self.web_socket.send(js)
-                self.heartbeat_sent += 1
-                self.logger.info("Heartbeat: %s" % js)
+                try:
+                    self.web_socket.send(js)
+                    self.heartbeat_sent += 1
+                    self.logger.info("Heartbeat: %s" % js)
+                except Exception as exc:
+                    self.logger.error("Exception caught: %s", str(exc))
 
             for i in range(self.heartbeat_interval / 1000):
                 if not self.shutdown_event.is_set():
