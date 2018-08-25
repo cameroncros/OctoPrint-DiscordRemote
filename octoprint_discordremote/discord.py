@@ -69,7 +69,8 @@ class Discord:
         self.restart_event.clear()
         self.bot_token = bot_token
         self.channel_id = channel_id
-        self.logger = logger
+        if logger:
+             self.logger = logger
         self.command = command
         self.status_callback = status_callback
         self.error_counter = 0
