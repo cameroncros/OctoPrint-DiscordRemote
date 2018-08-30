@@ -1,11 +1,10 @@
-import os
 import humanfriendly
-from unittest import TestCase
-
 import mock
+import os
 
 from octoprint_discordremote import Command
 from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 file_list = {'local': {
     u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530L, 'type': 'folder', 'typePath': ['folder'],
@@ -40,7 +39,7 @@ flatten_file_list = [
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
 
 
-class TestCommand(TestCase):
+class TestCommand(DiscordRemoteTestCase):
 
     def _mock_settings_get(self, *args, **kwards):
         if args[0] == ["prefix"]:

@@ -1,7 +1,7 @@
 import mock
-from unittest import TestCase
 
 from octoprint_discordremote import DiscordRemotePlugin
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
 def mock_global_get_boolean(array):
@@ -12,7 +12,7 @@ def mock_global_get_boolean(array):
     }[str(array)]
 
 
-class TestCommand(TestCase):
+class TestCommand(DiscordRemoteTestCase):
     def test_plugin_get_snapshot_http(self):
         plugin = DiscordRemotePlugin()
         plugin._settings = mock.Mock()

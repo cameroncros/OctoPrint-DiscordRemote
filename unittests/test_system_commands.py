@@ -1,17 +1,15 @@
 import json
 from collections import OrderedDict
 from mock import mock
-from unittest import TestCase
 
 from octoprint_discordremote.command_plugins.system_commands import SystemCommands
-from octoprint_discordremote.embedbuilder import COLOR_SUCCESS, COLOR_ERROR, error_embed
-from unittests.test_embedbuilder import validate_basic_embed
+from octoprint_discordremote.embedbuilder import COLOR_SUCCESS, COLOR_ERROR
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
-class TestSystemCommand(TestCase):
+class TestSystemCommand(DiscordRemoteTestCase):
     def setUp(self):
         self.system_commands = SystemCommands()
-
 
     def test_setup(self):
         command = mock.Mock()
@@ -28,7 +26,23 @@ class TestSystemCommand(TestCase):
     def test_list_all_commands(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
 
+        # Server Failed
         mock_result = mock.Mock()
+        mock_result.status_code = 500
+        mock_result.content = "500 server error"
+
+        requests_mock.return_value = mock_result
+
+        snapshots, embeds = self.system_commands.list_system_commands()
+        requests_mock.assert_called_once()
+        self.assertBasicEmbed(embeds,
+                              title="Error code: %i" % mock_result.status_code,
+                              description=mock_result.content,
+                              color=COLOR_ERROR)
+        requests_mock.assert_called_once()
+        requests_mock.reset_mock()
+
+        # Success
         mock_result.content = json.dumps({
             'core': [{'action': 'restart',
                       'command': 'sudo restart',
@@ -38,8 +52,6 @@ class TestSystemCommand(TestCase):
             'other': []
         })
         mock_result.status_code = 200
-
-        requests_mock.return_value = mock_result
 
         snapshots, embeds = self.system_commands.list_system_commands()
         requests_mock.assert_called_once()
@@ -55,7 +67,7 @@ class TestSystemCommand(TestCase):
         self.assertEqual('Restart', embed.fields[0]['name'])
         self.assertEqual('core/shutdown', embed.fields[1]['value'])
         self.assertEqual('Shutdown', embed.fields[1]['name'])
-        
+
     @mock.patch('requests.post')
     def test_system_command(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
@@ -63,28 +75,26 @@ class TestSystemCommand(TestCase):
         # Not enough args
         snapshots, embeds = self.system_commands.system_command(['/systemcommand'])
 
-        validate_basic_embed(self,
-                             embeds,
-                             title='Wrong number of args',
-                             description='/systemcommand {source/command}',
-                             color=COLOR_ERROR)
+        self.assertBasicEmbed(embeds,
+                              title='Wrong number of args',
+                              description='/systemcommand {source/command}',
+                              color=COLOR_ERROR)
 
         # Successfully ran
         mock_result = mock.Mock()
         mock_result.status_code = 200
 
         requests_mock.return_value = mock_result
-        
+
         snapshots, embeds = self.system_commands.system_command(['/systemcommand', 'core/restart'])
-        
+
         requests_mock.assert_called_once()
         self.assertIsNone(snapshots)
 
-        validate_basic_embed(self,
-                             embeds,
-                             title='Successfully ran command',
-                             description='core/restart',
-                             color=COLOR_SUCCESS)
+        self.assertBasicEmbed(embeds,
+                              title='Successfully ran command',
+                              description='core/restart',
+                              color=COLOR_SUCCESS)
 
         # Unsuccessful run
         requests_mock.reset_mock()
@@ -95,8 +105,7 @@ class TestSystemCommand(TestCase):
         requests_mock.assert_called_once()
         self.assertIsNone(snapshots)
 
-        validate_basic_embed(self,
-                             embeds,
-                             title='Failed to run command',
-                             description='core/doesntexist',
-                             color=COLOR_ERROR)
+        self.assertBasicEmbed(embeds,
+                              title='Failed to run command',
+                              description='core/doesntexist',
+                              color=COLOR_ERROR)
