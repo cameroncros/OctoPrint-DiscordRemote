@@ -10,6 +10,15 @@ from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_DESCRIPTION, 
     info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR
 
 
+def validate_basic_embed(cls, embeds, title, description, color):
+    cls.assertEqual(1, len(embeds))
+    first_embed = embeds[0].get_embed()
+    cls.assertEqual(title, first_embed['title'])
+    cls.assertEqual(description, first_embed['description'])
+    cls.assertEqual(color, first_embed['color'])
+    cls.assertIsNotNone(first_embed['timestamp'])
+    cls.assertEqual(0, len(first_embed['fields']))
+
 class TestEmbedBuilder(TestCase):
 
     def setUp(self):
@@ -66,13 +75,11 @@ class TestEmbedBuilder(TestCase):
     def test_success_embed(self):
         embeds = success_embed(title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_SUCCESS, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        validate_basic_embed(self,
+                             embeds,
+                             title="title",
+                             description="description",
+                             color=COLOR_SUCCESS)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
@@ -80,13 +87,11 @@ class TestEmbedBuilder(TestCase):
     def test_error_embed(self):
         embeds = error_embed(title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_ERROR, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        validate_basic_embed(self,
+                             embeds,
+                             title="title",
+                             description="description",
+                             color=COLOR_ERROR)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
@@ -94,13 +99,11 @@ class TestEmbedBuilder(TestCase):
     def test_info_embed(self):
         embeds = info_embed(title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_INFO, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        validate_basic_embed(self,
+                             embeds,
+                             title="title",
+                             description="description",
+                             color=COLOR_INFO)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))

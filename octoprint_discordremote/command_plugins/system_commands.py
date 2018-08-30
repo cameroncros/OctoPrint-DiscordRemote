@@ -19,7 +19,7 @@ class SystemCommands(AbstractPlugin):
         }
 
         command.command_dict['systemcommand'] = {
-            'args': '{command name}',
+            'params': '{source/command}',
             'cmd': self.system_command,
             'description': 'Execute a system command'
         }
@@ -48,10 +48,12 @@ class SystemCommands(AbstractPlugin):
         return None, builder.get_embeds()
 
     def system_command(self, command):
+        if len(command) != 2:
+            return None, error_embed(title='Wrong number of args', description='/systemcommand {source/command}')
         api_key = self.plugin.get_settings().global_get(['api', 'key'])
         port = self.plugin.get_settings().global_get(['server', 'port'])
         header = {'X-Api-Key': api_key, 'Content-Type': 'application/json'}
-        if requests.post('http://127.0.0.1:%s/api/system/commands/%s' % (port, command), headers=header):
-            return None, success_embed(title='Successfully ran command', description=command)
+        if requests.post('http://127.0.0.1:%s/api/system/commands/%s' % (port, command[1]), headers=header):
+            return None, success_embed(title='Successfully ran command', description=command[1])
         else:
-            return None, error_embed(title='Failed to run command', description=command)
+            return None, error_embed(title='Failed to run command', description=command[1])

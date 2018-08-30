@@ -4,7 +4,8 @@ from mock import mock
 from unittest import TestCase
 
 from octoprint_discordremote.command_plugins.system_commands import SystemCommands
-from octoprint_discordremote.embedbuilder import COLOR_SUCCESS, COLOR_ERROR
+from octoprint_discordremote.embedbuilder import COLOR_SUCCESS, COLOR_ERROR, error_embed
+from unittests.test_embedbuilder import validate_basic_embed
 
 
 class TestSystemCommand(TestCase):
@@ -59,36 +60,43 @@ class TestSystemCommand(TestCase):
     def test_system_command(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
 
+        # Not enough args
+        snapshots, embeds = self.system_commands.system_command(['/systemcommand'])
+
+        validate_basic_embed(self,
+                             embeds,
+                             title='Wrong number of args',
+                             description='/systemcommand {source/command}',
+                             color=COLOR_ERROR)
+
         # Successfully ran
         mock_result = mock.Mock()
         mock_result.status_code = 200
 
         requests_mock.return_value = mock_result
         
-        snapshots, embeds = self.system_commands.system_command('core/restart')
+        snapshots, embeds = self.system_commands.system_command(['/systemcommand', 'core/restart'])
         
         requests_mock.assert_called_once()
         self.assertIsNone(snapshots)
-        self.assertEqual(1, len(embeds))
-        embed = embeds[0]
-        
-        self.assertEqual('Successfully ran command', embed.title)
-        self.assertEqual('core/restart', embed.description)
-        self.assertEqual(0, len(embed.fields))
-        self.assertEqual(COLOR_SUCCESS, embed.color)
+
+        validate_basic_embed(self,
+                             embeds,
+                             title='Successfully ran command',
+                             description='core/restart',
+                             color=COLOR_SUCCESS)
 
         # Unsuccessful run
         requests_mock.reset_mock()
         requests_mock.return_value = False
 
-        snapshots, embeds = self.system_commands.system_command('core/doesntexist')
+        snapshots, embeds = self.system_commands.system_command(['/systemcommand', 'core/doesntexist'])
 
         requests_mock.assert_called_once()
         self.assertIsNone(snapshots)
-        self.assertEqual(1, len(embeds))
-        embed = embeds[0]
 
-        self.assertEqual('Failed to run command', embed.title)
-        self.assertEqual('core/doesntexist', embed.description)
-        self.assertEqual(0, len(embed.fields))
-        self.assertEqual(COLOR_ERROR, embed.color)
+        validate_basic_embed(self,
+                             embeds,
+                             title='Failed to run command',
+                             description='core/doesntexist',
+                             color=COLOR_ERROR)
