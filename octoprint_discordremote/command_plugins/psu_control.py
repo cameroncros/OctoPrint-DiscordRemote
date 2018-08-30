@@ -1,10 +1,11 @@
 import json
 import requests
 
+from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
 from octoprint_discordremote.embedbuilder import success_embed, error_embed, info_embed
 
 
-class PsuControl:
+class PsuControl(AbstractPlugin):
     plugin = None
 
     def __init__(self):

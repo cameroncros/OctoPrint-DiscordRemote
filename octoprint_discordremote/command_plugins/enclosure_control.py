@@ -1,13 +1,14 @@
 import requests
 
+from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
 
 
-class EnclosureControl:
+class EnclosureControl(AbstractPlugin):
     plugin = None
 
     def __init__(self):
-        pass
+        AbstractPlugin.__init__(self)
 
     def setup(self, command, plugin):
         self.plugin = plugin
