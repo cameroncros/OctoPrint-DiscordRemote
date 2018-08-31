@@ -28,15 +28,17 @@ public class BowConfig {
     private String name = "";
     private String description = "";
     private final List<PositionPair> positionArray = new ArrayList<>();
-    private final PositionCalculator positionCalculator = new LineOfBestFitCalculator();
+    PositionCalculator positionCalculator = null;
 
     public BowConfig(String name, String description) {
+        initPositionCalculator();
         this.id = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
     }
 
     public BowConfig(InputStream stream) throws IOException, ParserConfigurationException, SAXException {
+        initPositionCalculator();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = factory.newDocumentBuilder();
         InputSource inputSource = new InputSource(stream);
@@ -107,6 +109,10 @@ public class BowConfig {
             Log.e("Exception",e.toString());
         }
 
+    }
+
+    public void initPositionCalculator() {
+        positionCalculator = new LineOfBestFitCalculator();
     }
 
     public String getId() {
