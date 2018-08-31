@@ -1,18 +1,15 @@
-import os
-
-import logging
 import time
 
+import logging
+import os
 import socket
 import unittest
-from mock import mock
-from unittest import TestCase
-
 import yaml
+from mock import mock
 
-from octoprint_discordremote import info_embed
 from octoprint_discordremote.discord import Discord
 from octoprint_discordremote.embedbuilder import EmbedBuilder
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
 class TestLogger(logging.Logger):
@@ -41,7 +38,7 @@ class TestLogger(logging.Logger):
         print("CRITICAL: %s" % msg, args)
 
 
-class TestSend(TestCase):
+class TestSend(DiscordRemoteTestCase):
     def setUp(self):
         self.discord = Discord()
         if "NET_TEST" in os.environ:
