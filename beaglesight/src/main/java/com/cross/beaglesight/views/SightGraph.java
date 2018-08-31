@@ -12,6 +12,7 @@ import android.view.View;
 
 import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
+import com.cross.beaglesightlibs.MockBowConfig;
 import com.cross.beaglesightlibs.PositionCalculator;
 import com.cross.beaglesightlibs.PositionPair;
 import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
@@ -91,22 +92,7 @@ public class SightGraph extends View implements LongPressCustomView {
 
     private void init(AttributeSet attrs, int defStyle) {
         if (isInEditMode()) {
-            BowConfig bowConfig = new BowConfig("TempName", "TempDescription");
-
-            try {
-                bowConfig.addPosition(new PositionPair("15", "45"));
-                bowConfig.addPosition(new PositionPair("18", "40"));
-                bowConfig.addPosition(new PositionPair("20", "40"));
-                bowConfig.addPosition(new PositionPair("30", "42"));
-                bowConfig.addPosition(new PositionPair("40", "45"));
-                bowConfig.addPosition(new PositionPair("50", "49"));
-                bowConfig.addPosition(new PositionPair("60", "54"));
-            }
-            catch (InvalidNumberFormatException nfe)
-            {
-                // Do nothing, will never happen.
-            }
-
+            BowConfig bowConfig = new MockBowConfig();
             setBowConfig(bowConfig);
         }
 

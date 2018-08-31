@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.cross.beaglesightlibs.MockBowConfig;
 import com.cross.beaglesightwear.R;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.PositionCalculator;
@@ -57,6 +58,9 @@ public class SightGraphWear extends View {
 
     private float lineWidth;
 
+    private static String distLabel = "Dist:";
+    private static String posLabel = "Pos:";
+
     public SightGraphWear(Context context) {
         super(context);
         init(null, 0);
@@ -72,8 +76,7 @@ public class SightGraphWear extends View {
         init(attrs, defStyle);
     }
 
-    private Paint getPaint(TypedArray a, int colorStyle, int def, float lineWidth)
-    {
+    private Paint getPaint(TypedArray a, int colorStyle, int def, float lineWidth) {
         int lineColor = def;
         if (!isInEditMode() && a != null) {
             lineColor = a.getColor(
@@ -89,22 +92,7 @@ public class SightGraphWear extends View {
 
     private void init(AttributeSet attrs, int defStyle) {
         if (isInEditMode()) {
-            BowConfig bowConfig = new BowConfig("TempName", "TempDescription");
-
-            try {
-                bowConfig.addPosition(new PositionPair("15", "45"));
-                bowConfig.addPosition(new PositionPair("18", "40"));
-                bowConfig.addPosition(new PositionPair("20", "40"));
-                bowConfig.addPosition(new PositionPair("30", "42"));
-                bowConfig.addPosition(new PositionPair("40", "45"));
-                bowConfig.addPosition(new PositionPair("50", "49"));
-                bowConfig.addPosition(new PositionPair("60", "54"));
-            }
-            catch (InvalidNumberFormatException nfe)
-            {
-                // Do nothing, will never happen.
-            }
-
+            BowConfig bowConfig = new MockBowConfig();
             setBowConfig(bowConfig);
         }
 
@@ -115,29 +103,29 @@ public class SightGraphWear extends View {
                     attrs, R.styleable.SightGraphWear, defStyle, 0);
         }
 
-        lineWidth = 10f;
+        lineWidth = 2f;
         if (!isInEditMode() && a != null) {
-            lineWidth= a.getDimension(
+            lineWidth = a.getDimension(
                     R.styleable.SightGraphWear_lineWidth,
-                    10);
+                    lineWidth);
         }
 
-        linePaint = getPaint(a, R.styleable.SightGraphWear_lineColor, Color.BLACK, lineWidth);
-        graphPaint = getPaint(a, R.styleable.SightGraphWear_graphColor, Color.BLUE, lineWidth);
-        graphMinorAxis = getPaint(a, R.styleable.SightGraphWear_graphColor, Color.BLUE, lineWidth/2);
+        linePaint = getPaint(a, R.styleable.SightGraphWear_lineColor, Color.BLUE, lineWidth);
+        graphPaint = getPaint(a, R.styleable.SightGraphWear_graphColor, Color.RED, lineWidth);
+        graphMinorAxis = getPaint(a, R.styleable.SightGraphWear_graphColor, Color.BLUE, lineWidth / 2);
         pointPaint = getPaint(a, R.styleable.SightGraphWear_pointColor, Color.RED, lineWidth);
-        backgroundPaint = getPaint(a, R.styleable.SightGraphWear_backgroundColor, Color.GREEN, lineWidth);
+        backgroundPaint = getPaint(a, R.styleable.SightGraphWear_backgroundColor, Color.BLACK, lineWidth);
         labelPaint = getPaint(a, R.styleable.SightGraphWear_labelColor, Color.YELLOW, lineWidth);
         axisLabelPaint = getPaint(a, R.styleable.SightGraphWear_labelColor, Color.YELLOW, lineWidth);
 
-        float textSize = 10f;
+        float textSize = 30f;
         if (!isInEditMode() && a != null) {
             textSize = a.getDimension(
                     R.styleable.SightGraphWear_labelSize,
-                    10);
+                    textSize);
         }
         labelPaint.setTextSize(textSize);
-        axisLabelPaint.setTextSize(textSize/2);
+        axisLabelPaint.setTextSize(textSize / 2);
 
         if (!isInEditMode() && a != null) {
             a.recycle();
@@ -145,8 +133,7 @@ public class SightGraphWear extends View {
     }
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b)
-    {
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int paddingLeft = getPaddingLeft();
         int paddingTop = getPaddingTop();
         int paddingRight = getPaddingRight();
@@ -167,10 +154,10 @@ public class SightGraphWear extends View {
 
     /**
      * Sets the bowConfig to use to draw the view.
+     *
      * @param config The BowConfig to use to draw the view.
      */
-    public void setBowConfig(BowConfig config)
-    {
+    public void setBowConfig(BowConfig config) {
         bowConfig = config;
         pc = config.getPositionCalculator();
 
@@ -190,8 +177,7 @@ public class SightGraphWear extends View {
         positionPairMap = new HashMap<>();
         List<PositionPair> positions = bowConfig.getPositions();
 
-        for (PositionPair pair : positions)
-        {
+        for (PositionPair pair : positions) {
             float position = pair.getPositionFloat();
             float distance = pair.getDistanceFloat();
 
@@ -203,31 +189,27 @@ public class SightGraphWear extends View {
         }
     }
 
-    private float pixelToDistance(float pixel)
-    {
+    private float pixelToDistance(float pixel) {
         // 20m == contentWidthStart
         // 100m == contentWidthEnd.
         float percent = (pixel - contentWidthStart) / (contentWidthEnd - contentWidthStart);
         return minDist + percent * (maxDist - minDist);
     }
 
-    private float distanceToPixel(float distance)
-    {
+    private float distanceToPixel(float distance) {
         float percent = (distance - minDist) / (maxDist - minDist);
         return Math.round(contentWidthStart + percent * (contentWidthEnd - contentWidthStart));
     }
 
-    private float positionToPixel(float position)
-    {
+    private float positionToPixel(float position) {
         float percent = (position - minPos) / (maxPos - minPos);
         return Math.round(contentHeightStart + percent * (contentHeightEnd - contentHeightStart));
     }
 
-    private float calculateYVal(float xVal)
-    {
+    private float calculateYVal(float xVal) {
         float distance = pixelToDistance(xVal);
         float position = pc.calcPosition(distance);
-        return  positionToPixel(position);
+        return positionToPixel(position);
     }
 
     @Override
@@ -235,18 +217,16 @@ public class SightGraphWear extends View {
         super.onDraw(canvas);
 
         // Draw Background
-        canvas.drawRect((long)contentWidthStart, (long)contentHeightStart, (long)contentWidthEnd, (long)contentHeightEnd, backgroundPaint);
+        canvas.drawRect((long) contentWidthStart, (long) contentHeightStart, (long) contentWidthEnd, (long) contentHeightEnd, backgroundPaint);
 
         // Draw Axis
-        for (float i = 0; i < maxDist; i+=10)
-        {
+        for (float i = 0; i < maxDist; i += 10) {
             float xPixel = distanceToPixel(i);
             canvas.drawLine(xPixel, contentHeightStart, xPixel, contentHeightEnd, graphMinorAxis);
-            canvas.drawText(Float.toString(i), xPixel+axisLabelPaint.getTextSize(), contentHeightEnd-axisLabelPaint.getTextSize(), axisLabelPaint);
+            canvas.drawText(Float.toString(i), xPixel + axisLabelPaint.getTextSize(), contentHeightEnd - axisLabelPaint.getTextSize(), axisLabelPaint);
         }
 
-        for (float i = Math.round(minPos/10)* 10; i < maxPos; i+=10)
-        {
+        for (float i = Math.round(minPos / 10) * 10; i < maxPos; i += 10) {
             float yPixel = positionToPixel(i);
             canvas.drawLine(contentWidthStart, yPixel, contentWidthEnd, yPixel, graphMinorAxis);
             canvas.drawText(Float.toString(i), axisLabelPaint.getTextSize(), yPixel + axisLabelPaint.getTextSize(), axisLabelPaint);
@@ -254,26 +234,23 @@ public class SightGraphWear extends View {
 
         // Draw the graph.
         float lastYVal = calculateYVal(contentWidthStart);
-        for (float i = contentWidthStart; i < contentWidthEnd; i++)
-        {
+        for (float i = contentWidthStart; i < contentWidthEnd; i++) {
             float yVal = calculateYVal(i);
-            canvas.drawLine(i-1, lastYVal, i, yVal, graphPaint);
+            canvas.drawLine(i - 1, lastYVal, i, yVal, graphPaint);
             lastYVal = yVal;
         }
 
         // Draw the dots.
         Set<PositionPair> positions = positionPairMap.keySet();
-        for (PositionPair pair : positions)
-        {
+        for (PositionPair pair : positions) {
             float positionPixel = pair.getPositionFloat();
             float distancePixel = pair.getDistanceFloat();
 
-            canvas.drawCircle(distancePixel, positionPixel, lineWidth*2, pointPaint);
+            canvas.drawCircle(distancePixel, positionPixel, lineWidth * 2, pointPaint);
         }
 
         // Draw the select line.
-        if (selectedDistance >= 0)
-        {
+        if (selectedDistance >= 0) {
             float xval = distanceToPixel(selectedDistance);
             canvas.drawLine(xval, contentHeightStart, xval, contentHeightEnd, linePaint);
 
@@ -281,10 +258,36 @@ public class SightGraphWear extends View {
             float yval = positionToPixel(position);
             canvas.drawLine(contentWidthStart, yval, contentWidthEnd, yval, linePaint);
 
-            canvas.drawText(PositionCalculator.getDisplayValue(position, 2),
-                    xval + labelPaint.getTextSize() / 2,
-                    yval - labelPaint.getTextSize() / 2,
-                    labelPaint);
+            // Draw text labels
+            {
+                float labelX = (contentWidthEnd - contentWidthStart) / 4;
+                float labelY = (contentHeightEnd - contentHeightStart) / 4;
+                canvas.drawCircle(labelX, labelY, labelPaint.measureText(distLabel)*0.8f, graphMinorAxis);
+                canvas.drawText(distLabel,
+                        labelX - labelPaint.measureText(distLabel) / 2,
+                        labelY - labelPaint.getTextSize() / 2,
+                        labelPaint);
+                String distValue = PositionCalculator.getDisplayValue(selectedDistance, 1);
+
+                canvas.drawText(distValue,
+                        labelX - labelPaint.measureText(distValue) / 2,
+                        labelY + labelPaint.getTextSize() / 2,
+                        labelPaint);
+            }
+            {
+                float labelX = (contentWidthEnd - contentWidthStart) * 3 / 4;
+                float labelY = (contentHeightEnd - contentHeightStart) / 4;
+                canvas.drawText(posLabel,
+                        labelX- labelPaint.measureText(posLabel) / 2,
+                        labelY - labelPaint.getTextSize() / 2,
+                        labelPaint);
+                String posValue = PositionCalculator.getDisplayValue(position, 1);
+
+                canvas.drawText(posValue,
+                        labelX - labelPaint.measureText(posValue) / 2,
+                        labelY + labelPaint.getTextSize() / 2,
+                        labelPaint);
+            }
         }
     }
 
@@ -294,17 +297,16 @@ public class SightGraphWear extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                 int history = event.getHistorySize();
-                if (history < 1)
-                {
+                if (history < 1) {
                     break;
                 }
                 float lastX = event.getHistoricalX(history - 1);
-                float currentX =event.getX();
+                float currentX = event.getX();
                 float delta = currentX - lastX;
                 float percent = (delta - contentWidthStart) / (contentWidthEnd - contentWidthStart);
 
                 float dist = percent * zoomDist * 2;
-                Log.i("SightGraphWear","Distance: " + Float.toString(currentX - lastX));
+                Log.i("SightGraphWear", "Distance: " + Float.toString(currentX - lastX));
                 selectedDistance += dist;
                 break;
         }
