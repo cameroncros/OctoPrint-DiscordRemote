@@ -14,6 +14,9 @@ plugins:
 printerProfiles:
   default: _default
 server:
+  commands:
+    serverRestartCommand: pig
+    systemRestartCommand: ashgas
   firstRun: false
   onlineCheck:
     enabled: false

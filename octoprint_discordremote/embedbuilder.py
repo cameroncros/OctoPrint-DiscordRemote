@@ -1,4 +1,4 @@
-from future.backports import datetime
+import datetime
 
 COLOR_SUCCESS = 0x00AE86
 COLOR_ERROR = 0xE84A4A
@@ -59,7 +59,7 @@ class EmbedBuilder:
 
     def set_description(self, description):
         if description is None:
-            description = ""
+            description = None
         elif len(description) > MAX_DESCRIPTION:
             description = description[0:MAX_DESCRIPTION-3] + "..."
 
@@ -69,9 +69,14 @@ class EmbedBuilder:
         return self
 
     def add_field(self, title, text, inline=False):
-        if title and len(str(title)) > MAX_TITLE:
-            title = title[0:MAX_TITLE-3] + "..."
-        if text and len(str(text)) > MAX_VALUE:
+        if title is None or len(str(title)) == 0:
+            title = "DEVERROR: Passed an invalid title"
+        if text is None or len(str(text)) == 0:
+            text = "DEVERROR: Passed an invalid text"
+
+        if len(str(title)) > MAX_TITLE:
+            title = title[0:MAX_TITLE - 3] + "..."
+        if len(str(text)) > MAX_VALUE:
             text = text[0:MAX_VALUE - 3] + "..."
 
         while not self.embeds[-1].add_field({'name': str(title),
