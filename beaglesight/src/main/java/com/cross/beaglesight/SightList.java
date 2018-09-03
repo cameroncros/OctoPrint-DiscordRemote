@@ -152,7 +152,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
     }
 
     @Override
-    public Boolean onListFragmentInteraction(BowConfig bowConfig) {
+    public boolean onListFragmentInteraction(BowConfig bowConfig) {
         if (selectedBowConfigs != null)
         {
             if (selectedBowConfigs.contains(bowConfig))
@@ -176,17 +176,21 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
 
     @SuppressLint("RestrictedApi")
     @Override
-    public void onListFragmentLongPress(BowConfig bowConfig) {
-        selectedBowConfigs = new ArrayList<>();
-        selectedBowConfigs.add(bowConfig);
+    public boolean onListFragmentLongPress(BowConfig bowConfig) {
+        if (selectedBowConfigs == null) {
+            selectedBowConfigs = new ArrayList<>();
+            //TODO: Fix selecting on long press: selectedBowConfigs.add(bowConfig);
 
-        startActionMode(selectedActionMode);
+            startActionMode(selectedActionMode);
 
-        fab.setVisibility(View.GONE);
-        fab.invalidate();
+            fab.setVisibility(View.GONE);
+            fab.invalidate();
 
-        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams)appBarLayout.getLayoutParams();
-        lp.height = (int) getResources().getDimension(R.dimen.toolbar_height);
+            CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
+            lp.height = (int) getResources().getDimension(R.dimen.toolbar_height);
+            return true;
+        }
+        return false;
     }
 
     private final ActionMode.Callback selectedActionMode = new ActionMode.Callback() {
@@ -221,6 +225,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
                     //TODO: Export the configs
                     break;
             }
+            selectedBowConfigs = null;
             mode.finish();
             return true;
         }

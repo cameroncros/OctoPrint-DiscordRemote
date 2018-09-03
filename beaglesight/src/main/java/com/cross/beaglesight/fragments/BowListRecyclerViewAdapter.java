@@ -64,10 +64,12 @@ public class BowListRecyclerViewAdapter extends RecyclerView.Adapter<BowListRecy
             @Override
             public boolean onLongClick(View v) {
                 if (mListener != null) {
-                    mListener.onListFragmentLongPress(holder.mItem);
-                    CheckBox checkBox = holder.mView.findViewById(R.id.itemSelect);
-                    checkBox.setSelected(true);
-                    checkBox.invalidate();
+                    Boolean selected = mListener.onListFragmentLongPress(holder.mItem);
+                    //TODO: Fix selecting on long press:
+                    //CheckBox checkBox = holder.mView.findViewById(R.id.itemSelect);
+                    //checkBox.setSelected(selected);
+                    //checkBox.invalidate();
+                    //holder.mView.invalidate();
                 }
                 return true;
             }
@@ -119,7 +121,7 @@ public class BowListRecyclerViewAdapter extends RecyclerView.Adapter<BowListRecy
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         Boolean onListFragmentInteraction(BowConfig item);
-        void onListFragmentLongPress(BowConfig item);
+        boolean onListFragmentLongPress(BowConfig item);
     }
 }
 
