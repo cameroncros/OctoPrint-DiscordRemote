@@ -1,4 +1,4 @@
-package com.cross.beaglesightwear.views;
+package com.cross.beaglesight.views;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,11 +12,10 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.cross.beaglesightlibs.MockBowConfig;
-import com.cross.beaglesightwear.R;
+import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.PositionCalculator;
 import com.cross.beaglesightlibs.PositionPair;
-import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 import java.util.HashMap;
 import java.util.List;

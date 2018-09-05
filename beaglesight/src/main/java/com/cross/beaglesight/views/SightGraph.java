@@ -15,7 +15,6 @@ import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.MockBowConfig;
 import com.cross.beaglesightlibs.PositionCalculator;
 import com.cross.beaglesightlibs.PositionPair;
-import com.cross.beaglesightlibs.exceptions.InvalidNumberFormatException;
 
 import java.util.HashMap;
 import java.util.List;

@@ -120,7 +120,7 @@ public class BowListRecyclerViewAdapter extends RecyclerView.Adapter<BowListRecy
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        Boolean onListFragmentInteraction(BowConfig item);
+        boolean onListFragmentInteraction(BowConfig item);
         boolean onListFragmentLongPress(BowConfig item);
     }
 }

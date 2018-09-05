@@ -38,7 +38,7 @@ public class AddSight extends AppCompatActivity implements View.OnClickListener 
         String description = descriptionEntry.getText().toString();
 
         BowConfig bowConfig = new BowConfig(name, description);
-        bowManager.addBowConfig(bowConfig, true);
+        bowManager.addBowConfig(bowConfig);
 
         Intent intent = new Intent(this, ShowSight.class);
         intent.putExtra(CONFIG_TAG, bowConfig.getId());

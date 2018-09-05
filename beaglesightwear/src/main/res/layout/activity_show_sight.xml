@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.cross.beaglesightwear.views.SightGraphWear
+        <com.cross.beaglesight.views.SightGraphWear
             android:id="@+id/sightGraph"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

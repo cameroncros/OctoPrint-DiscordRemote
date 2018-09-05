@@ -178,7 +178,7 @@ public class AddDistance extends AppCompatActivity {
                 {
                     // Ignore, should never happen
                 }
-                bowManager.addBowConfig(bowConfig, true);
+                bowManager.addBowConfig(bowConfig);
 
                 finish();
             }

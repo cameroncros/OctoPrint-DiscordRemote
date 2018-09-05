@@ -33,10 +33,12 @@ import com.cross.beaglesightlibs.BowManager;
 
 import org.xml.sax.SAXException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -44,6 +46,7 @@ import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
 public class SightList extends AppCompatActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
     private Intent addIntent;
+    private List<BowConfig> configList;
     private ArrayList<BowConfig> selectedBowConfigs;
     private FloatingActionButton fab;
 
@@ -76,7 +79,8 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         if (view != null) {
             Context context = view.getContext();
             view.setLayoutManager(new LinearLayoutManager(context));
-            adapter = new BowListRecyclerViewAdapter(BowManager.getInstance(getApplicationContext()).getBowList(), this);
+            configList = BowManager.getInstance(getApplicationContext()).getBowList();
+            adapter = new BowListRecyclerViewAdapter(configList, this);
             view.setAdapter(adapter);
         }
 
@@ -211,17 +215,28 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-
+            BowManager bm = BowManager.getInstance(getBaseContext());
             switch (item.getItemId()) {
                 case R.id.action_delete:
-                    BowManager bm = BowManager.getInstance(getBaseContext());
                     for (BowConfig config : selectedBowConfigs)
                     {
-                        bm.deleteBowConfig(config);
+                        bm.deleteBowConfig(config.getId());
                     }
+                    configList.clear();
+                    configList.addAll(BowManager.getInstance(getApplicationContext()).getBowList());
                     adapter.notifyDataSetChanged();
                     break;
                 case R.id.action_export:
+                    StringBuilder sb = new StringBuilder();
+                    for (BowConfig config : selectedBowConfigs)
+                    {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        config.save(baos);
+                        sb.append(baos.toString());
+                        sb.append('\n');
+                        bm.deleteBowConfig(config.getId());
+                    }
+                    
                     //TODO: Export the configs
                     break;
             }
@@ -261,7 +276,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
 
                         FileInputStream fis = new FileInputStream(fname);
                         BowConfig bowConfig = new BowConfig(fis);
-                        BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig, true);
+                        BowManager.getInstance(getApplicationContext()).addBowConfig(bowConfig);
                     } catch (SAXException | ParserConfigurationException | IOException | NullPointerException e) {
                         Toast.makeText(this, "Failed to load BowConfig: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }

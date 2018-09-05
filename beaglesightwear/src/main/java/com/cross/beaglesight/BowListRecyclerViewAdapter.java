@@ -1,4 +1,4 @@
-package com.cross.beaglesightwear;
+package com.cross.beaglesight;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -6,7 +6,6 @@ import android.support.wear.widget.WearableRecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.cross.beaglesightlibs.BowConfig;
