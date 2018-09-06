@@ -305,7 +305,9 @@ public class SightGraphWear extends View {
 
                 float dist = percent * zoomDist * 2;
                 Log.i("SightGraphWear", "Distance: " + Float.toString(currentX - lastX));
-                selectedDistance += dist;
+
+                // Negate the distance moved, makes it feel like the user is scrolling the graph.
+                selectedDistance -= dist;
                 break;
         }
         if (selectedDistance > 100) selectedDistance = 100;
