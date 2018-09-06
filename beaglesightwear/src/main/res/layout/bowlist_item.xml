@@ -11,8 +11,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
+        android:textSize="16sp"
         android:text="@string/name"
-        android:textAppearance="?attr/maxTextSize"
         android:textColor="@color/white"/>
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_below="@id/itemName"
+        android:textSize="10sp"
         android:text="@string/description"
-        android:textAppearance="?attr/minTextSize"
         android:textColor="@color/white" />
 </RelativeLayout>
