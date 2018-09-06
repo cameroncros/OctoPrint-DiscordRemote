@@ -53,6 +53,9 @@ public class SightGraphWear extends View {
     private float selectedDistance;
     private float selectedPosition;
 
+    private float startTouchDist;
+    private float startTouchX;
+
     private Map<PositionPair, PositionPair> positionPairMap;
 
     private float lineWidth;
@@ -293,21 +296,20 @@ public class SightGraphWear extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                startTouchDist = selectedDistance;
+                startTouchX = event.getX();
+                break;
             case MotionEvent.ACTION_MOVE:
-                int history = event.getHistorySize();
-                if (history < 1) {
-                    break;
-                }
-                float lastX = event.getHistoricalX(history - 1);
                 float currentX = event.getX();
-                float delta = currentX - lastX;
+                float delta = currentX - startTouchX;
                 float percent = (delta - contentWidthStart) / (contentWidthEnd - contentWidthStart);
 
                 float dist = percent * zoomDist * 2;
-                Log.i("SightGraphWear", "Distance: " + Float.toString(currentX - lastX));
+                Log.i("SightGraphWear", "Total Distance: " + Float.toString(currentX - startTouchX));
 
                 // Negate the distance moved, makes it feel like the user is scrolling the graph.
-                selectedDistance -= dist;
+                selectedDistance = startTouchDist - dist;
                 break;
         }
         if (selectedDistance > 100) selectedDistance = 100;
