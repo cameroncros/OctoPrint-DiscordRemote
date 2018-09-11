@@ -15,6 +15,7 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -36,6 +37,7 @@ import org.xml.sax.SAXException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -227,17 +229,30 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
                     adapter.notifyDataSetChanged();
                     break;
                 case R.id.action_export:
-                    StringBuilder sb = new StringBuilder();
+                    File outputDir = getCacheDir();
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                    shareIntent.setType("text/xml");
+                    ArrayList<Uri> uris = new ArrayList<>();
+
                     for (BowConfig config : selectedBowConfigs)
                     {
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        config.save(baos);
-                        sb.append(baos.toString());
-                        sb.append('\n');
-                        bm.deleteBowConfig(config.getId());
+                        try {
+                            String filename = config.getName();
+                            if (filename.length() == 0) {
+                                filename = config.getId();
+                            }
+                            File outputFile = File.createTempFile("BowConfig_" + filename, ".xml", outputDir);
+                            FileOutputStream fos = new FileOutputStream(outputFile);
+                            config.save(fos);
+                            Uri uri = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID, outputFile);
+                            uris.add(uri);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    
-                    //TODO: Export the configs
+                    shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                    startActivity(Intent.createChooser(shareIntent, "Export Configs"));
                     break;
             }
             selectedBowConfigs = null;
