@@ -64,9 +64,10 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_success_embed(self):
-        embeds = success_embed(title="title", description="description")
+        embeds = success_embed(author="OctoPrint", title="title", description="description")
 
         self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
                               title="title",
                               description="description",
                               color=COLOR_SUCCESS)
@@ -75,9 +76,10 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_error_embed(self):
-        embeds = error_embed(title="title", description="description")
+        embeds = error_embed(author="OctoPrint", title="title", description="description")
 
         self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
                               title="title",
                               description="description",
                               color=COLOR_ERROR)
@@ -86,9 +88,10 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_info_embed(self):
-        embeds = info_embed(title="title", description="description")
+        embeds = info_embed(author="OctoPrint", title="title", description="description")
 
         self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
                               title="title",
                               description="description",
                               color=COLOR_INFO)

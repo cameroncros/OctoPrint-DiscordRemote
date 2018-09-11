@@ -20,7 +20,8 @@ class Command:
                                         'description': "Connect to a printer."}
         self.command_dict['disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
         self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
-        self.command_dict['files'] = {'cmd': self.list_files, 'description': "List all files and respective download links."}
+        self.command_dict['files'] = {'cmd': self.list_files,
+                                      'description': "List all files and respective download links."}
         self.command_dict['abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
         self.command_dict['snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
         self.command_dict['status'] = {'cmd': self.status, 'description': "Get the current printer status."}
@@ -61,6 +62,7 @@ class Command:
 
         builder = EmbedBuilder()
         builder.set_title('Files and Details')
+        builder.set_author(name=self.plugin.get_printer_name())
 
         response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
         data = response.json()
@@ -91,41 +93,51 @@ class Command:
             builder.add_field(title=title, text=description)
 
         return None, builder.get_embeds()
-    
+
     def help(self):
         builder = EmbedBuilder()
         builder.set_title('Commands, Parameters and Description')
+        builder.set_author(self.plugin.get_printer_name())
 
         for command, details in self.command_dict.items():
-            builder.add_field(title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
-                              text=details.get('description'))
+            builder.add_field(
+                title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
+                text=details.get('description'))
 
         return None, builder.get_embeds()
 
     def cancel_print(self):
         self.plugin.get_printer().cancel_print()
-        return None, error_embed(title='Print aborted')
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title='Print aborted')
 
     def start_print(self, params):
         if len(params) != 2:
-            return None, error_embed(title='Wrong number of arguments',
-                                     description='try "%sprint [filename]"' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Wrong number of arguments',
+                                     description='try "%sprint [filename]"' % self.plugin.get_settings().get(
+                                         ["prefix"]))
         if not self.plugin.get_printer().is_ready():
-            return None, error_embed(title='Printer is not ready')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Printer is not ready')
 
         file = self.find_file(params[1])
         if file is None:
-            return None, error_embed(title='Failed to find the file')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Failed to find the file')
 
         is_sdcard = (file['location'] == 'sdcard')
         try:
             file_path = self.plugin.get_file_manager().path_on_disk(file['location'], file['path'])
             self.plugin.get_printer().select_file(file_path, is_sdcard, printAfterSelect=True)
         except InvalidFileType:
-            return None, error_embed(title='Invalid file type selected')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Invalid file type selected')
         except InvalidFileLocation:
-            return None, error_embed(title='Invalid file location?')
-        return None, success_embed(title='Successfully started print',
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Invalid file location?')
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Successfully started print',
                                    description=file['path'])
 
     def list_files(self):
@@ -136,6 +148,7 @@ class Command:
 
         builder = EmbedBuilder()
         builder.set_title('Files and Details')
+        builder.set_author(name=self.plugin.get_printer_name())
         file_list = self.get_flat_file_list()
         for details in file_list:
             description = ''
@@ -184,7 +197,8 @@ class Command:
     def snapshot(self):
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
-            return None, info_embed(snapshot=snapshots[0])
+            return None, info_embed(author=self.plugin.get_printer_name(),
+                                    snapshot=snapshots[0])
         return None, None
 
     def find_file(self, file_name):
@@ -216,10 +230,13 @@ class Command:
 
     def connect(self, params):
         if len(params) > 3:
-            return None, error_embed(title='Too many parameters',
-                                     description='Should be: %sconnect [port] [baudrate]' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Too many parameters',
+                                     description='Should be: %sconnect [port] [baudrate]' % self.plugin.get_settings().get(
+                                         ["prefix"]))
         if self.plugin.get_printer().is_operational():
-            return None, error_embed(title='Printer already connected',
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Printer already connected',
                                      description='Disconnect first')
 
         port = None
@@ -230,32 +247,39 @@ class Command:
             try:
                 baudrate = int(params[2])
             except ValueError:
-                return None, error_embed(title='Wrong format for baudrate',
+                return None, error_embed(author=self.plugin.get_printer_name(),
+                                         title='Wrong format for baudrate',
                                          description='should be a number')
 
         self.plugin.get_printer().connect(port=port, baudrate=baudrate, profile=None)
         # Sleep a while before checking if connected
         time.sleep(10)
         if not self.plugin.get_printer().is_operational():
-            return None, error_embed(title='Failed to connect',
-                                     description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Failed to connect',
+                                     description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
+                                         ["prefix"]))
 
         return None, success_embed('Connected to printer')
 
     def disconnect(self):
         if not self.plugin.get_printer().is_operational():
-            return None, error_embed(title='Printer is not connected')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Printer is not connected')
         self.plugin.get_printer().disconnect()
         # Sleep a while before checking if disconnected
         time.sleep(10)
         if self.plugin.get_printer().is_operational():
-            return None, error_embed(title='Failed to disconnect')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Failed to disconnect')
 
-        return None, success_embed(title='Disconnected to printer')
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Disconnected to printer')
 
     def status(self):
         builder = EmbedBuilder()
         builder.set_title('Status')
+        builder.set_author(name=self.plugin.get_printer_name())
 
         if self.plugin.get_settings().get(['show_local_ip'], merged=True):
             ip_addr = self.plugin.get_ip_address()
@@ -313,7 +337,8 @@ class Command:
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
             snapshot = snapshots[0]
-        return None, success_embed(title='Print paused', snapshot=snapshot)
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Print paused', snapshot=snapshot)
 
     def resume(self):
         self.plugin.get_printer().resume_print()
@@ -321,7 +346,8 @@ class Command:
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
             snapshot = snapshots[0]
-        return None, success_embed(title='Print resumed', snapshot=snapshot)
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Print resumed', snapshot=snapshot)
 
     def upload_file(self, filename, url):
         upload_file = self.plugin.get_file_manager().path_on_disk('local', filename)
@@ -331,5 +357,6 @@ class Command:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
-        return None, success_embed(title='File Received',
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='File Received',
                                    description=filename)

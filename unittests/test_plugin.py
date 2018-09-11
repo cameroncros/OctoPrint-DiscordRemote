@@ -60,3 +60,16 @@ class TestCommand(DiscordRemoteTestCase):
         snapshot_data = snapshot[1].read()
         self.assertEqual(len(file_data), len(snapshot_data))
         self.assertEqual([file_data], [snapshot_data])
+
+    def test_plugin_get_printer_name(self):
+        plugin = DiscordRemotePlugin()
+        plugin._settings = mock.Mock()
+        plugin._settings.global_get = mock.Mock()
+        plugin._settings.global_get.return_value = "DiscordBot"
+        self.assertEqual(plugin._settings.global_get.return_value, plugin.get_printer_name())
+
+        plugin._settings.global_get.return_value = None
+        self.assertEqual("OctoPrint", plugin.get_printer_name())
+
+
+

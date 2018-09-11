@@ -11,7 +11,7 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(title=None, description=None, color=None, snapshot=None):
+def embed_simple(author, title=None, description=None, color=None, snapshot=None):
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -21,19 +21,21 @@ def embed_simple(title=None, description=None, color=None, snapshot=None):
         builder.set_description(description)
     if snapshot:
         builder.set_image(snapshot)
+    if author:
+        builder.set_author(author)
     return builder.get_embeds()
 
 
-def success_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_SUCCESS, snapshot)
+def success_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_ERROR, snapshot)
+def error_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_INFO, snapshot)
+def info_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
 
 class EmbedBuilder:
@@ -41,6 +43,7 @@ class EmbedBuilder:
         self.color = COLOR_INFO
         self.embeds = [Embed()]
         self.timestamp = True
+        self.author = None
 
     def set_color(self, color):
         self.color = color
@@ -50,7 +53,7 @@ class EmbedBuilder:
         if title is None:
             title = ""
         elif len(title) > MAX_TITLE:
-            title = title[0:MAX_TITLE-3] + "..."
+            title = title[0:MAX_TITLE - 3] + "..."
 
         while not self.embeds[-1].set_title(title):
             self.embeds.append(Embed())
@@ -61,11 +64,24 @@ class EmbedBuilder:
         if description is None:
             description = None
         elif len(description) > MAX_DESCRIPTION:
-            description = description[0:MAX_DESCRIPTION-3] + "..."
+            description = description[0:MAX_DESCRIPTION - 3] + "..."
 
         while not self.embeds[-1].set_description(description):
             self.embeds.append(Embed())
 
+        return self
+
+    def set_author(self, name, url=None, icon_url=None):
+        if name is None:
+            self.author = None
+            return self
+	if len(name) > MAX_TITLE:
+            name = name[0:MAX_TITLE - 3] + "..."
+        self.author = {'name': name}
+        if url:
+            self.author['url'] = url
+        if icon_url:
+            self.author['icon_url'] = icon_url
         return self
 
     def add_field(self, title, text, inline=False):
@@ -101,6 +117,7 @@ class EmbedBuilder:
 
         for embed in self.embeds:
             embed.color = self.color
+            embed.author = self.author
 
         return self.embeds
 
@@ -120,6 +137,7 @@ class Embed:
         self.fields = []
         self.image = None
         self.files = []
+        self.author = None
 
     def set_title(self, title):
         current_length = 0
@@ -167,6 +185,8 @@ class Embed:
 
     def get_embed(self):
         embed = {'fields': self.fields}
+        if self.author:
+            embed['author'] = self.author
         if self.title:
             embed['title'] = self.title
         if self.description:
@@ -185,6 +205,15 @@ class Embed:
     def __str__(self):
         embed = self.get_embed()
         string = "\n---------------------------------\n"
+        if 'author' in embed:
+            string += "~~Author~~~~~~~~~~~~~~~~~~\n"
+            if 'name' in embed['author']:
+                string += "\tAuthor Name: %s\n" % embed['author']['name']
+            if 'url' in embed['author']:
+                string += "\tAuthor Url: %s\n" % embed['author']['url']
+            if 'icon_url' in embed['author']:
+                string += "\tAuthor Icon: %s\n" % embed['author']['icon_url']
+            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
         if 'color' in embed:
             string += "Color: %x\n" % embed['color']
         if 'title' in embed:
@@ -192,7 +221,7 @@ class Embed:
         if 'description' in embed:
             string += "Description: %s\n" % embed['description']
         for field in embed['fields']:
-            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+            string += "~~~Field~~~~~~~~~~~~~~~~~~\n"
             if 'name' in field:
                 string += "\tField Name: %s\n" % field['name']
             if 'value' in field:
