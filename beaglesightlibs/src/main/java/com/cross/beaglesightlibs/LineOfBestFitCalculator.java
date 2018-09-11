@@ -79,7 +79,7 @@ public class LineOfBestFitCalculator extends PositionCalculator {
 		}
 
 		catch (Exception e) {
-			Log.e("Beagle", e.getMessage());
+			Log.e("BeagleSight", e.getMessage());
 		}
 		
 	}
