@@ -75,8 +75,8 @@ class EmbedBuilder:
         if name is None:
             self.author = None
             return self
-	if len(name) > MAX_TITLE:
-            name = name[0:MAX_TITLE - 3] + "..."
+        if len(name) > MAX_TITLE:
+                name = name[0:MAX_TITLE - 3] + "..."
         self.author = {'name': name}
         if url:
             self.author['url'] = url
@@ -117,7 +117,8 @@ class EmbedBuilder:
 
         for embed in self.embeds:
             embed.color = self.color
-            embed.author = self.author
+            if self.author:
+                embed.set_author(self.author)
 
         return self.embeds
 
@@ -138,6 +139,17 @@ class Embed:
         self.image = None
         self.files = []
         self.author = None
+
+    def set_author(self, author):
+        current_length = 0
+        if self.author:
+            current_length = len(self.author['name'])
+        if self.embed_length - current_length + len(author['name']) > MAX_EMBED_LENGTH:
+            return False
+        self.embed_length -= current_length
+        self.author = author
+        self.embed_length += len(self.author['name'])
+        return True
 
     def set_title(self, title):
         current_length = 0
