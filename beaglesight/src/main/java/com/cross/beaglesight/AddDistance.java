@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -180,6 +181,8 @@ public class AddDistance extends AppCompatActivity {
                 }
                 bowManager.addBowConfig(bowConfig);
 
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
                 finish();
             }
             catch (NumberFormatException nfe)
@@ -230,5 +233,18 @@ public class AddDistance extends AppCompatActivity {
         pinSetting2.addTextChangedListener(calcPinListener);
         offset1.addTextChangedListener(calcPinListener);
         offset2.addTextChangedListener(calcPinListener);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Intent intent = new Intent();
+                setResult(RESULT_CANCELED, intent);
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

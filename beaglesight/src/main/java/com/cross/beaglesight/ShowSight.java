@@ -24,6 +24,7 @@ import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
 
 public class ShowSight extends AppCompatActivity implements SightGraph.SightGraphCallback {
     static final String CONFIG_TAG = "config";
+    private static final int ADD_DISTANCE = 1;
     private SightGraph sightGraph = null;
 
     private EditText distance;
@@ -81,7 +82,7 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(addDistance);
+                    startActivityForResult(addDistance, ADD_DISTANCE);
                 }
             });
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -89,6 +90,9 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
             positionCalculator = bowConfig.getPositionCalculator();
 
             sightGraph = findViewById(R.id.sightGraph);
+            sightGraph.setBowConfig(bowConfig);
+            sightGraph.setUpdateDistanceCallback(this);
+            sightGraph.invalidate();
             distance = findViewById(R.id.distanceText);
             position = findViewById(R.id.positionText);
             distance.addTextChangedListener(distanceListener);
@@ -101,21 +105,26 @@ public class ShowSight extends AppCompatActivity implements SightGraph.SightGrap
     }
 
     @Override
-    protected void onResume()
-    {
-        try
-        {
-            bowConfig = BowManager.getInstance(this).getBowConfig(id);
-            sightGraph.setBowConfig(bowConfig);
-            sightGraph.setUpdateDistanceCallback(this);
-            sightGraph.invalidate();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case ADD_DISTANCE:
+                if (resultCode == RESULT_OK)
+                {
+                    try
+                    {
+                        bowConfig = BowManager.getInstance(this).getBowConfig(id);
+                        sightGraph.setBowConfig(bowConfig);
+                        sightGraph.setUpdateDistanceCallback(this);
+                        sightGraph.invalidate();
+                    }
+                    catch (InvalidBowConfigIdException e)
+                    {
+                        Toast.makeText(this, R.string.failed_find_bow_settings, Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                }
+                break;
         }
-        catch (InvalidBowConfigIdException e)
-        {
-            Toast.makeText(this, R.string.failed_find_bow_settings, Toast.LENGTH_LONG).show();
-            finish();
-        }
-        super.onResume();
     }
 
     @Override

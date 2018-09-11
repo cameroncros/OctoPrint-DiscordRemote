@@ -34,7 +34,6 @@ import com.cross.beaglesightlibs.BowManager;
 
 import org.xml.sax.SAXException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -54,6 +53,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
 
     private static final int FILE_SELECT_CODE = 0;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+    private static final int ADD_BOW = 2;
     private BowListRecyclerViewAdapter adapter;
     private AppBarLayout appBarLayout;
 
@@ -72,7 +72,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(addIntent);
+                startActivityForResult(addIntent, ADD_BOW);
             }
         });
 
@@ -106,7 +106,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         switch (id)
         {
             case R.id.action_add:
-                startActivity(addIntent);
+                startActivityForResult(addIntent, ADD_BOW);
                 return true;
             case R.id.action_import:
                 if (ContextCompat.checkSelfPermission(this,
@@ -297,6 +297,14 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
                     }
                 }
                 recreate();
+                break;
+            case ADD_BOW:
+                if(resultCode == RESULT_OK) {
+                    String bowConfigId = data.getStringExtra(CONFIG_TAG);
+                    Intent intent = new Intent(this, ShowSight.class);
+                    intent.putExtra(CONFIG_TAG, bowConfigId);
+                    startActivity(intent);
+                }
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
