@@ -25,6 +25,8 @@ class TestSystemCommand(DiscordRemoteTestCase):
     @mock.patch('requests.get')
     def test_list_all_commands(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
+        self.system_commands.plugin.get_printer_name = mock.Mock()
+        self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
 
         # Server Failed
         mock_result = mock.Mock()
@@ -38,7 +40,8 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.assertBasicEmbed(embeds,
                               title="Error code: %i" % mock_result.status_code,
                               description=mock_result.content,
-                              color=COLOR_ERROR)
+                              color=COLOR_ERROR,
+                              author=self.system_commands.plugin.get_printer_name.return_value)
         requests_mock.assert_called_once()
         requests_mock.reset_mock()
 
@@ -71,6 +74,8 @@ class TestSystemCommand(DiscordRemoteTestCase):
     @mock.patch('requests.post')
     def test_system_command(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
+        self.system_commands.plugin.get_printer_name = mock.Mock()
+        self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
 
         # Not enough args
         snapshots, embeds = self.system_commands.system_command(['/systemcommand'])
@@ -78,7 +83,8 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.assertBasicEmbed(embeds,
                               title='Wrong number of args',
                               description='/systemcommand {source/command}',
-                              color=COLOR_ERROR)
+                              color=COLOR_ERROR,
+                              author=self.system_commands.plugin.get_printer_name.return_value)
 
         # Successfully ran
         mock_result = mock.Mock()
@@ -94,7 +100,8 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.assertBasicEmbed(embeds,
                               title='Successfully ran command',
                               description='core/restart',
-                              color=COLOR_SUCCESS)
+                              color=COLOR_SUCCESS,
+                              author=self.system_commands.plugin.get_printer_name.return_value)
 
         # Unsuccessful run
         requests_mock.reset_mock()
@@ -108,4 +115,5 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.assertBasicEmbed(embeds,
                               title='Failed to run command',
                               description='core/doesntexist',
-                              color=COLOR_ERROR)
+                              color=COLOR_ERROR,
+                              author=self.system_commands.plugin.get_printer_name.return_value)

@@ -82,6 +82,9 @@ class TestCommand(DiscordRemoteTestCase):
     def get_plugin_manager(self):
         return self._plugin_manager
 
+    def get_printer_name(self):
+        return "OctoPrint"
+
     @staticmethod
     def get_port():
         return 80

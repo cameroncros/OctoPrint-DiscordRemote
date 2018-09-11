@@ -266,11 +266,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             executeCommand=['args']
         )
 
-    def on_api_command(self, command, data):
+    def on_api_command(self, comm, data):
         if not user_permission.can():
             return make_response("Insufficient rights", 403)
 
-        if command == 'executeCommand':
+        if comm == 'executeCommand':
             self.execute_command(data)
 
     def execute_command(self, data):
@@ -278,7 +278,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'args' in data:
             args = data['args']
 
-        snapshots, embeds = self.command.parse_command(data['args'])
+        snapshots, embeds = self.command.parse_command(args)
         self.discord.send(snapshots=snapshots, embeds=embeds)
 
     def notify_event(self, event_id, data=None):
@@ -401,7 +401,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(embeds=info_embed(title=message,
+        out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
+                                                  title=message,
                                                   snapshot=snapshot))
 
         # exec "after" script if any
@@ -454,6 +455,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             return [("snapshot.png", new_image)]
         return [("snapshot.png", snapshot)]
+
+    def get_printer_name(self):
+        printer_name = self._settings.global_get(["appearance", "name"])
+        if printer_name is None:
+            printer_name = "OctoPrint"
+        return printer_name
 
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))

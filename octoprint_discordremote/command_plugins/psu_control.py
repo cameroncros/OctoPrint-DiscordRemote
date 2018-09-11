@@ -30,14 +30,18 @@ class PsuControl(AbstractPlugin):
     def poweron(self):
         result = self.api_command("turnPSUOn")
         if result:
-            return None, success_embed(title="Turned PSU on")
-        return None, error_embed(title="Failed to turn PSU on", description=str(result.content))
+            return None, success_embed(author=self.plugin.get_printer_name(),
+                                       title="Turned PSU on")
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to turn PSU on", description=str(result.content))
 
     def poweroff(self):
         result = self.api_command("turnPSUOff")
         if result:
-            return None, success_embed(title="Turned PSU off")
-        return None, error_embed(title="Failed to turn PSU off", description=str(result.content))
+            return None, success_embed(author=self.plugin.get_printer_name(),
+                                       title="Turned PSU off")
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to turn PSU off", description=str(result.content))
 
     def powerstatus(self):
         result = self.api_command("getPSUState")
@@ -45,8 +49,10 @@ class PsuControl(AbstractPlugin):
             message = "PSU is OFF"
             if json.loads(result.content)['isPSUOn']:
                 message = "PSU is ON"
-            return None, info_embed(title=message)
-        return None, error_embed(title="Failed to get PSU status", description=str(result.content))
+            return None, info_embed(author=self.plugin.get_printer_name(),
+                                    title=message)
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to get PSU status", description=str(result.content))
 
     def api_command(self, command):
         api_key = self.plugin.get_settings().global_get(["api", "key"])

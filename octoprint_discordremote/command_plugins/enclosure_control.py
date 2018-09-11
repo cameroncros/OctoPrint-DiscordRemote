@@ -37,35 +37,47 @@ class EnclosureControl(AbstractPlugin):
 
     def on(self, params):
         if len(params) > 2:
-            return None, error_embed(title='Too many parameters',
-                                     description='Should be: %soutputon {ID}' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Too many parameters',
+                                     description='Should be: %soutputon {ID}' % self.plugin.get_settings().get(
+                                         ["prefix"]))
         elif len(params) < 2:
-            return None, error_embed(title='Missing parameters',
-                                     description='Should be: %soutputon {ID}' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Missing parameters',
+                                     description='Should be: %soutputon {ID}' % self.plugin.get_settings().get(
+                                         ["prefix"]))
 
         result = self.api_command("on", params[1])
 
         data = result.json()
 
         if data['success']:
-            return None, success_embed(title="Turned ID %i on." % int(params[1]))
-        return None, error_embed(title="Failed to turn ID %i on." % int(params[1]),
+            return None, success_embed(author=self.plugin.get_printer_name(),
+                                       title="Turned ID %i on." % int(params[1]))
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to turn ID %i on." % int(params[1]),
                                  description=str(result.content))
 
     def off(self, params):
         if len(params) > 2:
-            return None, error_embed(title='Too many parameters',
-                                     description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Too many parameters',
+                                     description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(
+                                         ["prefix"]))
         elif len(params) < 2:
-            return None, error_embed(title='Missing parameters',
-                                     description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Missing parameters',
+                                     description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(
+                                         ["prefix"]))
 
         result = self.api_command("off", params[1])
         data = result.json()
 
         if data['success']:
-            return None, success_embed(title="Turned ID %i off." % int(params[1]))
-        return None, error_embed(title="Failed to turn ID %i off." % int(params[1]),
+            return None, success_embed(author=self.plugin.get_printer_name(),
+                                       title="Turned ID %i off." % int(params[1]))
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to turn ID %i off." % int(params[1]),
                                  description=str(result.content))
 
     def enc_status(self):
@@ -74,6 +86,7 @@ class EnclosureControl(AbstractPlugin):
 
         builder = EmbedBuilder()
         builder.set_title('Enclosure Status')
+        builder.set_author(name=self.plugin.get_printer_name())
 
         for file in data:
             title = ("ID: %s" % str(file['index_id']))
