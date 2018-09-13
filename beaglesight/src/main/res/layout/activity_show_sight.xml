@@ -99,8 +99,9 @@
                 app:backgroundColor="#00000000"
                 app:graphColor="#e53935"
                 app:lineColor="#ff8a65"
+                app:plotColor="#1a237e"
                 app:lineWidth="2dp"
-                app:pointColor="#29b6f6"
+                app:pointColor="#00e5ff"
                 app:labelColor="#263238"
                 app:labelSize="20dp"/>
 

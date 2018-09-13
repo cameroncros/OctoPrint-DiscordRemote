@@ -30,7 +30,7 @@ public class SightGraph extends View implements LongPressCustomView {
     private Paint pointPaint;
     private Paint pointSelectedPaint;
     private Paint graphPaint;
-    private Paint graphMinorAxis;
+    private Paint plotPaint;
     private Paint backgroundPaint;
     private Paint labelPaint;
     private Paint axisLabelPaint;
@@ -110,8 +110,8 @@ public class SightGraph extends View implements LongPressCustomView {
         }
 
         linePaint = getPaint(a, R.styleable.SightGraph_lineColor, Color.BLACK, lineWidth);
-        graphPaint = getPaint(a, R.styleable.SightGraph_graphColor, Color.BLUE, lineWidth);
-        graphMinorAxis = getPaint(a, R.styleable.SightGraph_graphColor, Color.BLUE, lineWidth/2);
+        plotPaint = getPaint(a, R.styleable.SightGraph_plotColor, Color.BLUE, lineWidth);
+        graphPaint = getPaint(a, R.styleable.SightGraph_graphColor, Color.BLUE, lineWidth/2);
         pointPaint = getPaint(a, R.styleable.SightGraph_pointColor, Color.RED, lineWidth);
         backgroundPaint = getPaint(a, R.styleable.SightGraph_backgroundColor, Color.GREEN, lineWidth);
         labelPaint = getPaint(a, R.styleable.SightGraph_labelColor, Color.YELLOW, lineWidth);
@@ -242,23 +242,23 @@ public class SightGraph extends View implements LongPressCustomView {
         for (float i = 0; i < maxDist; i+=10)
         {
             float xPixel = distanceToPixel(i);
-            canvas.drawLine(xPixel, contentHeightStart, xPixel, contentHeightEnd, graphMinorAxis);
+            canvas.drawLine(xPixel, contentHeightStart, xPixel, contentHeightEnd, graphPaint);
             canvas.drawText(Float.toString(i), xPixel+axisLabelPaint.getTextSize(), contentHeightEnd-axisLabelPaint.getTextSize(), axisLabelPaint);
         }
 
         for (float i = Math.round(minPos/10)* 10; i < maxPos; i+=10)
         {
             float yPixel = positionToPixel(i);
-            canvas.drawLine(contentWidthStart, yPixel, contentWidthEnd, yPixel, graphMinorAxis);
+            canvas.drawLine(contentWidthStart, yPixel, contentWidthEnd, yPixel, graphPaint);
             canvas.drawText(Float.toString(i), axisLabelPaint.getTextSize(), yPixel + axisLabelPaint.getTextSize(), axisLabelPaint);
         }
 
-        // Draw the graph.
+        // Plot the graph.
         float lastYVal = calculateYVal(contentWidthStart);
         for (float i = contentWidthStart; i < contentWidthEnd; i++)
         {
             float yVal = calculateYVal(i);
-            canvas.drawLine(i-1, lastYVal, i, yVal, graphPaint);
+            canvas.drawLine(i-1, lastYVal, i, yVal, plotPaint);
             lastYVal = yVal;
         }
 

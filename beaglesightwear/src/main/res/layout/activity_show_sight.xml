@@ -27,6 +27,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:lineColor="#ff8a65"
+            app:plotColor="#64dd17"
             app:lineWidth="2dp"
             app:pointColor="#29b6f6" />
 
