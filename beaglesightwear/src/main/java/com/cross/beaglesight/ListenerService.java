@@ -2,7 +2,6 @@ package com.cross.beaglesight;
 
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
@@ -20,7 +19,7 @@ import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import static com.cross.beaglesightlibs.BowManager.BOWCONFIGS;
+import static com.cross.beaglesightlibs.WearSync.BOWCONFIGS;
 
 public class ListenerService extends WearableListenerService {
     static final String REFRESH_DATA = "REFRESH_DATA";

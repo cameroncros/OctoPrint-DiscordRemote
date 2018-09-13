@@ -3,16 +3,10 @@ package com.cross.beaglesightlibs;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.widget.Toast;
 
 import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
-import com.google.android.gms.wearable.Asset;
-import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.PutDataMapRequest;
-import com.google.android.gms.wearable.PutDataRequest;
-import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,21 +19,13 @@ import java.util.List;
 public class BowManager {
     @SuppressLint("StaticFieldLeak")
     private static volatile BowManager instance = null;
-    private final boolean isPhone;
     private SharedPreferences savedConfigs = null;
     private Context cont;
-    public static final String BOWCONFIGS = "/bowconfigs";
-    private PutDataMapRequest dataMapRequest = PutDataMapRequest.create(BOWCONFIGS);
+    private WearSync wearSync;
 
     private BowManager(Context cont) {
         assert cont != null;
-        this.isPhone = Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT_WATCH ||
-                !cont.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        dataMapRequest.setUrgent();
-        setContext(cont);
-    }
-
-    private void setContext(Context cont) {
+        this.wearSync = new WearSync(cont);
         this.cont = cont;
         this.savedConfigs = cont.getSharedPreferences("savedConfigs", Context.MODE_PRIVATE);
     }
@@ -93,28 +79,17 @@ public class BowManager {
                 new String(baos.toByteArray(), Charset.forName("UTF-8"));
         savedConfigs.edit().putString(bowConfig.getId(), configString).apply();
 
-        if (isPhone) {
-            DataMap dataMap = dataMapRequest.getDataMap();
-            dataMap.putByteArray(bowConfig.getId(), baos.toByteArray());
-            PutDataRequest dataRequest = dataMapRequest.asPutDataRequest();
-            Wearable.getDataClient(this.cont).putDataItem(dataRequest);
-        }
+        wearSync.addBowConfig(bowConfig);
     }
 
     public BowConfig getBowConfig(String id) throws InvalidBowConfigIdException {
         String configString = this.savedConfigs.getString(id, "");
 
-        if (isPhone)
-        {
-            DataMap dataMap = dataMapRequest.getDataMap();
-            dataMap.putByteArray(id, configString.getBytes());
-            PutDataRequest dataRequest = dataMapRequest.asPutDataRequest();
-            Wearable.getDataClient(this.cont).putDataItem(dataRequest);
-        }
-
         try {
             InputStream stream = new ByteArrayInputStream(configString.getBytes(Charset.forName("UTF-8")));
-            return new BowConfig(stream);
+            BowConfig config = new BowConfig(stream);
+            wearSync.addBowConfig(config);
+            return config;
         }
         catch (Exception e)
         {
@@ -124,12 +99,7 @@ public class BowManager {
 
     public void deleteBowConfig(String id) {
         this.savedConfigs.edit().remove(id).apply();
-        if (isPhone) {
-            DataMap dataMap = dataMapRequest.getDataMap();
-            dataMap.remove(id);
-            PutDataRequest dataRequest = dataMapRequest.asPutDataRequest();
-            Wearable.getDataClient(this.cont).putDataItem(dataRequest);
-        }
+        wearSync.removeBowConfig(id);
     }
 
 	public List<BowConfig> getBowList() {
