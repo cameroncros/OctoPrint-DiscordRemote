@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightwear;
 
 import android.content.Intent;
 import android.util.Log;

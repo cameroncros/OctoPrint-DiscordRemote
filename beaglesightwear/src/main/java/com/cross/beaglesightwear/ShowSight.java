@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightwear;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,12 +10,13 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.cross.beaglesight.views.SightGraphWear;
+import com.cross.beaglesight.R;
+import com.cross.beaglesightwear.views.SightGraphWear;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
 import com.cross.beaglesightlibs.exceptions.InvalidBowConfigIdException;
 
-import static com.cross.beaglesight.ListenerService.REFRESH_DATA;
+import static com.cross.beaglesightwear.ListenerService.REFRESH_DATA;
 
 public class ShowSight extends WearableActivity {
     static final String CONFIG_TAG = "config";

@@ -28,7 +28,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".SightList"
+            android:name="com.cross.beaglesightwear.SightList"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,7 +38,7 @@
         </activity>
 
         <service
-            android:name=".ListenerService"
+            android:name="com.cross.beaglesightwear.ListenerService"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -49,7 +49,7 @@
         </service>
 
         <activity
-            android:name=".ShowSight"
+            android:name="com.cross.beaglesightwear.ShowSight"
             android:label="@string/title_activity_show_sight"/>
     </application>
 

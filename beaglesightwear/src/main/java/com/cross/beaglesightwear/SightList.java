@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightwear;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,13 +9,14 @@ import android.support.v7.widget.RecyclerView;
 import android.support.wear.widget.WearableLinearLayoutManager;
 import android.support.wearable.activity.WearableActivity;
 
+import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
 import com.cross.beaglesightlibs.BowManager;
 
 import java.util.List;
 
-import static com.cross.beaglesight.ListenerService.REFRESH_DATA;
-import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
+import static com.cross.beaglesightwear.ListenerService.REFRESH_DATA;
+import static com.cross.beaglesightwear.ShowSight.CONFIG_TAG;
 
 public class SightList extends WearableActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
 

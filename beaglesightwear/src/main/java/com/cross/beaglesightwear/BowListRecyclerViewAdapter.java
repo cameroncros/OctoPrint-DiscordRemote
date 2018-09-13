@@ -1,4 +1,4 @@
-package com.cross.beaglesight;
+package com.cross.beaglesightwear;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.cross.beaglesight.R;
 import com.cross.beaglesightlibs.BowConfig;
 
 import java.util.List;
