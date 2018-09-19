@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.beaglesight.SightList">
+    <item
+        android:id="@+id/action_add"
+        android:orderInCategory="100"
+        android:title="@string/add"
+        android:icon="@drawable/ic_add_white_24dp"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_import"
+        android:orderInCategory="100"
+        android:title="@string/action_import"
+        android:icon="@drawable/ic_import_export_white_24dp"
+        app:showAsAction="ifRoom" />
+</menu>

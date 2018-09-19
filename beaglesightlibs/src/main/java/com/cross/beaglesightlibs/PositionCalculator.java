@@ -1,51 +1,21 @@
 package com.cross.beaglesightlibs;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public abstract class PositionCalculator
 {
-	Map<Double,Double> positionArray = null;
-    static DecimalFormat hn = new DecimalFormat("#");
-    static DecimalFormat df = new DecimalFormat("#.##");
-	
-	void setPositions(Map<String,String> pos) {
-		positionArray.clear();
-		for (String key : pos.keySet()) {
-			try {
-				double x = Double.valueOf(key);
-				double y = Double.valueOf(pos.get(key));
+    List<PositionPair> positions;
+    private static final DecimalFormat hn = new DecimalFormat("#");
+    private static final DecimalFormat df = new DecimalFormat("#.##");
 
-				positionArray.put(x, y);
-			}
-			catch (NumberFormatException e) {
-				//Invalid numbers in save file, dont need to do anything but ignore them
-			}
-		}
-	}
-	public abstract double calcPosition(double distance);
-	public int precision() {
-		switch (positionArray.size()) {
-		case 0:
-		case 1:
-		case 2:
-			return 0;
-		default:
-			return positionArray.size()-2;
-		}
+	void setPositions(List<PositionPair> pos) {
+		positions = pos;
 	}
 
-    public List<Double> getKnownPositions() {
-        return new ArrayList<Double>(positionArray.values());
-    }
+	public abstract float calcPosition(float distance);
 
-    public List<Double> getKnownDistances() {
-        return new ArrayList<Double>(positionArray.keySet());
-    }
-
-    public static String getDisplayValue(double val, int numPlaces) {
+    public static String getDisplayValue(float val, int numPlaces) {
         switch (numPlaces) {
             default:
             case 0:
@@ -54,5 +24,35 @@ public abstract class PositionCalculator
                 return df.format(val);
 
         }
+    }
+
+    //TODO: Horrifically slow and inaccurate. Replace with optimised version?
+    public float getMaxPosition(float distStart, float distEnd)
+    {
+        float max = Float.MIN_VALUE;
+        for (float i = distStart; i < distEnd; i++)
+        {
+            float val = this.calcPosition(i);
+            if (val > max)
+            {
+                max = val;
+            }
+        }
+        return max;
+    }
+
+    //TODO: Horrifically slow and inaccurate. Replace with optimised version?
+    public float getMinPosition(float distStart, float distEnd)
+    {
+        float min = Float.MAX_VALUE;
+        for (float i = distStart; i < distEnd; i++)
+        {
+            float val = this.calcPosition(i);
+            if (val < min)
+            {
+                min = val;
+            }
+        }
+        return min;
     }
 }

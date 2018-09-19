@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wear.widget.SwipeDismissFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_grey"
+    android:padding="@dimen/box_inset_layout_padding"
+    tools:context=".ShowSight"
+    tools:deviceIds="wear"
+    android:windowSwipeToDismiss="false">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.cross.beaglesight.views.SightGraphWear
+            android:id="@+id/sightGraph"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:backgroundColor="#000000"
+            app:graphColor="#e53935"
+            app:labelColor="#cfd8dc"
+            app:labelSize="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:lineColor="#ff8a65"
+            app:plotColor="#64dd17"
+            app:lineWidth="2dp"
+            app:pointColor="#29b6f6" />
+
+        <ImageView
+            android:id="@+id/exitButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/close_button"
+            app:layout_constraintBottom_toBottomOf="@+id/sightGraph"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/sightGraph" />
+
+    </android.support.constraint.ConstraintLayout>
+
+
+</android.support.wear.widget.SwipeDismissFrameLayout>

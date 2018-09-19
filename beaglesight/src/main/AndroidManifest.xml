@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cross.beaglesight"
-    android:versionCode="1"
-    android:versionName="1.0" >
-
-    <uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="21" />
-
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.cross.beaglesight">
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:name="MyApplication">
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
         <activity
-            android:name=".gui.BowList"
-            android:label="@string/app_name" >
+            android:name=".SightList"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -24,45 +25,35 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".gui.AddActivity"
-            android:label="@string/app_name" >
+            android:name=".ShowSight"
+            android:label="@string/title_activity_show_sight"
+            android:parentActivityName=".SightList"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.cross.beaglesight.SightList" />
         </activity>
         <activity
-            android:name=".gui.ShowSight"
-            android:label="@string/app_name" >
+            android:name=".AddSight"
+            android:label="@string/title_activity_add_sight"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AddDistance"
+            android:label="@string/title_activity_add_distance"
+            android:parentActivityName=".ShowSight"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.cross.beaglesight.ShowSight" />
         </activity>
-
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.cross.beaglesight.fileprovider"
+            android:grantUriPermissions="true"
             android:exported="false"
-            android:grantUriPermissions="true" >
+            android:authorities="${applicationId}">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths" />
+                android:resource="@xml/file_provider_paths"/>
         </provider>
-
-        <receiver android:name=".widget.BeagleWidget" >
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/beagle_widget_info" />
-        </receiver>
-
-        <activity android:name=".widget.BeagleWidgetConfigureActivity" >
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
-
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
     </application>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>
