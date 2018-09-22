@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/dark_grey"
     android:padding="@dimen/box_inset_layout_padding"
-    tools:context=".ShowSight"
     tools:deviceIds="wear"
     android:windowSwipeToDismiss="false">
 
@@ -14,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.cross.beaglesight.views.SightGraphWear
+        <com.cross.beaglesightwear.views.SightGraphWear
             android:id="@+id/sightGraph"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
