@@ -30,6 +30,10 @@ class Command:
         self.command_dict['resume'] = {'cmd': self.resume, 'description': "Resume current print."}
         self.command_dict['timelapse'] = {'cmd': self.timelapse,
                                           'description': "List all timelapses and respective download links."}
+        self.command_dict['mute'] = {'cmd': self.mute,
+                                     'description': "Mute notifications"}
+        self.command_dict['unmute'] = {'cmd': self.unmute,
+                                       'description': "Unmute notifications"}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -360,3 +364,13 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='File Received',
                                    description=filename)
+
+    def mute(self):
+        self.plugin.mute()
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Notifications Muted')
+
+    def unmute(self):
+        self.plugin.unmute()
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title='Notifications Unmuted')
