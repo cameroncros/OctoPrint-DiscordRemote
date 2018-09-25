@@ -32,6 +32,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     discord = None
     command = None
     last_progress_message = None
+    is_muted = False
 
     def __init__(self):
         # Events definition here (better for intellisense in IDE)
@@ -282,6 +283,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.discord.send(snapshots=snapshots, embeds=embeds)
 
     def notify_event(self, event_id, data=None):
+        if self.is_muted:
+            return True
+
         if data is None:
             data = {}
         if event_id not in self.events:
@@ -464,6 +468,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
+
+    def mute(self):
+        self.is_muted = True
+
+    def unmute(self):
+        self.is_muted = False
 
     def get_file_manager(self):
         return self._file_manager
