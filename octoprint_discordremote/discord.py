@@ -245,10 +245,6 @@ class Discord:
             # Only care about messages from correct channel
             return
 
-        if "bot" in data['author']:
-            # Only care about real people messages
-            return
-
         if len(self.allowed_users) != 0:
             # If defined, only listen to messages from certain users.
             authorised = False
@@ -265,7 +261,7 @@ class Discord:
                 snapshots, embeds = self.command.upload_file(filename, url)
                 self.send(embeds=embeds)
 
-        if 'content' in data:
+        if 'content' in data and len(data['content']) > 0:
             snapshots, embeds = self.command.parse_command(data['content'])
             self.send(snapshots=snapshots,
                       embeds=embeds)
