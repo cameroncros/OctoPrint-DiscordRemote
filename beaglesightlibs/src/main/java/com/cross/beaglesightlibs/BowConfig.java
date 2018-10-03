@@ -144,4 +144,10 @@ public class BowConfig {
     public void deletePosition(PositionPair selectedPair) {
         positionArray.remove(selectedPair);
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("ID: %s, Name: %s, Desc: %s", id, name, description);
+    }
 }

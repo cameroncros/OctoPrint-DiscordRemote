@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -47,7 +48,7 @@ import static com.cross.beaglesight.ShowSight.CONFIG_TAG;
 
 public class SightList extends AppCompatActivity implements BowListRecyclerViewAdapter.OnListFragmentInteractionListener {
     private Intent addIntent;
-    private List<BowConfig> configList;
+    private List<BowConfig> configList = new ArrayList<>();
     private ArrayList<BowConfig> selectedBowConfigs;
     private FloatingActionButton fab;
 
@@ -81,11 +82,20 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
         if (view != null) {
             Context context = view.getContext();
             view.setLayoutManager(new LinearLayoutManager(context));
-            configList = BowManager.getInstance(getApplicationContext()).getBowList();
             adapter = new BowListRecyclerViewAdapter(configList, this);
             view.setAdapter(adapter);
         }
 
+        // Load bows
+        BowManager bm = BowManager.getInstance(getApplicationContext());
+        bm.loadBows(new BowManager.LoadCallback() {
+            @Override
+            public void onResult(List<BowConfig> results) {
+                configList.clear();
+                configList.addAll(results);
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
@@ -222,7 +232,7 @@ public class SightList extends AppCompatActivity implements BowListRecyclerViewA
                 case R.id.action_delete:
                     for (BowConfig config : selectedBowConfigs)
                     {
-                        bm.deleteBowConfig(config.getId());
+                        bm.deleteBowConfig(config);
                     }
                     configList.clear();
                     configList.addAll(BowManager.getInstance(getApplicationContext()).getBowList());

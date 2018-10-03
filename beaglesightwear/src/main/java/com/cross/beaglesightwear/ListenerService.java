@@ -36,7 +36,7 @@ public class ListenerService extends WearableListenerService {
                 // Remove all bow configs
                 for (BowConfig bowConfig : bowManager.getBowList())
                 {
-                    bowManager.deleteBowConfig(bowConfig.getId());
+                    bowManager.deleteBowConfig(bowConfig);
                 }
                 // Add back bow configs
                 DataItem item = event.getDataItem();

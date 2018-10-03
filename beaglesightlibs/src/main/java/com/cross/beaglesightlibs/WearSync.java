@@ -37,10 +37,10 @@ public class WearSync {
         }
     }
 
-    public void removeBowConfig(String id) {
+    public void removeBowConfig(BowConfig bowConfig) {
         if (isPhone) {
             DataMap dataMap = dataMapRequest.getDataMap();
-            dataMap.remove(id);
+            dataMap.remove(bowConfig.getId());
             PutDataRequest dataRequest = dataMapRequest.asPutDataRequest();
             dataClient.putDataItem(dataRequest);
         }
