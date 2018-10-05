@@ -76,6 +76,7 @@ public class BowManager {
                             FileInputStream fis = new FileInputStream(fl);
                             BowConfig bc = new BowConfig(fis);
                             instance.bowList.add(bc);
+                            instance.wearSync.addBowConfig(bc);
                         }
                         catch (ParserConfigurationException | IOException | SAXException e) {
                             Log.e("BeagleSight", "Failed to load bow: " + e.getMessage());
@@ -167,7 +168,7 @@ public class BowManager {
 
     public void deleteBowConfig(BowConfig bowConfig) {
         File bowConfigFile = getBowConfigFile(bowConfig);
-        bowConfigFile.deleteOnExit();
+        bowConfigFile.delete();
 
         bowList.remove(bowConfig);
         wearSync.removeBowConfig(bowConfig);
