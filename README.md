@@ -71,6 +71,11 @@ Messages are regular Discord messages, which means you can use :
 - `@mentions` to notify someone
 
 Some events also support variables, here is a basic list :
+**Common** :
+- `{ipaddr}` : the internal IP address of the OctoPrint server
+- `{externaddr}` : the external IP address of the OctoPrint server
+- `{timeremaining}` : the time remaining for the print ('Unknown' if the print is not running)
+- `{timespent}` : the time spent so far on the print
 
 **Printing process : started event** :
 - `{name}` : file's name that's being printed

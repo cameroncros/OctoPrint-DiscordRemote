@@ -2,7 +2,7 @@ import humanfriendly
 import mock
 import os
 
-from octoprint_discordremote import Command
+from octoprint_discordremote import Command, DiscordRemotePlugin
 from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
@@ -53,44 +53,28 @@ class TestCommand(DiscordRemoteTestCase):
         else:
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
-    def __init__(self, *args, **kwargs):
-        super(TestCommand, self).__init__(*args, **kwargs)
-        self._file_manager = mock.Mock()
-
-        self._settings = mock.Mock()
-        self._settings.get = mock.Mock()
-        self._settings.get.side_effect = self._mock_settings_get
-
-        self.get_ip_address = mock.Mock()
-        self.get_ip_address.return_value = "192.168.1.1"
-
-        self.get_external_address = mock.Mock()
-        self.get_external_address.return_value = "1.2.3.4"
-
-        self._printer = mock.Mock()
-        self._plugin_manager = mock.Mock()
-
-    def get_file_manager(self):
-        return self._file_manager
-
-    def get_settings(self):
-        return self._settings
-
-    def get_printer(self):
-        return self._printer
-
-    def get_plugin_manager(self):
-        return self._plugin_manager
-
-    def get_printer_name(self):
-        return "OctoPrint"
-
-    @staticmethod
-    def get_port():
-        return 80
 
     def setUp(self):
-        self.command = Command(self)
+        with mock.patch('octoprint_discordremote.DiscordRemotePlugin.discord'):
+            self.plugin = DiscordRemotePlugin()
+
+            self.plugin._printer = mock.Mock()
+            self.plugin._plugin_manager = mock.Mock()
+            self.plugin._file_manager = mock.Mock()
+            self.plugin._settings = mock.Mock()
+            self.plugin._settings.get = mock.Mock()
+            self.plugin._settings.get.side_effect = self._mock_settings_get
+
+            self.plugin.get_printer_name = mock.Mock()
+            self.plugin.get_printer_name.return_value = 'OctoPrint'
+
+            self.plugin.get_ip_address = mock.Mock()
+            self.plugin.get_ip_address.return_value = "192.168.1.1"
+
+            self.plugin.get_external_address = mock.Mock()
+            self.plugin.get_external_address.return_value = "1.2.3.4"
+
+            self.command = Command(self.plugin)
 
     def _validate_embeds(self, embeds, color):
         self.assertIsNotNone(embeds)
@@ -126,10 +110,10 @@ class TestCommand(DiscordRemoteTestCase):
 
     def test_parse_command_list(self):
         # Success
-        self.get_file_manager().list_files = mock.Mock()
-        self.get_file_manager().list_files.return_value = file_list
+        self.plugin.get_file_manager().list_files = mock.Mock()
+        self.plugin.get_file_manager().list_files.return_value = file_list
         snapshots, embeds = self.command.parse_command("/files")
-        self.get_file_manager().list_files.assert_called_once()
+        self.plugin.get_file_manager().list_files.assert_called_once()
         self.assertIsNone(snapshots)
 
         message = ""
@@ -141,10 +125,10 @@ class TestCommand(DiscordRemoteTestCase):
 
     def test_parse_command_print(self):
         # FAIL: Printer not ready
-        self.get_printer().is_ready = mock.Mock()
-        self.get_printer().is_ready.return_value = False
+        self.plugin.get_printer().is_ready = mock.Mock()
+        self.plugin.get_printer().is_ready.return_value = False
         snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self.get_printer().is_ready.assert_called_once()
+        self.plugin.get_printer().is_ready.assert_called_once()
         self._validate_simple_embed(embeds, COLOR_ERROR, title="Printer is not ready")
         self.assertIsNone(snapshots)
         # TODO
@@ -153,10 +137,10 @@ class TestCommand(DiscordRemoteTestCase):
         # TODO: Mock and validate the print started
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = flatten_file_list
-        self.get_printer().is_ready = mock.Mock()
-        self.get_printer().is_ready.return_value = True
+        self.plugin.get_printer().is_ready = mock.Mock()
+        self.plugin.get_printer().is_ready.return_value = True
         snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self.get_printer().is_ready.assert_called_once()
+        self.plugin.get_printer().is_ready.assert_called_once()
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -185,14 +169,14 @@ class TestCommand(DiscordRemoteTestCase):
         # TODO
 
         # Success: Camera serving images
-        self.get_snapshot = mock.Mock()
+        self.plugin.get_snapshot = mock.Mock()
         with open("unittests/test_pattern.png") as input_file:
-            self.get_snapshot.return_value = [('snapshot.png', input_file)]
+            self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command("/snapshot")
 
             self.assertIsNone(snapshots)
-            self._validate_simple_embed(embeds, COLOR_INFO, image=self.get_snapshot.return_value)
+            self._validate_simple_embed(embeds, COLOR_INFO, image=self.plugin.get_snapshot.return_value)
 
     def test_parse_command_abort(self):
         # Success: Print aborted
@@ -219,10 +203,10 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertIsNone(snapshots)
 
     def test_get_flat_file_list(self):
-        self.get_file_manager().list_files = mock.Mock()
-        self.get_file_manager().list_files.return_value = file_list
+        self.plugin.get_file_manager().list_files = mock.Mock()
+        self.plugin.get_file_manager().list_files.return_value = file_list
         flat_file_list = self.command.get_flat_file_list()
-        self.get_file_manager().list_files.assert_called_once()
+        self.plugin.get_file_manager().list_files.assert_called_once()
         self.assertEqual(2, len(flat_file_list))
         self.assertEqual(flatten_file_list, flat_file_list)
 
@@ -237,79 +221,79 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertIsNone(snapshots)
 
         # Fail: Printer already connected
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = True
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = True
         snapshots, embeds = self.command.parse_command("/connect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Printer already connected",
                                     description="Disconnect first")
         self.assertIsNone(snapshots)
-        self.get_printer().is_operational.assert_called_once()
+        self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: wrong format for baudrate
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = False
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = False
         snapshots, embeds = self.command.parse_command("/connect port baudrate")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Wrong format for baudrate",
                                     description="should be a number")
         self.assertIsNone(snapshots)
-        self.get_printer().is_operational.assert_called_once()
+        self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: connect failed.
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = False
-        self.get_printer().connect = mock.Mock()
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = False
+        self.plugin.get_printer().connect = mock.Mock()
         snapshots, embeds = self.command.parse_command("/connect port 1234")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Failed to connect",
                                     description='try: "/connect [port] [baudrate]"')
         self.assertIsNone(snapshots)
-        self.assertEqual(2, self.get_printer().is_operational.call_count)
-        self.get_printer().connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
+        self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
+        self.plugin.get_printer().connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
 
     @mock.patch("time.sleep")
     def test_parse_command_disconnect(self, mock_sleep):
         # Fail: Printer already disconnected
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = False
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = False
         snapshots, embeds = self.command.parse_command("/disconnect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Printer is not connected")
         self.assertIsNone(snapshots)
-        self.get_printer().is_operational.assert_called_once()
+        self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: disconnect failed.
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = True
-        self.get_printer().disconnect = mock.Mock()
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = True
+        self.plugin.get_printer().disconnect = mock.Mock()
         snapshots, embeds = self.command.parse_command("/disconnect")
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Failed to disconnect")
         self.assertIsNone(snapshots)
-        self.assertEqual(2, self.get_printer().is_operational.call_count)
-        self.get_printer().disconnect.assert_called_once_with()
+        self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
+        self.plugin.get_printer().disconnect.assert_called_once_with()
 
     def test_parse_command_status(self):
-        self.get_ip_address = mock.Mock()
-        self.get_ip_address.return_value = "192.168.1.1"
+        self.plugin.get_ip_address = mock.Mock()
+        self.plugin.get_ip_address.return_value = "192.168.1.1"
 
-        self.get_external_ip_address = mock.Mock()
-        self.get_external_ip_address.return_value = "8.8.8.8"
+        self.plugin.get_external_ip_address = mock.Mock()
+        self.plugin.get_external_ip_address.return_value = "8.8.8.8"
 
-        self.get_printer().is_operational = mock.Mock()
-        self.get_printer().is_operational.return_value = True
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = True
 
-        self.get_printer().is_printing = mock.Mock()
-        self.get_printer().is_printing.return_value = True
+        self.plugin.get_printer().is_printing = mock.Mock()
+        self.plugin.get_printer().is_printing.return_value = True
 
-        self.get_printer().get_current_data = mock.Mock()
-        self.get_printer().get_current_data.return_value = {
+        self.plugin.get_printer().get_current_data = mock.Mock()
+        self.plugin.get_printer().get_current_data.return_value = {
             'currentZ': 10,
             'job': {'file': {'name': 'filename'}},
             'progress': {
@@ -319,22 +303,22 @@ class TestCommand(DiscordRemoteTestCase):
             }
         }
 
-        self.get_printer().get_current_temperatures = mock.Mock()
-        self.get_printer().get_current_temperatures.return_value = {
+        self.plugin.get_printer().get_current_temperatures = mock.Mock()
+        self.plugin.get_printer().get_current_temperatures.return_value = {
             'bed': {'actual': 100},
             'extruder0': {'actual': 250},
             'extruder1': {'actual': 350}
         }
 
-        self.get_snapshot = mock.Mock()
+        self.plugin.get_snapshot = mock.Mock()
 
         with open("unittests/test_pattern.png") as input_file:
-            self.get_snapshot.return_value = [('snapshot.png', input_file)]
+            self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command('/status')
 
             self.assertIsNone(snapshots)
-            self.get_snapshot.assert_called_once()
+            self.plugin.get_snapshot.assert_called_once()
 
         message = ""
         for embed in embeds:
@@ -345,49 +329,49 @@ class TestCommand(DiscordRemoteTestCase):
                           'Bed Temp', 'extruder0', 'extruder1', 'File', 'Progress',
                           'Time Spent', 'Time Remaining',
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
-                          self.get_ip_address.return_value, self.get_external_ip_address.return_value]
+                          self.plugin.get_ip_address.return_value, self.plugin.get_external_ip_address.return_value]
 
-        self.assertEqual(3, self.get_settings().get.call_count)
+        self.assertEqual(3, self.plugin.get_settings().get.call_count)
 
         calls = [mock.call(["show_local_ip"], merged=True),
                  mock.call(["show_external_ip"], merged=True)]
-        self.get_settings().get.assert_has_calls(calls)
+        self.plugin.get_settings().get.assert_has_calls(calls)
 
         for term in expected_terms:
             self.assertIn(term, message)
 
     def test_parse_command_pause(self):
-        self.get_snapshot = mock.Mock()
-        self.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
-        self.get_printer().pause_print = mock.Mock()
+        self.plugin.get_snapshot = mock.Mock()
+        self.plugin.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
+        self.plugin.get_printer().pause_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/pause")
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="Print paused",
-                                    image=self.get_snapshot.return_value)
-        self.get_snapshot.assert_called_once()
+                                    image=self.plugin.get_snapshot.return_value)
+        self.plugin.get_snapshot.assert_called_once()
         self.assertIsNone(snapshots)
-        self.get_printer().pause_print.assert_called_once()
+        self.plugin.get_printer().pause_print.assert_called_once()
 
     def test_parse_command_resume(self):
-        self.get_snapshot = mock.Mock()
-        self.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
-        self.get_printer().resume_print = mock.Mock()
+        self.plugin.get_snapshot = mock.Mock()
+        self.plugin.get_snapshot.return_value = [('snapshot.png', mock.Mock())]
+        self.plugin.get_printer().resume_print = mock.Mock()
         snapshots, embeds = self.command.parse_command("/resume")
 
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="Print resumed",
-                                    image=self.get_snapshot.return_value)
-        self.get_snapshot.assert_called_once()
+                                    image=self.plugin.get_snapshot.return_value)
+        self.plugin.get_snapshot.assert_called_once()
         self.assertIsNone(snapshots)
-        self.get_printer().resume_print.assert_called_once()
+        self.plugin.get_printer().resume_print.assert_called_once()
 
     @mock.patch("requests.get")
     def test_upload_file(self, mock_get):
-        self.get_file_manager().path_on_disk = mock.Mock()
-        self.get_file_manager().path_on_disk.return_value = "./temp.file"
+        self.plugin.get_file_manager().path_on_disk = mock.Mock()
+        self.plugin.get_file_manager().path_on_disk.return_value = "./temp.file"
 
         mock_request_val = mock.Mock()
         mock_request_val.iter_content = mock.Mock()
@@ -396,7 +380,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.command.upload_file("filename", "http://mock.url")
 
-        self.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
+        self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
         mock_get.assert_called_once_with("http://mock.url", stream=True)
 
         with open("./temp.file", 'rb') as f:
