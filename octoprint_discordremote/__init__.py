@@ -3,18 +3,19 @@ from __future__ import absolute_import
 
 from datetime import timedelta, datetime
 
+import humanfriendly
 import ipgetter as ipgetter
 import octoprint.plugin
 import octoprint.settings
-from octoprint.server import user_permission
 import os
 import requests
 import socket
 import subprocess
 from PIL import Image
-from io import BytesIO
-from requests import ConnectionError
 from flask import make_response
+from io import BytesIO
+from octoprint.server import user_permission
+from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
@@ -301,6 +302,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Store IP address for message
         data['ipaddr'] = self.get_ip_address()
         data['externaddr'] = self.get_external_ip_address()
+        data['timeremaining'] = self.get_print_time_remaining()
+        data['timespent'] = self.get_print_time_spent()
 
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
@@ -486,6 +489,23 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_plugin_manager(self):
         return self._plugin_manager
+
+    def get_print_time_spent(self):
+        current_data = self._printer.get_current_data()
+        try:
+            current_time_val = current_data['progress']['printTime']
+            return humanfriendly.format_timespan(current_time_val, max_units=2)
+        except (KeyError, ValueError):
+            return 'Unknown'
+
+    def get_print_time_remaining(self):
+        current_data = self._printer.get_current_data()
+        try:
+            remaining_time_val = current_data['progress']['printTimeLeft']
+            return humanfriendly.format_timespan(remaining_time_val, max_units=2)
+        except (KeyError, ValueError):
+            return 'Unknown'
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

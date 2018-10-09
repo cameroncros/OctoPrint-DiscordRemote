@@ -71,5 +71,39 @@ class TestCommand(DiscordRemoteTestCase):
         plugin._settings.global_get.return_value = None
         self.assertEqual("OctoPrint", plugin.get_printer_name())
 
+    def test_get_print_time_spent(self):
+        plugin = DiscordRemotePlugin()
+        plugin._printer = mock.Mock()
+        plugin._printer.get_current_data = mock.Mock()
+
+        plugin._printer.get_current_data.return_value = {}
+        self.assertEqual('Unknown', plugin.get_print_time_spent())
+
+        plugin._printer.get_current_data.return_value = {'progress': {}}
+        self.assertEqual('Unknown', plugin.get_print_time_spent())
+
+        plugin._printer.get_current_data.return_value = {'progress': {'printTime': None}}
+        self.assertEqual('Unknown', plugin.get_print_time_remaining())
+
+        plugin._printer.get_current_data.return_value = {'progress': {'printTime': 1234}}
+        self.assertEqual('20 minutes and 34 seconds', plugin.get_print_time_spent())
+
+    def test_get_print_time_remaining(self):
+        plugin = DiscordRemotePlugin()
+        plugin._printer = mock.Mock()
+        plugin._printer.get_current_data = mock.Mock()
+
+        plugin._printer.get_current_data.return_value = {}
+        self.assertEqual('Unknown', plugin.get_print_time_remaining())
+
+        plugin._printer.get_current_data.return_value = {'progress': {}}
+        self.assertEqual('Unknown', plugin.get_print_time_remaining())
+
+        plugin._printer.get_current_data.return_value = {'progress': {'printTimeLeft': None}}
+        self.assertEqual('Unknown', plugin.get_print_time_remaining())
+
+        plugin._printer.get_current_data.return_value = {'progress': {'printTimeLeft': 1234}}
+        self.assertEqual('20 minutes and 34 seconds', plugin.get_print_time_remaining())
+
 
 

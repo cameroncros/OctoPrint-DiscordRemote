@@ -316,19 +316,8 @@ class Command:
                 if completion:
                     builder.add_field(title='Progress', text='%d%%' % completion, inline=True)
 
-                current_time_val = current_data['progress']['printTime']
-                if current_time_val:
-                    time_spent = humanfriendly.format_timespan(current_time_val, max_units=2)
-                    builder.add_field(title='Time Spent', text=time_spent, inline=True)
-                else:
-                    builder.add_field(title='Time Spent', text='Unknown', inline=True)
-
-                remaining_time_val = current_data['progress']['printTimeLeft']
-                if remaining_time_val:
-                    time_left = humanfriendly.format_timespan(current_data['progress']['printTimeLeft'], max_units=2)
-                    builder.add_field(title='Time Remaining', text=time_left, inline=True)
-                else:
-                    builder.add_field(title='Time Remaining', text='Unknown', inline=True)
+                builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
+                builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
 
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
