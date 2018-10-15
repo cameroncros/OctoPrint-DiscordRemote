@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from datetime import timedelta, datetime
 
 import humanfriendly
-import ipgetter as ipgetter
 import octoprint.plugin
 import octoprint.settings
 import os
@@ -16,7 +15,7 @@ from flask import make_response
 from io import BytesIO
 from octoprint.server import user_permission
 from requests import ConnectionError
-
+from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from .discord import Discord
