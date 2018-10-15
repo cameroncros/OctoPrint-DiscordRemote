@@ -51,7 +51,7 @@ plugin_url = "https://github.com/cameroncros/Octoprint-DiscordRemote"
 plugin_license = "MIT"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests", "humanfriendly", "ipgetter"]
+plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests", "humanfriendly"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

@@ -9,5 +9,4 @@ PyYAML
 websocket-client
 requests
 humanfriendly
-ipgetter
 .
