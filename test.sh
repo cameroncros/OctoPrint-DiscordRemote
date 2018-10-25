@@ -10,4 +10,4 @@ cp -rf testconfig testenv/
 pip install PyYAML
 python2 configtest.py
 python -m webbrowser -t http://127.0.0.1:5000
-octoprint serve -b testenv/testconfig
+FAKE_SNAPSHOT=unittests/test_pattern.png octoprint serve -b testenv/testconfig

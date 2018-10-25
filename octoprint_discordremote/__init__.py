@@ -408,8 +408,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord = Discord()
 
         out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                  title=message,
-                                                  snapshot=snapshot))
+                                                  title=message))
+        if not out:
+            self._logger.error("Failed to send message")
+            return out
+
+        if snapshot:
+            out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
+                                                      snapshot=snapshot))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
@@ -417,6 +423,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return out
 
     def get_snapshot(self):
+        if 'FAKE_SNAPSHOT' in os.environ:
+            return self.get_snapshot_fake()
+        else:
+            return self.get_snapshot_camera()
+
+    @staticmethod
+    def get_snapshot_fake():
+        fl = open(os.environ['FAKE_SNAPSHOT'])
+        return [("snapshot.png", fl)]
+
+    def get_snapshot_camera(self):
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
