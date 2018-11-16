@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<targets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="target_schema.xsd">
+    <target>
+        <id>372e9cae-cb37-49d9-8593-74f5ef17ed00</id>
+        <name>Test target</name>
+        <builtin>true</builtin>
+        <location>
+            <id>5152ae6d-8c6a-4eec-91bb-6b98cffb4b75</id>
+            <target_id>372e9cae-cb37-49d9-8593-74f5ef17ed00</target_id>
+            <description>Test Target</description>
+            <latitude>-37.627482</latitude>
+            <longitude>145.122773</longitude>
+            <altitude>300.0</altitude>
+            <lat_lng_accuracy>6.0</lat_lng_accuracy>
+            <altitude_accuracy>3.0</altitude_accuracy>
+        </location>
+        <shoot_position>
+            <id>f880aba7-27a4-4fb4-90bf-5d1218de7451</id>
+            <target_id>372e9cae-cb37-49d9-8593-74f5ef17ed00</target_id>
+            <description>Shoot Pos 1</description>
+            <latitude>-37.627442</latitude>
+            <longitude>145.122733</longitude>
+            <altitude>310.0</altitude>
+            <lat_lng_accuracy>2.0</lat_lng_accuracy>
+            <altitude_accuracy>2.0</altitude_accuracy>
+        </shoot_position>
+        <shoot_position>
+            <id>ea4b0058-4efc-46b8-9de3-9e3ac2258bc1</id>
+            <target_id>372e9cae-cb37-49d9-8593-74f5ef17ed00</target_id>
+            <description>Shoot Pos 2</description>
+            <latitude>-37.627432</latitude>
+            <longitude>145.122573</longitude>
+            <altitude>270.0</altitude>
+            <lat_lng_accuracy>6.0</lat_lng_accuracy>
+            <altitude_accuracy>4.0</altitude_accuracy>
+        </shoot_position>
+    </target>
+</targets>

@@ -1,0 +1,39 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:simpleType name="GUID">
+        <xs:restriction base="xs:string">
+            <xs:pattern
+                value="([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\})" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="location">
+        <xs:sequence>
+            <xs:element name="id" type="GUID" />
+            <xs:element name="target_id" type="GUID" />
+            <xs:element name="description" minOccurs="0" type="xs:string" />
+            <xs:element name="latitude" type="xs:float" />
+            <xs:element name="longitude" type="xs:float" />
+            <xs:element name="altitude" type="xs:float" />
+            <xs:element name="lat_lng_accuracy" minOccurs="0" type="xs:float" />
+            <xs:element name="altitude_accuracy" minOccurs="0" type="xs:float" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="target">
+        <xs:sequence>
+            <xs:element name="id" type="GUID" />
+            <xs:element name="name" type="xs:string" />
+            <xs:element name="builtin" type="xs:boolean" />
+            <xs:element name="location" type="location" />
+            <xs:element name="shoot_position" maxOccurs="unbounded" minOccurs="0" type="location" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="targets">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="target" type="target" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
