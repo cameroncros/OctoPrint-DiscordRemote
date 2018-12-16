@@ -350,9 +350,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         finally:
             s.close()
 
-    @staticmethod
-    def get_external_ip_address():
-        return str(ipgetter.myip())
+    def get_external_ip_address(self):
+        if self.get_settings().get(['show_external_ip'], merged=True):
+            return str(ipgetter.myip())
+        else:
+            return "External IP disabled"
 
     def get_port(self):
         port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
