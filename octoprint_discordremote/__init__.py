@@ -10,6 +10,7 @@ import os
 import requests
 import socket
 import subprocess
+import logging
 from PIL import Image
 from flask import make_response
 from io import BytesIO
@@ -120,6 +121,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         }
 
     def on_after_startup(self):
+        # Use a different log file for DiscordRemote, as it is very noisy.
+        self._logger = logging.getLogger("octoprint.plugins.discordremote")
+        from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
+        hdlr = CleaningTimedRotatingFileHandler(
+            self._settings.get_plugin_logfile_path(), when="D", backupCount=3)
+
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        hdlr.setFormatter(formatter)
+        self._logger.addHandler(hdlr)
+        self._logger.setLevel(logging.DEBUG)
+
+        # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
         if self.command is None:
             self.command = Command(self)
