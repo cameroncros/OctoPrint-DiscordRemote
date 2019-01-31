@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import time
 from datetime import timedelta, datetime
 
 import humanfriendly
@@ -16,6 +17,8 @@ from flask import make_response
 from io import BytesIO
 from octoprint.server import user_permission
 from requests import ConnectionError
+from threading import Thread, Event
+
 from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
@@ -33,7 +36,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     discord = None
     command = None
     last_progress_message = None
+    last_progress_percent = 0
     is_muted = False
+    periodic_signal = None
+    periodic_thread = None
 
     def __init__(self):
         # Events definition here (better for intellisense in IDE)
@@ -107,11 +113,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "message": "👎 Printing has failed! :("
             },
             "printing_progress": {
-                "name": "Printing progress",
+                "name": "Printing progress (Percentage)",
                 "enabled": True,
                 "with_snapshot": True,
                 "message": "📢 Printing is at {progress}%",
                 "step": 10
+            },
+            "printing_progress_periodic": {
+                "name": "Printing progress (Periodic)",
+                "enabled": False,
+                "with_snapshot": True,
+                "message": "📢 Printing is at {progress}%",
+                "period": 300
             },
             "test": {  # Not a real message, but we will treat it as one
                 "enabled": True,
@@ -238,6 +251,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 return self.notify_event("printer_state_unknown")
 
         if event == "PrintStarted":
+            self.start_periodic_reporting()
             return self.notify_event("printing_started", payload)
         if event == "PrintPaused":
             return self.notify_event("printing_paused", payload)
@@ -247,12 +261,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return self.notify_event("printing_cancelled", payload)
 
         if event == "PrintDone":
+            self.stop_periodic_reporting()
             payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
             return self.notify_event("printing_done", payload)
 
         return True
 
     def on_print_progress(self, location, path, progress):
+        self.last_progress_percent = progress
         self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
@@ -537,6 +553,42 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         except (KeyError, ValueError):
             return 'Unknown'
 
+    def start_periodic_reporting(self):
+        self.stop_periodic_reporting()
+        self.last_progress_percent = 0
+
+        self.periodic_signal = Event()
+        self.periodic_signal.clear()
+
+        self.periodic_thread = Thread(target=self.periodic_reporting)
+        self.periodic_thread.start()
+
+    def stop_periodic_reporting(self):
+        if not self.periodic_signal:
+            return
+
+        self.periodic_signal.set()
+        self.periodic_thread.join(timeout=60)
+        if self.periodic_thread.is_alive():
+            self._logger.error("Periodic thread has hung, leaking it now.")
+        else:
+            self._logger.info("Periodic thread joined.")
+        self.periodic_thread = None
+
+    def periodic_reporting(self):
+        if not self._settings.get(["events", "printing_progress_periodic", "enabled"]):
+            return
+        timeout = self._settings.get(["events", "printing_progress_periodic", "period"])
+
+        while True:
+            cur_time = time.time()
+            next_time = cur_time + int(timeout)
+            while time.time() < next_time:
+                time.sleep(1)
+                if self.periodic_signal.is_set():
+                    return
+
+            self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

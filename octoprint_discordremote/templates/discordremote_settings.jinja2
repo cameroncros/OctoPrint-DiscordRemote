@@ -90,6 +90,7 @@
                     <input type="checkbox" data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
                 </div>
             </div>
+            <!-- Special Case for Percentage reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Notify every") }}</label>
                 <div class="controls">
@@ -100,6 +101,13 @@
                 <label class="control-label">{{ _("Minimum timeout between messages") }}</label>
                 <div class="controls">
                     <input type="number" data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
+                </div>
+            </div>
+            <!-- Special Case for Periodic reporting -->
+            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].period">
+                <label class="control-label">{{ _("Notify every") }}</label>
+                <div class="controls">
+                    <input type="number" min="1" step="1" data-bind="value: $parent.settings.plugins.discordremote.events[$data].period"/>s
                 </div>
             </div>
         </div>
