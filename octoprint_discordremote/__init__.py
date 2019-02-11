@@ -312,6 +312,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.discord.send(snapshots=snapshots, embeds=embeds)
 
     def notify_event(self, event_id, data=None):
+        self._logger.info("Received event: %s" % event_id)
         if self.is_muted:
             return True
 
