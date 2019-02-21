@@ -268,8 +268,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return True
 
     def on_print_progress(self, location, path, progress):
-        self.last_progress_percent = progress
-        self.notify_event("printing_progress", {"progress": progress})
+        # Avoid sending duplicate percentage progress messages
+        if progress != self.last_progress_percent:
+            self.last_progress_percent = progress
+            self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
