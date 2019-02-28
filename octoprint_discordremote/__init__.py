@@ -567,7 +567,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.periodic_thread.start()
 
     def stop_periodic_reporting(self):
-        if not self.periodic_signal:
+        if self.periodic_signal is None or self.periodic_thread is None:
             return
 
         self.periodic_signal.set()
@@ -577,6 +577,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         else:
             self._logger.info("Periodic thread joined.")
         self.periodic_thread = None
+        self.periodic_signal = None
 
     def periodic_reporting(self):
         if not self._settings.get(["events", "printing_progress_periodic", "enabled"]):
