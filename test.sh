@@ -4,7 +4,7 @@
 python2 -m virtualenv testenv
 
 source testenv/bin/activate
-pip install https://get.octoprint.org/latest
+pip install --upgrade --no-cache-dir https://get.octoprint.org/latest
 python2 setup.py develop
 cp -rf testconfig testenv/
 pip install PyYAML

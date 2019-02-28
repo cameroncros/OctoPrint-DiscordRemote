@@ -11,6 +11,8 @@ plugins:
     _config_version: 6
     check_providers:
       discordremote: discordremote
+  tracking:
+    enabled: false
 printerProfiles:
   default: _default
 server:
