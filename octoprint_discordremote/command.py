@@ -39,11 +39,15 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string):
+    def parse_command(self, string, user=None):
         parts = re.split('\s+', string)
 
         prefix_len = len(self.plugin.get_settings().get(["prefix"]))
-        command = self.command_dict.get(parts[0][prefix_len:])
+        command_string = parts[0][prefix_len:]
+        if user and not self.check_perms(command_string, user):
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Permission Denied")
+        command = self.command_dict.get(command_string)
         if command is None:
             if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
                     parts[0].lower() == "help":
@@ -363,3 +367,23 @@ class Command:
         self.plugin.unmute()
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Notifications Unmuted')
+
+    @staticmethod
+    def _parse_array(string):
+        if string and isinstance(string, basestring):
+            return re.split("[^a-zA-Z0-9*]+", string)
+        return None
+
+    def check_perms(self, command, user):
+        permissions = self.plugin.get_settings().get(['permissions'], merged=True)
+
+        for rulename in permissions:
+            rule = permissions.get(rulename)
+            users = self._parse_array(rule['users'])
+            commands = self._parse_array(rule['commands'])
+            if users is None or commands is None:
+                continue
+            if ('*' in users or user in users) and \
+               ('*' in commands or command in commands):
+                return True
+        return False

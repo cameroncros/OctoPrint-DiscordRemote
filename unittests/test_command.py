@@ -387,3 +387,65 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertEqual(b'1234', f.read())
 
         os.remove("./temp.file")
+
+    def test_parse_array(self):
+        self.assertIsNone(self.command._parse_array(None))
+        self.assertIsNone(self.command._parse_array(1))
+
+        results = self.command._parse_array("*")
+        self.assertEqual(1, len(results))
+        self.assertIn("*", results)
+
+        results = self.command._parse_array("123")
+        self.assertEqual(1, len(results))
+        self.assertIn("123", results)
+
+        results = self.command._parse_array("123,456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+        results = self.command._parse_array("123 456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+        results = self.command._parse_array("123/456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+    def test_check_perms(self):
+        get_mock = mock.Mock()
+
+        settings_mock = mock.Mock()
+        settings_mock.get = get_mock
+
+        self.command.plugin.get_settings = mock.Mock()
+        self.command.plugin.get_settings.return_value = settings_mock
+
+        get_mock.return_value = {}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '*', 'commands': ''}}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '', 'commands': '*'}}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '*', 'commands': '*'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '123', 'commands': '*'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.get.return_value = {'1': {'users': '*', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '123', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '456', 'commands': 'notallowed'},
+                                 '2': {'users': '123', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+

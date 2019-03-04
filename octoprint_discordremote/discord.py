@@ -53,7 +53,6 @@ class Discord:
     command = None  # Command parser
     status_callback = None  # The callback to use when the status changes.
     error_counter = 0  # The number of errors that have occured.
-    allowed_users = []  # Users who the bot should listen to. If empty, listen to everyone.
 
     # Threads:
     manager_thread = None
@@ -64,7 +63,7 @@ class Discord:
     restart_event = Event()  # Set to restart discord bot.
     shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
-    def configure_discord(self, bot_token, channel_id, allowed_users, logger, command, status_callback=None):
+    def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
         self.shutdown_event.clear()
         self.restart_event.clear()
         self.bot_token = bot_token
@@ -74,8 +73,6 @@ class Discord:
         self.command = command
         self.status_callback = status_callback
         self.error_counter = 0
-        if allowed_users:
-            self.allowed_users = re.split("[^0-9]+", allowed_users)
 
         if self.status_callback:
             self.status_callback(connected="disconnected")
@@ -245,30 +242,23 @@ class Discord:
             # Only care about messages from correct channel
             return
 
-        if len(self.allowed_users) != 0:
-            # If defined, only listen to messages from certain users.
-            authorised = False
-            for user in self.allowed_users:
-                if user == data['author']['id']:
-                    authorised = True
-            if not authorised:
-                return
+        user = data['author']['id']
 
         if 'attachments' in data:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                snapshots, embeds = self.command.upload_file(filename, url)
+                snapshots, embeds = self.command.upload_file(filename, url, user)
                 self.send(embeds=embeds)
 
         if 'content' in data and len(data['content']) > 0:
-            snapshots, embeds = self.command.parse_command(data['content'])
+            snapshots, embeds = self.command.parse_command(data['content'], user)
             self.send(snapshots=snapshots,
                       embeds=embeds)
 
     def handle_hello(self, js):
         self.logger.info("Received HELLO message")
-        
+
         # Authenticate/Resume
         if self.session_id:
             self.send_resume()
