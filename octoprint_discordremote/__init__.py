@@ -143,7 +143,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self._logger.addHandler(hdlr)
-        self._logger.setLevel(logging.DEBUG)
 
         # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
