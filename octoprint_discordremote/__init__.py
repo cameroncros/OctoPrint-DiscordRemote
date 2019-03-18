@@ -168,8 +168,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Transition settings
         allowed_users = self._settings.get(['allowedusers'], merged=True)
         if allowed_users:
-            import pdb
-            pdb.set_trace()
             self._settings.set(["allowedusers"], None, True)
             self._settings.set(['permissions'], {'1': {'users': allowed_users, 'commands': '*'}}, True)
 
