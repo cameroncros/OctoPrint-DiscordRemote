@@ -346,11 +346,14 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Print resumed', snapshot=snapshot)
 
-    def upload_file(self, filename, url):
-        upload_file = self.plugin.get_file_manager().path_on_disk('local', filename)
+    def upload_file(self, filename, url, user):
+        if user and not self.check_perms('upload', user):
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Permission Denied")
+        upload_file_path = self.plugin.get_file_manager().path_on_disk('local', filename)
 
         r = requests.get(url, stream=True)
-        with open(upload_file, 'wb') as f:
+        with open(upload_file_path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
