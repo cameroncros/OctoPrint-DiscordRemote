@@ -1,15 +1,19 @@
 #!/bin/sh
 # Setup testenv on *nix os's
-PYTHON=python2
-ACTIVATE='source testenv/bin/activate'
-which $PYTHON > /dev/null 2>&1
-if [ $? == 1 ]; then
-    PYTHON='py -2'
-    ACTIVATE='source testenv/Scripts/activate'
+which py > /dev/null 2>&1
+if [ $? == 0 ]; then
+    echo "Running in Windows"
+    PYTHON='python'
+    py -2 -m virtualenv testenv
+    source testenv/Scripts/activate
+else
+    echo "Running in Linux"
+    PYTHON=python2
+    python2 -m virtualenv testenv
+    source testenv/bin/activate
 fi
-$PYTHON -m virtualenv testenv
-$ACTIVATE
 
+$PYTHON -m pip install -r requirements-dev.txt
 $PYTHON -m pip install --upgrade --no-cache-dir https://get.octoprint.org/latest
 $PYTHON setup.py develop
 $PYTHON configtest.py
