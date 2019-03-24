@@ -378,15 +378,49 @@ class TestCommand(DiscordRemoteTestCase):
         mock_request_val.iter_content.return_value = b'1234'
         mock_get.return_value = mock_request_val
 
-        self.command.upload_file("filename", "http://mock.url")
+        # Upload, no user
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", None)
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File Received")
 
         self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
+        self.plugin.get_file_manager().path_on_disk.reset_mock()
         mock_get.assert_called_once_with("http://mock.url", stream=True)
+        mock_get.reset_mock()
 
         with open("./temp.file", 'rb') as f:
             self.assertEqual(b'1234', f.read())
 
         os.remove("./temp.file")
+
+        # Upload with user
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = True
+
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File Received")
+
+        self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
+        self.plugin.get_file_manager().path_on_disk.reset_mock()
+        mock_get.assert_called_once_with("http://mock.url", stream=True)
+        mock_get.reset_mock()
+
+        with open("./temp.file", 'rb') as f:
+            self.assertEqual(b'1234', f.read())
+
+        # Upload denied
+        self.command.check_perms.return_value = False
+
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Permission Denied")
 
     def test_parse_array(self):
         self.assertIsNone(self.command._parse_array(None))
