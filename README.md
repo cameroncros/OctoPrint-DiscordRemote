@@ -13,6 +13,9 @@ License : MIT
 
 [OctopusProteins](https://github.com/OctopusProteins) for their work on the enclosure plugin, and file upload capabilities.
 
+[megasaturnv](https://github.com/megasaturnv) for their assistance with configuring the access settings.
+
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
@@ -44,10 +47,21 @@ The plugin can be configured in the configuration panel, under the "DiscordRemot
 ### Discord Settings
 
 - Bot Token: The token for a discord bot.
-- Channel ID: The ID of a channel the bot will listen and post to. Ensure that this is locked down so that strangers cannot send commands to your printer, or whitelist users using the "Allowed Users" setting.
-- Allowed Users: A whitelist of the users that are allowed to interact with. The bot will only respond if the users _ID_ (Not user name) is in this list.
+- Channel ID: The ID of a channel the bot will listen and post to.
+  Ensure that this is locked down so that strangers cannot send commands to your printer, or whitelist users using the "Access Settings"
 
-In order for you to be sure these settings work, every time you change one of them, a test message will be sent to the corresponding Discord Channel. If you don't receive it, something is most likely wrong!
+In order for you to be sure these settings work, every time you change one of them, a test message will be sent to the corresponding Discord Channel.
+If you don't receive it, something is most likely wrong!
+
+### Access Settings
+
+The access settings allow specific commands to be limited to specific users.
+- In the commands section, put a comma-separated list of commands.
+- In the users section, put a comma-separated list of user IDs.
+- A '*' in either section can be used to match all commands/users.
+
+If the current command and user combination matches any of the rules, it will be executed.
+If additional rules are required, manually editing the config will be required.
 
 ### Message Settings
 
@@ -61,7 +75,6 @@ Here you can customize every message handled by DiscordRemote.
     - `5%` means you'll receive a message at 5%, 10%, 15%, 20% ... 80%, 85%, 90%, 95% of the printing process.
     - etc...
 - **Timeout** : for small prints, prevents discord spam by only sending progress messages after the timeout has passed since the previous message.
-
 
 ## Message format
 
