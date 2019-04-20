@@ -8,7 +8,7 @@ if [[ $? -ne 0 ]]; then
     fi
     kill -9 ${OCTOPRINT_PID}
 else
-    OCTOPRINT_PID=`wmic process get processid, commandline -format:csv | grep octoprint | awk -F ',' '{print $3}'`
+    OCTOPRINT_PID=`wmic process get processid, commandline -format:csv | grep python | awk -F ',' '{print $3}'`
     OCTOPRINT_PID=`echo $OCTOPRINT_PID | awk -F '\r' '{print $1}'`
     if [[ ${OCTOPRINT_PID} == "" ]]; then
         echo Octoprint not running
