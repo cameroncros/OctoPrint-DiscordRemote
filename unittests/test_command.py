@@ -420,9 +420,9 @@ class TestCommand(DiscordRemoteTestCase):
                                     title="Failed to execute gcode",
                                     description="Error: Error")
 
-        # Success:
+        # Success - Case Insensitive:
         self.plugin.get_printer().commands.side_effect = None
-        snapshots, embeds = self.command.gcode(["/gcode", "M0"])
+        snapshots, embeds = self.command.gcode(["/gcode", "m0"])
         self.assertIsNone(snapshots)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,

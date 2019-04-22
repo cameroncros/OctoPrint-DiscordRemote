@@ -374,7 +374,7 @@ class Command:
                                      description="Connect to printer first.")
 
         allowed_gcodes = self.plugin.get_settings().get(["allowed_gcode"])
-        allowed_gcodes = re.split('[^0-9a-zA-Z]+', allowed_gcodes)
+        allowed_gcodes = re.split('[^0-9a-zA-Z]+', allowed_gcodes.upper())
         script = "".join(params[1:])
         lines = script.split(';')
         for line in lines:
@@ -382,7 +382,7 @@ class Command:
             first = re.findall('[mMgG][0-9]+', first)
             if first is None or \
                     len(first) == 0 or \
-                    first[0] not in allowed_gcodes:
+                    first[0].upper() not in allowed_gcodes:
                 return None, error_embed(author=self.plugin.get_printer_name(),
                                          title="Invalid GCODE",
                                          description="If you want to use \"%s\", add it to the allowed GCODEs" % line)
