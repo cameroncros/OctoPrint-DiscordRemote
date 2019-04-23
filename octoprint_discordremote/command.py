@@ -3,7 +3,6 @@ import humanfriendly
 import re
 import time
 import requests
-from requests import ConnectionError
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
@@ -208,7 +207,7 @@ class Command:
     def find_file(self, file_name):
         flat_filelist = self.get_flat_file_list()
         for file in flat_filelist:
-            if file_name in file.get('path'):
+            if file_name.upper() in file.get('path').upper():
                 return file
         return None
 

@@ -2,6 +2,8 @@ import humanfriendly
 import mock
 import os
 
+from octoprint.printer import InvalidFileType, InvalidFileLocation
+
 from octoprint_discordremote import Command, DiscordRemotePlugin
 from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
 from unittests.discordremotetestcase import DiscordRemoteTestCase
@@ -18,7 +20,7 @@ file_list = {'local': {
                                      'path': u'folder1/test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
                                      'size': 6530L}
                  }},
-    u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
+    u'test2.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
                     'typePath': ['machinecode', 'gcode'], 'analysis': {
             'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None,
                              'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
@@ -33,7 +35,7 @@ flatten_file_list = [
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'},
     {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822021,
-     'path': u'/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'path': u'/test2.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
@@ -52,7 +54,6 @@ class TestCommand(DiscordRemoteTestCase):
             return None
         else:
             self.assertFalse(True, "Not mocked: %s" % args[0])
-
 
     def setUp(self):
         with mock.patch('octoprint_discordremote.DiscordRemotePlugin.discord'):
@@ -107,7 +108,6 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertEqual({'url': "attachment://%s" % image[0][0]}, embed['image'])
             self.assertIn(image[0], embeds[0].files)
 
-
     def test_parse_command_list(self):
         # Success
         self.plugin.get_file_manager().list_files = mock.Mock()
@@ -124,28 +124,54 @@ class TestCommand(DiscordRemoteTestCase):
         self._validate_embeds(embeds, COLOR_INFO)
 
     def test_parse_command_print(self):
-        # FAIL: Printer not ready
+        # Invalid Arguments
+        snapshots, embeds = self.command.parse_command("/print")
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title='Wrong number of arguments',
+                                    description='try "%sprint [filename]"' % self.plugin.get_settings().get(
+                                        ["prefix"]))
+
+        # Printer not ready
         self.plugin.get_printer().is_ready = mock.Mock()
         self.plugin.get_printer().is_ready.return_value = False
-        snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self.plugin.get_printer().is_ready.assert_called_once()
-        self._validate_simple_embed(embeds, COLOR_ERROR, title="Printer is not ready")
-        self.assertIsNone(snapshots)
-        # TODO
+        snapshots, embeds = self.command.parse_command("/print dummyfile.gcode")
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title='Printer is not ready')
 
-        # Success: Printer ready
-        # TODO: Mock and validate the print started
-        self.command.get_flat_file_list = mock.Mock()
-        self.command.get_flat_file_list.return_value = flatten_file_list
-        self.plugin.get_printer().is_ready = mock.Mock()
+        # Printer is ready, file not found
         self.plugin.get_printer().is_ready.return_value = True
-        snapshots, embeds = self.command.parse_command("/print test.gcode")
-        self.plugin.get_printer().is_ready.assert_called_once()
+        self.command.find_file = mock.Mock()
+        self.command.find_file.return_value = None
+        snapshots, embeds = self.command.parse_command("/print dummyfile.gcode")
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title='Failed to find the file')
 
+        # Printer is ready, file is found, invalid file type
+        self.command.find_file.return_value = {'location': 'sdcard', 'path': '/temp/path'}
+        self.plugin.get_printer().select_file = mock.Mock()
+        self.plugin.get_printer().select_file.side_effect = InvalidFileType
+        snapshots, embeds = self.command.parse_command("/print dummyfile.gcode")
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title='Invalid file type selected')
+
+        # Printer is ready, file is found, invalid file location
+        self.plugin.get_printer().select_file.side_effect = InvalidFileLocation
+        snapshots, embeds = self.command.parse_command("/print dummyfile.gcode")
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title='Invalid file location?')
+
+        # Printer is ready, file is found, print started
+        self.plugin.get_printer().select_file.side_effect = None
+        snapshots, embeds = self.command.parse_command("/print dummyfile.gcode")
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
-                                    title="Successfully started print",
-                                    description="folder1/test.gcode")
+                                    title='Successfully started print',
+                                    description='/temp/path')
         self.assertIsNone(snapshots)
 
     def test_parse_command_unknown(self):
@@ -209,6 +235,14 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_file_manager().list_files.assert_called_once()
         self.assertEqual(2, len(flat_file_list))
         self.assertEqual(flatten_file_list, flat_file_list)
+
+    def test_find_file(self):
+        self.plugin.get_file_manager().list_files = mock.Mock()
+        self.plugin.get_file_manager().list_files.return_value = file_list
+
+        self.assertIsNone(self.command.find_file("NOT_IN_ANY_FILENAME"))
+        self.assertEqual(flatten_file_list[0], self.command.find_file("ER1/T"))
+        self.assertEqual(flatten_file_list[1], self.command.find_file("TEST2"))
 
     @mock.patch("time.sleep")
     def test_parse_command_connect(self, mock_sleep):
