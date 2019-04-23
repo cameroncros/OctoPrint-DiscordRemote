@@ -421,9 +421,11 @@ class TestCommand(DiscordRemoteTestCase):
                                     description="Error: Error")
 
         # Success - Case Insensitive:
+        self.plugin.get_printer().commands.reset_mock()
         self.plugin.get_printer().commands.side_effect = None
         snapshots, embeds = self.command.gcode(["/gcode", "m0"])
         self.assertIsNone(snapshots)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="Sent script")
+        self.plugin.get_printer().commands.assert_called_once_with(['M0'])
