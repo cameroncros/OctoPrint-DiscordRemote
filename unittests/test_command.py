@@ -387,3 +387,45 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertEqual(b'1234', f.read())
 
         os.remove("./temp.file")
+
+    def test_gcode(self):
+        # Printer disconnected
+        self.plugin.get_printer().is_operational = mock.Mock()
+        self.plugin.get_printer().is_operational.return_value = False
+        snapshots, embeds = self.command.gcode(["/gcode", "M0"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Printer not connected",
+                                    description="Connect to printer first.")
+
+        # Printer connected, invalid GCODE
+        self.plugin.get_printer().is_operational.return_value = True
+        self.plugin.get_settings().get = mock.Mock()
+        self.plugin.get_settings().get.return_value = "G0, M0|M851"
+        snapshots, embeds = self.command.gcode(["/gcode", "M1"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Invalid GCODE",
+                                    description="If you want to use \"M1\", add it to the allowed GCODEs")
+
+        # Failed to send
+        self.plugin.get_printer().commands = mock.Mock()
+        self.plugin.get_printer().commands.side_effect = Exception("Error")
+        snapshots, embeds = self.command.gcode(["/gcode", "M0"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Failed to execute gcode",
+                                    description="Error: Error")
+
+        # Success - Case Insensitive:
+        self.plugin.get_printer().commands.reset_mock()
+        self.plugin.get_printer().commands.side_effect = None
+        snapshots, embeds = self.command.gcode(["/gcode", "m0"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="Sent script")
+        self.plugin.get_printer().commands.assert_called_once_with(['M0'])

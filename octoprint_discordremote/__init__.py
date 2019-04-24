@@ -177,7 +177,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'events': self.events,
             'allow_scripts': False,
             'script_before': '',
-            'script_after': ''
+            'script_after': '',
+            'allowed_gcode': ''
         }
 
     # Restricts some paths to some roles only
@@ -193,7 +194,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ["show_local_ip"],
                            ["show_external_ip"],
                            ['script_before'],
-                           ['script_after']])
+                           ['script_after'],
+                           ['allowed_gcode']])
 
     # AssetPlugin mixin
     def get_assets(self):

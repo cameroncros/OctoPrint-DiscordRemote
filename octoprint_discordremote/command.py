@@ -1,4 +1,5 @@
 import collections
+import json
 import humanfriendly
 import re
 import time
@@ -34,6 +35,8 @@ class Command:
                                      'description': "Mute notifications"}
         self.command_dict['unmute'] = {'cmd': self.unmute,
                                        'description': "Unmute notifications"}
+        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': 'GCODE lines, seperated by \';\'',
+                                      'description': "Send a set of GCODE commands directly to the printer"}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -363,3 +366,32 @@ class Command:
         self.plugin.unmute()
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Notifications Unmuted')
+
+    def gcode(self, params):
+        if not self.plugin.get_printer().is_operational():
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Printer not connected",
+                                     description="Connect to printer first.")
+
+        allowed_gcodes = self.plugin.get_settings().get(["allowed_gcode"])
+        allowed_gcodes = re.split('[^0-9a-zA-Z]+', allowed_gcodes.upper())
+        script = "".join(params[1:]).upper()
+        lines = script.split(';')
+        for line in lines:
+            first = line.strip().replace(' ', '').replace('\t', '')
+            first = re.findall('[mMgG][0-9]+', first)
+            if first is None or \
+                    len(first) == 0 or \
+                    first[0] not in allowed_gcodes:
+                return None, error_embed(author=self.plugin.get_printer_name(),
+                                         title="Invalid GCODE",
+                                         description="If you want to use \"%s\", add it to the allowed GCODEs" % line)
+        try:
+            self.plugin.get_printer().commands(lines)
+        except Exception as e:
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Failed to execute gcode",
+                                     description="Error: %s" % str(e))
+
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title="Sent script")

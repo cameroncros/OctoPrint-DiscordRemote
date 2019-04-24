@@ -13,6 +13,8 @@ License : MIT
 
 [OctopusProteins](https://github.com/OctopusProteins) for their work on the enclosure plugin, and file upload capabilities.
 
+[goscicki](https://github.com/goscicki) for their help testing the /gcode capability.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
