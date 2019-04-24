@@ -258,15 +258,18 @@ class Command:
                                          description='should be a number')
 
         self.plugin.get_printer().connect(port=port, baudrate=baudrate, profile=None)
-        # Sleep a while before checking if connected
-        time.sleep(10)
-        if not self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
-                                     title='Failed to connect',
-                                     description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
-                                         ["prefix"]))
 
-        return None, success_embed('Connected to printer')
+        # Check every second for 30 seconds, to see if it has connected.
+        for i in range(30):
+            time.sleep(1)
+            if self.plugin.get_printer().is_operational():
+                return None, success_embed('Connected to printer')
+
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title='Failed to connect',
+                                 description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
+                                     ["prefix"]))
+
 
     def disconnect(self):
         if not self.plugin.get_printer().is_operational():
