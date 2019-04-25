@@ -168,7 +168,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         allowed_users = self._settings.get(['allowedusers'], merged=True)
         if allowed_users:
             self._settings.set(["allowedusers"], None, True)
-            self._settings.set(['permissions'], {'1': {'users': allowed_users, 'commands': '*'}}, True)
+            self._settings.set(['permissions'], {'1': {'users': allowed_users, 'commands': ''}}, True)
 
             self.send_message(None, "⚠️⚠️⚠️ Allowed users has been changed to a more granular system. "
                                     "Check the DiscordRemote settings and check that it is suitable⚠️⚠️⚠️")
