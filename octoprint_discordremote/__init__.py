@@ -133,7 +133,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             },
         }
         self.permissions = {
-            '1': {'users': '*', 'commands': '*'},
+            '1': {'users': '*', 'commands': ''},
             '2': {'users': '', 'commands': ''},
             '3': {'users': '', 'commands': ''},
             '4': {'users': '', 'commands': ''},

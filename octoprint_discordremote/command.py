@@ -44,15 +44,16 @@ class Command:
 
         prefix_len = len(self.plugin.get_settings().get(["prefix"]))
         command_string = parts[0][prefix_len:]
-        if user and not self.check_perms(command_string, user):
-            return None, error_embed(author=self.plugin.get_printer_name(),
-                                     title="Permission Denied")
         command = self.command_dict.get(command_string)
         if command is None:
             if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
                     parts[0].lower() == "help":
                 return self.help()
             return None, None
+
+        if user and not self.check_perms(command_string, user):
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Permission Denied")
 
         if command.get('params'):
             return command['cmd'](parts)

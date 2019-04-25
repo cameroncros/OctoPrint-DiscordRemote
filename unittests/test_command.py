@@ -53,7 +53,6 @@ class TestCommand(DiscordRemoteTestCase):
         else:
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
-
     def setUp(self):
         with mock.patch('octoprint_discordremote.DiscordRemotePlugin.discord'):
             self.plugin = DiscordRemotePlugin()
@@ -107,6 +106,21 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertEqual({'url': "attachment://%s" % image[0][0]}, embed['image'])
             self.assertIn(image[0], embeds[0].files)
 
+    def test_parse_command(self):
+        for command in ['help', '/asdf']:
+            self.command.help = mock.Mock()
+            self.command.help.return_value = None, None
+            snapshots, embeds = self.command.parse_command(command, user="Dummy")
+            self.assertIsNone(snapshots)
+            self.assertIsNone(embeds)
+            self.command.help.assert_called_once()
+
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = False
+        snapshots, embeds = self.command.parse_command("/print", user="Dummy")
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds, COLOR_ERROR, title="Permission Denied")
+        self.command.check_perms.assert_called_once()
 
     def test_parse_command_list(self):
         # Success
