@@ -15,6 +15,7 @@ License : MIT
 
 [megasaturnv](https://github.com/megasaturnv) for their assistance with configuring the access settings.
 
+[goscicki](https://github.com/goscicki) for their help testing the /gcode capability.
 
 ## Changelog
 

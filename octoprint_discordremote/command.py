@@ -1,9 +1,9 @@
 import collections
+import json
 import humanfriendly
 import re
 import time
 import requests
-from requests import ConnectionError
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
@@ -34,6 +34,8 @@ class Command:
                                      'description': "Mute notifications"}
         self.command_dict['unmute'] = {'cmd': self.unmute,
                                        'description': "Unmute notifications"}
+        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': 'GCODE lines, seperated by \';\'',
+                                      'description': "Send a set of GCODE commands directly to the printer"}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -213,7 +215,7 @@ class Command:
     def find_file(self, file_name):
         flat_filelist = self.get_flat_file_list()
         for file in flat_filelist:
-            if file_name in file.get('path'):
+            if file_name.upper() in file.get('path').upper():
                 return file
         return None
 
@@ -261,15 +263,18 @@ class Command:
                                          description='should be a number')
 
         self.plugin.get_printer().connect(port=port, baudrate=baudrate, profile=None)
-        # Sleep a while before checking if connected
-        time.sleep(10)
-        if not self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
-                                     title='Failed to connect',
-                                     description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
-                                         ["prefix"]))
 
-        return None, success_embed('Connected to printer')
+        # Check every second for 30 seconds, to see if it has connected.
+        for i in range(30):
+            time.sleep(1)
+            if self.plugin.get_printer().is_operational():
+                return None, success_embed('Connected to printer')
+
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title='Failed to connect',
+                                 description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
+                                     ["prefix"]))
+
 
     def disconnect(self):
         if not self.plugin.get_printer().is_operational():
@@ -391,3 +396,32 @@ class Command:
                ('*' in commands or command in commands):
                 return True
         return False
+
+    def gcode(self, params):
+        if not self.plugin.get_printer().is_operational():
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Printer not connected",
+                                     description="Connect to printer first.")
+
+        allowed_gcodes = self.plugin.get_settings().get(["allowed_gcode"])
+        allowed_gcodes = re.split('[^0-9a-zA-Z]+', allowed_gcodes.upper())
+        script = "".join(params[1:]).upper()
+        lines = script.split(';')
+        for line in lines:
+            first = line.strip().replace(' ', '').replace('\t', '')
+            first = re.findall('[mMgG][0-9]+', first)
+            if first is None or \
+                    len(first) == 0 or \
+                    first[0] not in allowed_gcodes:
+                return None, error_embed(author=self.plugin.get_printer_name(),
+                                         title="Invalid GCODE",
+                                         description="If you want to use \"%s\", add it to the allowed GCODEs" % line)
+        try:
+            self.plugin.get_printer().commands(lines)
+        except Exception as e:
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Failed to execute gcode",
+                                     description="Error: %s" % str(e))
+
+        return None, success_embed(author=self.plugin.get_printer_name(),
+                                   title="Sent script")

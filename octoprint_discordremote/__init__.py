@@ -150,7 +150,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self._logger.addHandler(hdlr)
-        self._logger.setLevel(logging.DEBUG)
 
         # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
@@ -193,7 +192,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'permissions': self.permissions,
             'allow_scripts': False,
             'script_before': '',
-            'script_after': ''
+            'script_after': '',
+            'allowed_gcode': ''
         }
 
     # Restricts some paths to some roles only
@@ -209,7 +209,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ["show_local_ip"],
                            ["show_external_ip"],
                            ['script_before'],
-                           ['script_after']])
+                           ['script_after'],
+                           ['allowed_gcode']])
 
     # AssetPlugin mixin
     def get_assets(self):
