@@ -160,7 +160,7 @@ class Command:
             description = ''
             title = ''
             try:
-                title = details['path'][1:]
+                title = details['path'].lstrip('/')
             except:
                 pass
 
@@ -191,7 +191,7 @@ class Command:
                 pass
 
             try:
-                url = "http://" + baseurl + "/downloads/files/" + details['location'] + "/" + details['path'][1:]
+                url = "http://" + baseurl + "/downloads/files/" + details['location'] + "/" + details['path'].lstrip('/')
                 description += 'Download Path: %s\n' % url
             except:
                 pass
