@@ -286,7 +286,7 @@ class TestCommand(DiscordRemoteTestCase):
                                     title="Failed to connect",
                                     description='try: "/connect [port] [baudrate]"')
         self.assertIsNone(snapshots)
-        self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
+        self.assertEqual(31, self.plugin.get_printer().is_operational.call_count)
         self.plugin.get_printer().connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
 
     @mock.patch("time.sleep")
