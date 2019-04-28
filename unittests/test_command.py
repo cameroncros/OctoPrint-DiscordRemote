@@ -108,6 +108,22 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertEqual({'url': "attachment://%s" % image[0][0]}, embed['image'])
             self.assertIn(image[0], embeds[0].files)
 
+    def test_parse_command(self):
+        for command in ['help', '/asdf']:
+            self.command.help = mock.Mock()
+            self.command.help.return_value = None, None
+            snapshots, embeds = self.command.parse_command(command, user="Dummy")
+            self.assertIsNone(snapshots)
+            self.assertIsNone(embeds)
+            self.command.help.assert_called_once()
+
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = False
+        snapshots, embeds = self.command.parse_command("/print", user="Dummy")
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds, COLOR_ERROR, title="Permission Denied")
+        self.command.check_perms.assert_called_once()
+
     def test_parse_command_list(self):
         # Success
         self.plugin.get_file_manager().list_files = mock.Mock()
@@ -412,15 +428,110 @@ class TestCommand(DiscordRemoteTestCase):
         mock_request_val.iter_content.return_value = b'1234'
         mock_get.return_value = mock_request_val
 
-        self.command.upload_file("filename", "http://mock.url")
+        # Upload, no user
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", None)
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File Received")
 
         self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
+        self.plugin.get_file_manager().path_on_disk.reset_mock()
         mock_get.assert_called_once_with("http://mock.url", stream=True)
+        mock_get.reset_mock()
 
         with open("./temp.file", 'rb') as f:
             self.assertEqual(b'1234', f.read())
 
         os.remove("./temp.file")
+
+        # Upload with user
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = True
+
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File Received")
+
+        self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
+        self.plugin.get_file_manager().path_on_disk.reset_mock()
+        mock_get.assert_called_once_with("http://mock.url", stream=True)
+        mock_get.reset_mock()
+
+        with open("./temp.file", 'rb') as f:
+            self.assertEqual(b'1234', f.read())
+
+        # Upload denied
+        self.command.check_perms.return_value = False
+
+        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Permission Denied")
+
+    def test_parse_array(self):
+        self.assertIsNone(self.command._parse_array(None))
+        self.assertIsNone(self.command._parse_array(1))
+
+        results = self.command._parse_array("*")
+        self.assertEqual(1, len(results))
+        self.assertIn("*", results)
+
+        results = self.command._parse_array("123")
+        self.assertEqual(1, len(results))
+        self.assertIn("123", results)
+
+        results = self.command._parse_array("123,456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+        results = self.command._parse_array("123 456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+        results = self.command._parse_array("123/456")
+        self.assertEqual(2, len(results))
+        self.assertIn("123", results)
+        self.assertIn("456", results)
+
+    def test_check_perms(self):
+        get_mock = mock.Mock()
+
+        settings_mock = mock.Mock()
+        settings_mock.get = get_mock
+
+        self.command.plugin.get_settings = mock.Mock()
+        self.command.plugin.get_settings.return_value = settings_mock
+
+        get_mock.return_value = {}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '*', 'commands': ''}}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '', 'commands': '*'}}
+        self.assertFalse(self.command.check_perms("notallowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '*', 'commands': '*'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '123', 'commands': '*'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.get.return_value = {'1': {'users': '*', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '123', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
+
+        get_mock.return_value = {'1': {'users': '456', 'commands': 'notallowed'},
+                                 '2': {'users': '123', 'commands': 'allowed'}}
+        self.assertTrue(self.command.check_perms("allowed", "123"))
 
     def test_gcode(self):
         # Printer disconnected

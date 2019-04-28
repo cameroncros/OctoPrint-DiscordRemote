@@ -41,16 +41,21 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string):
+    def parse_command(self, string, user=None):
         parts = re.split('\s+', string)
 
         prefix_len = len(self.plugin.get_settings().get(["prefix"]))
-        command = self.command_dict.get(parts[0][prefix_len:])
+        command_string = parts[0][prefix_len:]
+        command = self.command_dict.get(command_string)
         if command is None:
             if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
                     parts[0].lower() == "help":
                 return self.help()
             return None, None
+
+        if user and not self.check_perms(command_string, user):
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Permission Denied")
 
         if command.get('params'):
             return command['cmd'](parts)
@@ -347,11 +352,14 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Print resumed', snapshot=snapshot)
 
-    def upload_file(self, filename, url):
-        upload_file = self.plugin.get_file_manager().path_on_disk('local', filename)
+    def upload_file(self, filename, url, user):
+        if user and not self.check_perms('upload', user):
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Permission Denied")
+        upload_file_path = self.plugin.get_file_manager().path_on_disk('local', filename)
 
         r = requests.get(url, stream=True)
-        with open(upload_file, 'wb') as f:
+        with open(upload_file_path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
@@ -368,6 +376,26 @@ class Command:
         self.plugin.unmute()
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Notifications Unmuted')
+
+    @staticmethod
+    def _parse_array(string):
+        if string and isinstance(string, basestring):
+            return re.split("[^a-zA-Z0-9*]+", string)
+        return None
+
+    def check_perms(self, command, user):
+        permissions = self.plugin.get_settings().get(['permissions'], merged=True)
+
+        for rulename in permissions:
+            rule = permissions.get(rulename)
+            users = self._parse_array(rule['users'])
+            commands = self._parse_array(rule['commands'])
+            if users is None or commands is None:
+                continue
+            if ('*' in users or user in users) and \
+               ('*' in commands or command in commands):
+                return True
+        return False
 
     def gcode(self, params):
         if not self.plugin.get_printer().is_operational():
