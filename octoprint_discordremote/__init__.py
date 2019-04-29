@@ -457,14 +457,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord = Discord()
 
         out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                  title=message))
+                                                  title=message,
+                                                  snapshot=snapshot))
         if not out:
             self._logger.error("Failed to send message")
             return out
-
-        if snapshot:
-            out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                      snapshot=snapshot))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
