@@ -316,7 +316,8 @@ class Command:
                     continue
                 builder.add_field(title='Extruder Temp (%s)' % heater, text=temperatures[heater]['actual'], inline=True)
 
-            builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
+            if temperatures['bed']['actual']:
+                builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
 
             printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
