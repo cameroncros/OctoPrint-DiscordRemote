@@ -410,7 +410,7 @@ class Command:
         lines = script.split(';')
         for line in lines:
             first = line.strip().replace(' ', '').replace('\t', '')
-            first = re.findall('[mMgG][0-9]+', first)
+            first = re.findall('^[a-zA-Z]+[0-9]+', first)
             if first is None or \
                     len(first) == 0 or \
                     first[0] not in allowed_gcodes:
