@@ -42,16 +42,20 @@ class Command:
             command_plugin.setup(self, plugin)
 
     def parse_command(self, string, user=None):
-        parts = re.split('\s+', string)
+        prefix_str = self.plugin.get_settings().get(["prefix"])
+        prefix_len = len(prefix_str)
 
-        prefix_len = len(self.plugin.get_settings().get(["prefix"]))
+        parts = re.split(r'\s+', string)
+        if 'help' in parts[0].lower():
+            return self.help()
+
+        if prefix_str != parts[0][:prefix_len]:
+            return None, None
+
         command_string = parts[0][prefix_len:]
         command = self.command_dict.get(command_string)
         if command is None:
-            if parts[0][0] == self.plugin.get_settings().get(["prefix"]) or \
-                    parts[0].lower() == "help":
-                return self.help()
-            return None, None
+            return self.help()
 
         if user and not self.check_perms(command_string, user):
             return None, error_embed(author=self.plugin.get_printer_name(),
@@ -274,7 +278,6 @@ class Command:
                                  title='Failed to connect',
                                  description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
                                      ["prefix"]))
-
 
     def disconnect(self):
         if not self.plugin.get_printer().is_operational():
