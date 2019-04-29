@@ -193,14 +193,17 @@ class TestCommand(DiscordRemoteTestCase):
     def test_parse_command_unknown(self):
         self.command.help = mock.Mock()
 
-        self.command.parse_command("HELP")
+        # No prefix, cry for help
+        self.command.parse_command("HeLp")
         self.command.help.assert_called_once()
         self.command.help.reset_mock()
 
+        # Invalid command, return help
         self.command.parse_command("/?")
         self.command.help.assert_called_once()
         self.command.help.reset_mock()
 
+        # No/Wrong prefix
         snapshots, embeds = self.command.parse_command("not a command")
         self.assertIsNone(embeds)
         self.assertIsNone(snapshots)
