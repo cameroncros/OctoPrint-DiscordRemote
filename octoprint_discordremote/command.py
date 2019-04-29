@@ -46,7 +46,7 @@ class Command:
         parts = re.split('\s+', string)
 
         prefix_len = len(self.plugin.get_settings().get(["prefix"]))
-        if prefix_char == parts[0][0] or user="Dummy":
+        if prefix_char == parts[0][0] or user == "Dummy":
             command_string = parts[0][prefix_len:]
             command = self.command_dict.get(command_string)
             if command is None:
