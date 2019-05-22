@@ -200,7 +200,7 @@ class Discord:
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
-    def on_message(self, web_socket, message):
+    def on_message(self, message):
         js = json.loads(message)
 
         if js['op'] == HELLO:
@@ -403,11 +403,11 @@ class Discord:
                 self.queue_message(snapshot, embed)
                 return False
 
-    def on_error(self, ws, error):
+    def on_error(self, error):
         self.logger.error("Connection error: %s" % error)
         self.restart_event.set()
 
-    def on_close(self, ws):
+    def on_close(self):
         self.logger.info("WebSocket Closed")
         self.restart_event.set()
 
