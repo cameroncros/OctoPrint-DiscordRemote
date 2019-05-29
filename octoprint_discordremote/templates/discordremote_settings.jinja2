@@ -154,6 +154,11 @@
                 </div>
             </div>
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
+                <p>{{ _("If the minimum timeout has not passed when the next
+                    percentage trigger occurs, the notification will be swallowed") }}
+                </p>
+            </div>
+            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Minimum timeout between messages") }}</label>
                 <div class="controls">
                     <input type="number"
