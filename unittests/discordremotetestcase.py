@@ -1,5 +1,5 @@
 from unittest import TestCase
-
+import os
 
 class DiscordRemoteTestCase(TestCase):
     def assertBasicEmbed(self, embeds, title, description, color, author):
@@ -11,3 +11,6 @@ class DiscordRemoteTestCase(TestCase):
         self.assertIsNotNone(first_embed['timestamp'])
         self.assertEqual(0, len(first_embed['fields']))
         self.assertEqual(author, first_embed['author']['name'])
+
+    def _get_path(self, filename):
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)

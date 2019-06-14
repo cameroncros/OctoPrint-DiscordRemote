@@ -40,7 +40,6 @@ flatten_file_list = [
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
 
-
 class TestCommand(DiscordRemoteTestCase):
 
     def _mock_settings_get(self, *args, **kwards):
@@ -215,7 +214,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         # Success: Camera serving images
         self.plugin.get_snapshot = mock.Mock()
-        with open("unittests/test_pattern.png") as input_file:
+        with open(self._get_path("test_pattern.png")) as input_file:
             self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command("/snapshot")
@@ -365,7 +364,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.plugin.get_snapshot = mock.Mock()
 
-        with open("unittests/test_pattern.png") as input_file:
+        with open(self._get_path('test_pattern.png')) as input_file:
             self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command('/status')

@@ -21,7 +21,7 @@ class TestCommand(DiscordRemoteTestCase):
         plugin._settings.global_get_boolean = mock_global_get_boolean
         plugin._logger = mock.Mock()
 
-        with open("unittests/test_pattern.png", "rb") as f:
+        with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()
 
         with mock.patch("requests.get") as mock_requests_get:
@@ -43,11 +43,11 @@ class TestCommand(DiscordRemoteTestCase):
         plugin = DiscordRemotePlugin()
         plugin._settings = mock.Mock()
         plugin._settings.global_get = mock.Mock()
-        plugin._settings.global_get.return_value = "file://unittests/test_pattern.png"
+        plugin._settings.global_get.return_value = "file://" + self._get_path('test_pattern.png')
         plugin._settings.global_get_boolean = mock_global_get_boolean
         plugin._logger = mock.Mock()
 
-        with open("unittests/test_pattern.png", "rb") as f:
+        with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()
 
         snapshots = plugin.get_snapshot()
