@@ -1,5 +1,5 @@
 import collections
-import json
+import os
 import humanfriendly
 import re
 import time
@@ -38,6 +38,8 @@ class Command:
                                       'description': "Send a set of GCODE commands directly to the printer"}
         self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "filename",
                                         'description': "Get a gcode file and upload to discord."}
+        self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "filename",
+                                             'description': "Get a timelapse file and upload to discord."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -441,3 +443,17 @@ class Command:
         file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
 
         return upload_file(file_path)
+
+    def gettimelapse(self, params):
+        filename = " ".join(params[1:]).upper()
+        path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
+        path = os.path.abspath(path)
+
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                file_path = os.path.join(root, name)
+                if filename in file_path.upper():
+                    return upload_file(file_path)
+
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to find file matching the name given")
