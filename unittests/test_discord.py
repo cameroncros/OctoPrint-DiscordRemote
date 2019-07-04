@@ -8,7 +8,7 @@ import yaml
 from mock import mock
 
 from octoprint_discordremote.discord import Discord
-from octoprint_discordremote.embedbuilder import EmbedBuilder
+from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
@@ -96,6 +96,14 @@ class TestSend(DiscordRemoteTestCase):
         calls = [mock.call(snapshot=mock_snapshot),
                  mock.call(embed=mock_embed)]
         self.discord._dispatch_message.assert_has_calls(calls=calls)
+
+        large_file_path = self._get_path("large_file_temp")
+        with open(large_file_path, 'w') as f:
+            for i in range(0, DISCORD_MAX_FILE_SIZE):
+                f.write(str(i))
+
+        embeds = upload_file(large_file_path)
+        self.discord.send(embeds=embeds)
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")
