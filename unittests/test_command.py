@@ -421,7 +421,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_printer().resume_print.assert_called_once()
 
     @mock.patch("requests.get")
-    def test_upload_file(self, mock_get):
+    def test_download_file(self, mock_get):
         self.plugin.get_file_manager().path_on_disk = mock.Mock()
         self.plugin.get_file_manager().path_on_disk.return_value = "./temp.file"
 
@@ -431,7 +431,7 @@ class TestCommand(DiscordRemoteTestCase):
         mock_get.return_value = mock_request_val
 
         # Upload, no user
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", None)
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", None)
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -451,7 +451,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.command.check_perms = mock.Mock()
         self.command.check_perms.return_value = True
 
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -468,7 +468,7 @@ class TestCommand(DiscordRemoteTestCase):
         # Upload denied
         self.command.check_perms.return_value = False
 
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,

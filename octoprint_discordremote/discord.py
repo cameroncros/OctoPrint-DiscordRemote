@@ -253,7 +253,7 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                snapshots, embeds = self.command.upload_file(filename, url, user)
+                snapshots, embeds = self.command.download_file(filename, url, user)
                 self.send(embeds=embeds)
 
         if 'content' in data and len(data['content']) > 0:

@@ -8,7 +8,7 @@ import requests
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from command_plugins import plugin_list
-from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed
+from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
 class Command:
@@ -36,6 +36,8 @@ class Command:
                                        'description': "Unmute notifications"}
         self.command_dict['gcode'] = {'cmd': self.gcode, 'params': 'GCODE lines, seperated by \';\'',
                                       'description': "Send a set of GCODE commands directly to the printer"}
+        self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "filename",
+                                        'description': "Get a gcode file and upload to discord."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -356,7 +358,7 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='Print resumed', snapshot=snapshot)
 
-    def upload_file(self, filename, url, user):
+    def download_file(self, filename, url, user):
         if user and not self.check_perms('upload', user):
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Permission Denied")
@@ -429,3 +431,13 @@ class Command:
 
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")
+
+    def getfile(self, params):
+        filename = " ".join(params[1:])
+        foundfile = self.find_file(filename)
+        if foundfile is None:
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Failed to find file matching the name given")
+        file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
+
+        return upload_file(file_path)
