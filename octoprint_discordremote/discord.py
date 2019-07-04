@@ -53,6 +53,7 @@ class Discord:
     command = None  # Command parser
     status_callback = None  # The callback to use when the status changes.
     error_counter = 0  # The number of errors that have occured.
+    me = None  # The Bots ID.
 
     # Threads:
     manager_thread = None
@@ -226,6 +227,7 @@ class Discord:
             return
 
         if dispatch_type == "READY":
+            self.me = data['user']['id']
             return self.handle_ready(js)
 
         if dispatch_type == "RESUMED":
@@ -243,6 +245,9 @@ class Discord:
             return
 
         user = data['author']['id']
+        if self.me != None and user == self.me:
+            # Don't respond to ourself.
+            return
 
         if 'attachments' in data:
             for upload in data['attachments']:
