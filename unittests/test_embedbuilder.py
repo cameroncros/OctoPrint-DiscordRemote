@@ -14,14 +14,13 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
 
     def setUp(self):
         if "NET_TEST" in os.environ:
-            config_file = "config.yaml"
+            config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
-                    config = yaml.load(config.read())
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord = Discord()
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
-                                               allowed_users="",
                                                logger=logging.getLogger(),
                                                command=None)
                 time.sleep(5)

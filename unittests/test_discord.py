@@ -42,13 +42,12 @@ class TestSend(DiscordRemoteTestCase):
     def setUp(self):
         self.discord = Discord()
         if "NET_TEST" in os.environ:
-            config_file = "config.yaml"
+            config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
-                    config = yaml.load(config.read())
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
-                                               allowed_users="",
                                                logger=TestLogger(),
                                                command=None)
                 time.sleep(5)
@@ -79,7 +78,7 @@ class TestSend(DiscordRemoteTestCase):
 
         self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
 
-        with open("unittests/test_pattern.png", "rb") as f:
+        with open(self._get_path("test_pattern.png"), "rb") as f:
             builder.set_description("With snapshot")
             builder.set_image(("snapshot.png", f))
             self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
