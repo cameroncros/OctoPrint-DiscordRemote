@@ -4,7 +4,6 @@ import os
 
 from octoprint.printer import InvalidFileType, InvalidFileLocation
 
-import embedbuilder
 from octoprint_discordremote import Command, DiscordRemotePlugin
 from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
 from unittests.discordremotetestcase import DiscordRemoteTestCase
