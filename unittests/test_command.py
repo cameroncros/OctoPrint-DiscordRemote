@@ -4,6 +4,7 @@ import os
 
 from octoprint.printer import InvalidFileType, InvalidFileLocation
 
+import embedbuilder
 from octoprint_discordremote import Command, DiscordRemotePlugin
 from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
 from unittests.discordremotetestcase import DiscordRemoteTestCase
@@ -576,3 +577,39 @@ class TestCommand(DiscordRemoteTestCase):
                                     COLOR_SUCCESS,
                                     title="Sent script")
         self.plugin.get_printer().commands.assert_called_once_with(['M0'])
+
+    @mock.patch('octoprint_discordremote.command.upload_file')
+    def test_parse_command_getfile(self, mock_upload):
+        self.command.find_file = mock.Mock()
+        self.command.find_file.return_value = None
+        snapshots, embeds = self.command.getfile(["/getfile", "test.gcode"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Failed to find file matching the name given")
+
+        self.command.find_file.return_value = {'location': None, 'path': None}
+        mock_upload.return_value = True, True
+        self.plugin.get_file_manager = mock.Mock()
+        mock_file_manager = mock.Mock()
+        self.plugin.get_file_manager.return_value = mock_file_manager
+        snapshots, embeds = self.command.getfile(["/getfile", "test.gcode"])
+        self.assertTrue(snapshots)
+        self.assertTrue(embeds)
+
+    @mock.patch('os.walk')
+    @mock.patch('octoprint_discordremote.command.upload_file')
+    def test_parse_command_gettimelapse(self, mock_upload, mock_oswalk):
+        self.plugin._data_folder = ''
+        mock_oswalk.return_value = [('', [], [])]
+        snapshots, embeds = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Failed to find file matching the name given")
+
+        mock_oswalk.return_value = [('', [], ['test.gcode'])]
+        mock_upload.return_value = True, True
+        snapshots, embeds = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
+        self.assertTrue(snapshots)
+        self.assertTrue(embeds)
