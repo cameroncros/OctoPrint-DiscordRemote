@@ -82,7 +82,6 @@ Here you can customize every message handled by DiscordRemote.
 Messages are regular Discord messages, which means you can use :
 - `**markdown**` format (see [Discord Documentation](https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-))
 - `:emoji:` shortcuts to display emojis
-- `@mentions` to notify someone
 
 Some events also support variables, here is a basic list :
 **Common** :
