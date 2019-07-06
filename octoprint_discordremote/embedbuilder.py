@@ -49,12 +49,12 @@ def upload_file(path, author=None):
     file_size = file_stat.st_size
 
     if file_size < DISCORD_MAX_FILE_SIZE:
-        file = (file_name, open(path))
+        fl = (file_name, open(path))
         embeds = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
             .get_embeds()
-        return [file], embeds
+        return [fl], embeds
 
     else:
         with zipfile.ZipFile("temp.zip", 'w') as zip_file:
