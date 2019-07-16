@@ -1,0 +1,22 @@
+/* TODO: Have your plugin's CSS files generated to here. */
+#settings_plugin_discordremote .discordremote_message{
+    background: #F7F7F7;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#settings_plugin_discordremote .discordremote_message h4{
+    margin: 0 0 10px;
+}
+#settings_plugin_discordremote .discordremote_message h4 *{
+    vertical-align: top;
+}
+
+#settings_plugin_discordremote .discordremote_message .control-group{
+    margin-bottom: 3px;
+}
+
+#discordremote_indicator.connected i{color:#00FF00}
+#discordremote_indicator.connecting i{color:#FF8C00}
+#discordremote_indicator.disconnected i{color:grey}
