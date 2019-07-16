@@ -40,7 +40,6 @@ flatten_file_list = [
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
 
-
 class TestCommand(DiscordRemoteTestCase):
 
     def _mock_settings_get(self, *args, **kwards):
@@ -215,7 +214,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         # Success: Camera serving images
         self.plugin.get_snapshot = mock.Mock()
-        with open("unittests/test_pattern.png") as input_file:
+        with open(self._get_path("test_pattern.png")) as input_file:
             self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command("/snapshot")
@@ -365,7 +364,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.plugin.get_snapshot = mock.Mock()
 
-        with open("unittests/test_pattern.png") as input_file:
+        with open(self._get_path('test_pattern.png')) as input_file:
             self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
 
             snapshots, embeds = self.command.parse_command('/status')
@@ -422,7 +421,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_printer().resume_print.assert_called_once()
 
     @mock.patch("requests.get")
-    def test_upload_file(self, mock_get):
+    def test_download_file(self, mock_get):
         self.plugin.get_file_manager().path_on_disk = mock.Mock()
         self.plugin.get_file_manager().path_on_disk.return_value = "./temp.file"
 
@@ -432,7 +431,7 @@ class TestCommand(DiscordRemoteTestCase):
         mock_get.return_value = mock_request_val
 
         # Upload, no user
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", None)
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", None)
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -452,7 +451,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.command.check_perms = mock.Mock()
         self.command.check_perms.return_value = True
 
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
@@ -469,7 +468,7 @@ class TestCommand(DiscordRemoteTestCase):
         # Upload denied
         self.command.check_perms.return_value = False
 
-        snapshot, embeds = self.command.upload_file("filename", "http://mock.url", "1234")
+        snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
@@ -577,3 +576,39 @@ class TestCommand(DiscordRemoteTestCase):
                                     COLOR_SUCCESS,
                                     title="Sent script")
         self.plugin.get_printer().commands.assert_called_once_with(['M0'])
+
+    @mock.patch('octoprint_discordremote.command.upload_file')
+    def test_parse_command_getfile(self, mock_upload):
+        self.command.find_file = mock.Mock()
+        self.command.find_file.return_value = None
+        snapshots, embeds = self.command.getfile(["/getfile", "test.gcode"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Failed to find file matching the name given")
+
+        self.command.find_file.return_value = {'location': None, 'path': None}
+        mock_upload.return_value = True, True
+        self.plugin.get_file_manager = mock.Mock()
+        mock_file_manager = mock.Mock()
+        self.plugin.get_file_manager.return_value = mock_file_manager
+        snapshots, embeds = self.command.getfile(["/getfile", "test.gcode"])
+        self.assertTrue(snapshots)
+        self.assertTrue(embeds)
+
+    @mock.patch('os.walk')
+    @mock.patch('octoprint_discordremote.command.upload_file')
+    def test_parse_command_gettimelapse(self, mock_upload, mock_oswalk):
+        self.plugin._data_folder = ''
+        mock_oswalk.return_value = [('', [], [])]
+        snapshots, embeds = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
+        self.assertIsNone(snapshots)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Failed to find file matching the name given")
+
+        mock_oswalk.return_value = [('', [], ['test.gcode'])]
+        mock_upload.return_value = True, True
+        snapshots, embeds = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
+        self.assertTrue(snapshots)
+        self.assertTrue(embeds)

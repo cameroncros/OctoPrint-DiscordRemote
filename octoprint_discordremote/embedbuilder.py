@@ -1,4 +1,10 @@
 import datetime
+import io
+import math
+import zipfile
+import os
+
+DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
 COLOR_SUCCESS = 0x00AE86
 COLOR_ERROR = 0xE84A4A
@@ -36,6 +42,49 @@ def error_embed(author, title=None, description=None, snapshot=None):
 
 def info_embed(author, title=None, description=None, snapshot=None):
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
+
+def upload_file(path, author=None):
+    file_name = os.path.basename(path)
+    file_stat = os.stat(path)
+    file_size = file_stat.st_size
+
+    if file_size < DISCORD_MAX_FILE_SIZE:
+        fl = (file_name, open(path))
+        embeds = EmbedBuilder() \
+            .set_author(author) \
+            .set_title("Uploaded %s" % file_name) \
+            .get_embeds()
+        return [fl], embeds
+
+    else:
+        with zipfile.ZipFile("temp.zip", 'w') as zip_file:
+            zip_file.write(path, file_name)
+
+        # Get the compressed file size
+        file_stat = os.stat("temp.zip")
+        file_size = file_stat.st_size
+        num_parts = int(math.ceil(float(file_size) / DISCORD_MAX_FILE_SIZE))
+
+        embedbuilder = EmbedBuilder() \
+            .set_author(author) \
+            .set_title("Uploaded %s in %i parts" % (file_name, num_parts))
+
+        files = []
+        with open("temp.zip", 'rb') as zip_file:
+            i = 1
+            while True:
+                part_name = "%s.zip.%.03i" % (file_name, i)
+                part_file = io.BytesIO()
+                data = zip_file.read(DISCORD_MAX_FILE_SIZE)
+                if len(data) == 0:
+                    break
+                part_file.write(data)
+                part_file.seek(0)
+                files.append((part_name, part_file))
+                i += 1
+
+        os.remove("temp.zip")
+        return files, embedbuilder.get_embeds()
 
 
 class EmbedBuilder:

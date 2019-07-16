@@ -8,7 +8,7 @@ import yaml
 from mock import mock
 
 from octoprint_discordremote.discord import Discord
-from octoprint_discordremote.embedbuilder import EmbedBuilder
+from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
@@ -42,13 +42,12 @@ class TestSend(DiscordRemoteTestCase):
     def setUp(self):
         self.discord = Discord()
         if "NET_TEST" in os.environ:
-            config_file = "config.yaml"
+            config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
-                    config = yaml.load(config.read())
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
-                                               allowed_users="",
                                                logger=TestLogger(),
                                                command=None)
                 time.sleep(5)
@@ -79,7 +78,7 @@ class TestSend(DiscordRemoteTestCase):
 
         self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
 
-        with open("unittests/test_pattern.png", "rb") as f:
+        with open(self._get_path("test_pattern.png"), "rb") as f:
             builder.set_description("With snapshot")
             builder.set_image(("snapshot.png", f))
             self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
@@ -97,6 +96,14 @@ class TestSend(DiscordRemoteTestCase):
         calls = [mock.call(snapshot=mock_snapshot),
                  mock.call(embed=mock_embed)]
         self.discord._dispatch_message.assert_has_calls(calls=calls)
+
+        large_file_path = self._get_path("large_file_temp")
+        with open(large_file_path, 'w') as f:
+            for i in range(0, DISCORD_MAX_FILE_SIZE):
+                f.write(str(i))
+
+        embeds = upload_file(large_file_path)
+        self.discord.send(embeds=embeds)
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")

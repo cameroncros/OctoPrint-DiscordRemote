@@ -2,11 +2,12 @@ import time
 
 import logging
 import os
+import zipfile
 import yaml
 
 from octoprint_discordremote import Discord
 from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
-    info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR
+    info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
@@ -14,14 +15,13 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
 
     def setUp(self):
         if "NET_TEST" in os.environ:
-            config_file = "config.yaml"
+            config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
-                    config = yaml.load(config.read())
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord = Discord()
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
-                                               allowed_users="",
                                                logger=logging.getLogger(),
                                                command=None)
                 time.sleep(5)
@@ -98,3 +98,56 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
+
+    def test_upload_file(self):
+        small_file_path = self._get_path("test_pattern.png")
+        files, embeds = upload_file(small_file_path, "Author")
+        if "NET_TEST" in os.environ:
+            self.assertTrue(self.discord.send(embeds=embeds, snapshots=files))
+        self.assertIsNotNone(embeds)
+        self.assertBasicEmbed(embeds,
+                              author="Author",
+                              color=COLOR_INFO,
+                              title="Uploaded test_pattern.png",
+                              description=None)
+        self.assertEqual(1, len(files))
+        self.assertEqual(files[0][0], "test_pattern.png")
+        with open(small_file_path) as f:
+            files[0][1].seek(0)
+            self.assertEquals(f.read(), files[0][1].read())
+
+        # create large file, that requires splitting
+        large_file_path = self._get_path("large_file_temp")
+        with open(large_file_path, 'w') as f:
+            for i in range(0, DISCORD_MAX_FILE_SIZE):
+                f.write(str(i))
+
+        files, embeds = upload_file(large_file_path, author="Author")
+        if "NET_TEST" in os.environ:
+            self.assertTrue(self.discord.send(embeds=embeds, snapshots=files))
+        self.assertIsNotNone(embeds)
+        self.assertEqual(1, len(embeds))
+        self.assertEqual(7, len(files))
+        self.assertBasicEmbed(embeds,
+                              author="Author",
+                              color=COLOR_INFO,
+                              title="Uploaded large_file_temp in 7 parts",
+                              description=None)
+
+        with open("rebuilt.zip", 'w') as f:
+            i = 1
+            for fl in files:
+                self.assertEquals("large_file_temp.zip.%.03i" % i, fl[0])
+                fl[1].seek(0)
+                data = fl[1].read()
+                self.assertGreater(len(data), 0)
+                self.assertLessEqual(len(data), DISCORD_MAX_FILE_SIZE)
+                f.write(data)
+                i += 1
+
+        with zipfile.ZipFile("rebuilt.zip", 'r') as zip_file:
+            with open(large_file_path, 'r') as f:
+                self.assertEquals(f.read(), zip_file.read("large_file_temp"))
+
+        os.remove("rebuilt.zip")
+        os.remove(large_file_path)
