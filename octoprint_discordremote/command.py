@@ -16,7 +16,7 @@ class Command:
         assert plugin
         self.plugin = plugin
         self.command_dict = collections.OrderedDict()
-        self.command_dict['connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]",
+        self.command_dict['connect'] = {'cmd': self.connect, 'params': "{port} {baudrate}",
                                         'description': "Connect to a printer."}
         self.command_dict['disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
         self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
@@ -34,11 +34,11 @@ class Command:
                                      'description': "Mute notifications"}
         self.command_dict['unmute'] = {'cmd': self.unmute,
                                        'description': "Unmute notifications"}
-        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': 'GCODE lines, seperated by \';\'',
+        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': '{GCODE lines, seperated by \';\'}',
                                       'description': "Send a set of GCODE commands directly to the printer"}
-        self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "filename",
+        self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "{filename}",
                                         'description': "Get a gcode file and upload to discord."}
-        self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "filename",
+        self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "{filename}",
                                              'description': "Get a timelapse file and upload to discord."}
 
         # Load plugins
