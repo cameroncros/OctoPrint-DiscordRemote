@@ -42,6 +42,8 @@ class SystemCommands(AbstractPlugin):
         data = json.loads(response.content)
         for source in data:
             for comm in data[source]:
+                if 'name' not in comm:
+                    continue
                 comm_name = comm['name']
                 comm_description = "%s/%s" % (source, comm['action'])
                 if 'command' in comm:
