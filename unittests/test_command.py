@@ -133,7 +133,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += str(embed)
+            message += unicode(embed)
         print(message)
 
         self._validate_embeds(embeds, COLOR_INFO)
@@ -235,7 +235,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += str(embed)
+            message += unicode(embed)
         print(message)
         for command, details in self.command.command_dict.items():
             self.assertIn(command, message)
@@ -374,7 +374,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += str(embed)
+            message += unicode(embed)
         print(message)
 
         expected_terms = ['Status', 'Operational', 'Current Z',

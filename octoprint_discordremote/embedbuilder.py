@@ -134,18 +134,18 @@ class EmbedBuilder:
         return self
 
     def add_field(self, title, text, inline=False):
-        if title is None or len(str(title)) == 0:
+        if title is None or len(unicode(title)) == 0:
             title = "DEVERROR: Passed an invalid title"
-        if text is None or len(str(text)) == 0:
+        if text is None or len(unicode(text)) == 0:
             text = "DEVERROR: Passed an invalid text"
 
-        if len(str(title)) > MAX_TITLE:
+        if len(unicode(title)) > MAX_TITLE:
             title = title[0:MAX_TITLE - 3] + "..."
-        if len(str(text)) > MAX_VALUE:
+        if len(unicode(text)) > MAX_VALUE:
             text = text[0:MAX_VALUE - 3] + "..."
 
-        while not self.embeds[-1].add_field({'name': str(title),
-                                             'value': str(text),
+        while not self.embeds[-1].add_field({'name': unicode(title),
+                                             'value': unicode(text),
                                              'inline': inline}):
             self.embeds.append(Embed())
 
@@ -174,7 +174,7 @@ class EmbedBuilder:
     def __str__(self):
         string = ""
         for embed in self.get_embeds():
-            string += str(embed)
+            string += unicode(embed)
 
 
 class Embed:

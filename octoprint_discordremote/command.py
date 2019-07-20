@@ -429,7 +429,7 @@ class Command:
         except Exception as e:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to execute gcode",
-                                     description="Error: %s" % str(e))
+                                     description="Error: %s" % unicode(e))
 
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")
