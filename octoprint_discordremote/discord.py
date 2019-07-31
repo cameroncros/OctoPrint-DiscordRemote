@@ -195,7 +195,7 @@ class Discord:
                     self.heartbeat_sent += 1
                     self.logger.info("Heartbeat: %s" % js)
                 except Exception as exc:
-                    self.logger.error("Exception caught: %s", str(exc))
+                    self.logger.error("Exception caught: %s", unicode(exc))
 
             for i in range(self.heartbeat_interval / 1000):
                 if not self.shutdown_event.is_set():
@@ -433,4 +433,4 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        return str(message).replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
+        return unicode(message).replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")

@@ -278,7 +278,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         if event == "PrintDone":
             self.stop_periodic_reporting()
-            payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
+            payload['time_formatted'] = unicode(timedelta(seconds=int(payload["time"])))
             return self.notify_event("printing_done", payload)
 
         return True
@@ -399,7 +399,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_external_ip_address(self):
         if self.get_settings().get(['show_external_ip'], merged=True):
-            return str(ipgetter.myip())
+            return unicode(ipgetter.myip())
         else:
             return "External IP disabled"
 

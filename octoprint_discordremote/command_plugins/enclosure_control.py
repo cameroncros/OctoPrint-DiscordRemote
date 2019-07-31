@@ -56,7 +56,7 @@ class EnclosureControl(AbstractPlugin):
                                        title="Turned ID %i on." % int(params[1]))
         return None, error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i on." % int(params[1]),
-                                 description=str(result.content))
+                                 description=unicode(result.content))
 
     def off(self, params):
         if len(params) > 2:
@@ -78,7 +78,7 @@ class EnclosureControl(AbstractPlugin):
                                        title="Turned ID %i off." % int(params[1]))
         return None, error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i off." % int(params[1]),
-                                 description=str(result.content))
+                                 description=unicode(result.content))
 
     def enc_status(self):
         result = self.api_command("state", -1)
@@ -89,8 +89,8 @@ class EnclosureControl(AbstractPlugin):
         builder.set_author(name=self.plugin.get_printer_name())
 
         for file in data:
-            title = ("ID: %s" % str(file['index_id']))
-            description = str(file['status'])
+            title = ("ID: %s" % unicode(file['index_id']))
+            description = unicode(file['status'])
 
             builder.add_field(title=title, text=description)
 

@@ -120,7 +120,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         large_file_path = self._get_path("large_file_temp")
         with open(large_file_path, 'w') as f:
             for i in range(0, DISCORD_MAX_FILE_SIZE):
-                f.write(str(i))
+                f.write(unicode(i))
 
         files, embeds = upload_file(large_file_path, author="Author")
         if "NET_TEST" in os.environ:
