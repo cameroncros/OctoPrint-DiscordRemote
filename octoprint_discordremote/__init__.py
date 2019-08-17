@@ -603,6 +603,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 time.sleep(1)
                 if self.periodic_signal.is_set():
                     return
+                if not self._printer.is_printing():
+                    return
 
             self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
 
