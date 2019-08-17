@@ -1,5 +1,6 @@
 import collections
 import os
+import urllib
 import humanfriendly
 import re
 import time
@@ -71,45 +72,35 @@ class Command:
             return command['cmd']()
 
     def timelapse(self):
+        path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
+        path = os.path.abspath(path)
 
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        builder = EmbedBuilder()
+        builder.set_title('Files and Details')
+        builder.set_description('Download with /gettimelapse {filename}')
+        builder.set_author(name=self.plugin.get_printer_name())
+
         baseurl = self.plugin.get_settings().get(["baseurl"])
         port = self.plugin.get_port()
         if baseurl is None or baseurl == "":
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
-        header = {'X-Api-Key': api_key}
 
-        builder = EmbedBuilder()
-        builder.set_title('Files and Details')
-        builder.set_author(name=self.plugin.get_printer_name())
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                try:
+                    file_path = os.path.join(root, name)
 
-        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
-        data = response.json()
+                    title = os.path.basename(file_path)
 
-        for video in data['files']:
-            description = ''
-            title = ''
-            try:
-                title = video['name']
-            except:
-                pass
+                    description = ''
+                    description += 'Size: %s\n' % os.path.getsize(file_path)
+                    description += 'Date of Creation: %s\n' % time.ctime(os.path.getctime(file_path))
+                    description += 'Download Path: %s\n' %\
+                                   ("http://" + baseurl + "/downloads/timelapse/" + urllib.quote(title))
 
-            try:
-                description += 'Size: %s\n' % video['size']
-            except:
-                pass
-
-            try:
-                description += 'Date of Creation: %s\n' % video['date']
-            except:
-                pass
-
-            try:
-                description += 'Download Path: %s\n' % ("http://" + baseurl + video['url'])
-            except:
-                pass
-
-            builder.add_field(title=title, text=description)
+                    builder.add_field(title=title, text=description)
+                except Exception as e:
+                    pass
 
         return None, builder.get_embeds()
 
