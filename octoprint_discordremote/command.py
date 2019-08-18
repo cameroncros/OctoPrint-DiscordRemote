@@ -312,6 +312,8 @@ class Command:
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
+                if temperatures[heater]['actual'] is None or len(temperatures[heater]['actual']) == 0:
+                    continue
                 builder.add_field(title='Extruder Temp (%s)' % heater, text=temperatures[heater]['actual'], inline=True)
 
             if temperatures['bed']['actual']:
