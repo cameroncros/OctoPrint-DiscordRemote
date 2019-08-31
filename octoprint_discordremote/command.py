@@ -51,16 +51,12 @@ class Command:
         prefix_len = len(prefix_str)
 
         parts = re.split(r'\s+', string)
-        if 'help' in parts[0].lower():
-            return self.help()
 
-        if prefix_str != parts[0][:prefix_len]:
-            return None, None
+        command_string = "help"
+        if len(parts[0]) > len(prefix_str) and prefix_str == parts[0][:prefix_len]:
+            command_string = parts[0][prefix_len:]
 
-        command_string = parts[0][prefix_len:]
-        command = self.command_dict.get(command_string)
-        if command is None:
-            return self.help()
+        command = self.command_dict.get(command_string, {'cmd': self.help})
 
         if user and not self.check_perms(command_string, user):
             return None, error_embed(author=self.plugin.get_printer_name(),

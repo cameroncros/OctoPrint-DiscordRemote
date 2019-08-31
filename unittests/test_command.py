@@ -108,15 +108,23 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertIn(image[0], embeds[0].files)
 
     def test_parse_command(self):
-        for command in ['help', '/asdf']:
-            self.command.help = mock.Mock()
-            self.command.help.return_value = None, None
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = True
+        self.command.help = mock.Mock()
+        self.command.help.return_value = None, None
+
+        self.command.command_dict['help'] = {'cmd': self.command.help, 'description': "Mock help."}
+
+        for command in ['help', '/asdf', 'asdf', "", "/"]:
+            self.command.check_perms.reset_mock()
+            self.command.help.reset_mock()
             snapshots, embeds = self.command.parse_command(command, user="Dummy")
             self.assertIsNone(snapshots)
             self.assertIsNone(embeds)
             self.command.help.assert_called_once()
+            self.command.check_perms.assert_called_once()
 
-        self.command.check_perms = mock.Mock()
+        self.command.check_perms.reset_mock()
         self.command.check_perms.return_value = False
         snapshots, embeds = self.command.parse_command("/print", user="Dummy")
         self.assertIsNone(snapshots)
@@ -188,25 +196,6 @@ class TestCommand(DiscordRemoteTestCase):
                                     title='Successfully started print',
                                     description='/temp/path')
         self.assertIsNone(snapshots)
-
-    def test_parse_command_unknown(self):
-        self.command.help = mock.Mock()
-
-        # No prefix, cry for help
-        self.command.parse_command("HeLp")
-        self.command.help.assert_called_once()
-        self.command.help.reset_mock()
-
-        # Invalid command, return help
-        self.command.parse_command("/?")
-        self.command.help.assert_called_once()
-        self.command.help.reset_mock()
-
-        # No/Wrong prefix
-        snapshots, embeds = self.command.parse_command("not a command")
-        self.assertIsNone(embeds)
-        self.assertIsNone(snapshots)
-        self.command.help.assert_not_called()
 
     def test_parse_command_snapshot(self):
         # Fail: Camera not working.
