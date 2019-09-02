@@ -9,7 +9,7 @@ from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 file_list = {'local': {
-    u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530L, 'type': 'folder', 'typePath': ['folder'],
+    u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530, 'type': 'folder', 'typePath': ['folder'],
                  'display': u'folder1',
                  'children': {
                      u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
@@ -18,7 +18,7 @@ file_list = {'local': {
                                               'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                              'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822075,
                                      'path': u'folder1/test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
-                                     'size': 6530L}
+                                     'size': 6530}
                  }},
     u'test2.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
                     'typePath': ['machinecode', 'gcode'], 'analysis': {
@@ -26,16 +26,16 @@ file_list = {'local': {
                              'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
             'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822021,
                     'path': u'test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
-                    'size': 6530L}}}
+                    'size': 6530}}}
 
 flatten_file_list = [
     {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822075,
-     'path': u'folder1/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'path': u'folder1/test.gcode', 'size': 6530, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'},
     {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822021,
-     'path': u'/test2.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'path': u'/test2.gcode', 'size': 6530, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
