@@ -150,7 +150,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
 
         self._validate_embeds(embeds, COLOR_INFO)
@@ -231,9 +231,9 @@ class TestCommand(DiscordRemoteTestCase):
         # Success: Printed help
         snapshots, embeds = self.command.parse_command("/help")
 
-        message = ""
+        message = u""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
         for command, details in self.command.command_dict.items():
             self.assertIn(command, message)
@@ -372,7 +372,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
 
         expected_terms = ['Status', 'Operational', 'Current Z',
@@ -425,7 +425,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         mock_request_val = mock.Mock()
         mock_request_val.iter_content = mock.Mock()
-        mock_request_val.iter_content.return_value = b'1234'
+        mock_request_val.iter_content.return_value = [b'1234']
         mock_get.return_value = mock_request_val
 
         # Upload, no user

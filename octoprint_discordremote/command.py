@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import collections
 import os
 import urllib
@@ -8,7 +10,7 @@ import requests
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
-from command_plugins import plugin_list
+from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
@@ -379,9 +381,11 @@ class Command:
 
     @staticmethod
     def _parse_array(string):
-        if string and isinstance(string, basestring):
+        # noinspection PyBroadException
+        try:
             return re.split("[^a-zA-Z0-9*]+", string)
-        return None
+        except:
+            return None
 
     def check_perms(self, command, user):
         permissions = self.plugin.get_settings().get(['permissions'], merged=True)
@@ -421,7 +425,7 @@ class Command:
         except Exception as e:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to execute gcode",
-                                     description="Error: %s" % unicode(e))
+                                     description="Error: %s" % e)
 
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")

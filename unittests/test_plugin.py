@@ -6,10 +6,10 @@ from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 def mock_global_get_boolean(array):
     return {
-        unicode(['webcam', 'flipV']): False,
-        unicode(['webcam', 'flipH']): False,
-        unicode(['webcam', 'rotate90']): False,
-    }[unicode(array)]
+        u'webcam_flipV': False,
+        u'webcam_flipH': False,
+        u'webcam_rotate90': False,
+    }[u"_".join(array)]
 
 
 class TestCommand(DiscordRemoteTestCase):

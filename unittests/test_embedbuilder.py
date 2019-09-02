@@ -3,6 +3,7 @@ import time
 import logging
 import os
 import zipfile
+
 import yaml
 
 from octoprint_discordremote import Discord
@@ -99,6 +100,17 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
 
+    def test_unicode_embed(self):
+        teststr = "٩(-̮̮̃-̃)۶ ٩(●̮̮̃•̃)۶ ٩(͡๏̯͡๏)۶ ٩(-̮̮̃•̃)."
+        embed_builder = EmbedBuilder()
+        embed_builder.set_title(teststr)
+        embed_builder.set_description(teststr)
+        embed_builder.set_author(teststr)
+        embed_builder.add_field(teststr, teststr)
+        embeds = embed_builder.get_embeds()
+
+        self.assertIsNotNone(embeds)
+
     def test_upload_file(self):
         small_file_path = self._get_path("test_pattern.png")
         files, embeds = upload_file(small_file_path, "Author")
@@ -112,15 +124,19 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                               description=None)
         self.assertEqual(1, len(files))
         self.assertEqual(files[0][0], "test_pattern.png")
-        with open(small_file_path) as f:
+        with open(small_file_path, 'rb') as f:
             files[0][1].seek(0)
-            self.assertEquals(f.read(), files[0][1].read())
+            self.assertEqual(f.read(), files[0][1].read())
 
         # create large file, that requires splitting
         large_file_path = self._get_path("large_file_temp")
-        with open(large_file_path, 'w') as f:
-            for i in range(0, DISCORD_MAX_FILE_SIZE):
-                f.write(unicode(i))
+        data = bytearray(1024)
+        for i in range(1024):
+            data[i] = i % 0xff
+        data = bytes(data)
+        with open(large_file_path, 'wb') as f:
+            for i in range(0, int(round(DISCORD_MAX_FILE_SIZE / 1024 * 6))):
+                f.write(data)
 
         files, embeds = upload_file(large_file_path, author="Author")
         if "NET_TEST" in os.environ:
@@ -134,7 +150,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                               title="Uploaded large_file_temp in 7 parts",
                               description=None)
 
-        with open("rebuilt.zip", 'w') as f:
+        with open("rebuilt.zip", 'wb') as f:
             i = 1
             for fl in files:
                 self.assertEquals("large_file_temp.zip.%.03i" % i, fl[0])
@@ -146,7 +162,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                 i += 1
 
         with zipfile.ZipFile("rebuilt.zip", 'r') as zip_file:
-            with open(large_file_path, 'r') as f:
+            with open(large_file_path, 'rb') as f:
                 self.assertEquals(f.read(), zip_file.read("large_file_temp"))
 
         os.remove("rebuilt.zip")

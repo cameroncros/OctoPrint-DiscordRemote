@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 import requests
 
@@ -33,7 +34,7 @@ class PsuControl(AbstractPlugin):
             return None, success_embed(author=self.plugin.get_printer_name(),
                                        title="Turned PSU on")
         return None, error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to turn PSU on", description=unicode(result.content))
+                                 title="Failed to turn PSU on", description=result.content)
 
     def poweroff(self):
         result = self.api_command("turnPSUOff")
@@ -41,7 +42,7 @@ class PsuControl(AbstractPlugin):
             return None, success_embed(author=self.plugin.get_printer_name(),
                                        title="Turned PSU off")
         return None, error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to turn PSU off", description=unicode(result.content))
+                                 title="Failed to turn PSU off", description=result.content)
 
     def powerstatus(self):
         result = self.api_command("getPSUState")
@@ -52,7 +53,7 @@ class PsuControl(AbstractPlugin):
             return None, info_embed(author=self.plugin.get_printer_name(),
                                     title=message)
         return None, error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to get PSU status", description=unicode(result.content))
+                                 title="Failed to get PSU status", description=result.content)
 
     def api_command(self, command):
         api_key = self.plugin.get_settings().global_get(["api", "key"])

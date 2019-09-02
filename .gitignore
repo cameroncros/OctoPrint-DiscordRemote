@@ -12,3 +12,4 @@ testenv3/
 config.yaml
 .coverage
 htmlcov/
+.tox/
