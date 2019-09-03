@@ -115,7 +115,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.command.command_dict['help'] = {'cmd': self.command.help, 'description': "Mock help."}
 
-        for command in ['help', '/asdf', 'asdf', "", "/"]:
+        for command in ['/asdf', "/", "/help", "/?"]:
             self.command.check_perms.reset_mock()
             self.command.help.reset_mock()
             snapshots, embeds = self.command.parse_command(command, user="Dummy")
@@ -123,6 +123,15 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertIsNone(embeds)
             self.command.help.assert_called_once()
             self.command.check_perms.assert_called_once()
+
+        for command in ['asdf / fdsa', 'help', 'whatever']:
+            self.command.check_perms.reset_mock()
+            self.command.help.reset_mock()
+            snapshots, embeds = self.command.parse_command(command, user="Dummy")
+            self.assertIsNone(snapshots)
+            self.assertIsNone(embeds)
+            self.command.help.assert_not_called()
+            self.command.check_perms.assert_not_called()
 
         self.command.check_perms.reset_mock()
         self.command.check_perms.return_value = False

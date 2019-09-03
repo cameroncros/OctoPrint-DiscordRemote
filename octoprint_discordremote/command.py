@@ -53,8 +53,10 @@ class Command:
         parts = re.split(r'\s+', string)
 
         command_string = "help"
-        if len(parts[0]) > len(prefix_str) and prefix_str == parts[0][:prefix_len]:
-            command_string = parts[0][prefix_len:]
+        if len(parts[0]) < prefix_len or prefix_str != parts[0][:prefix_len]:
+            return None, None
+
+        command_string = parts[0][prefix_len:]
 
         command = self.command_dict.get(command_string, {'cmd': self.help})
 
