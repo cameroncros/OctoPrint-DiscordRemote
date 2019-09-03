@@ -52,7 +52,6 @@ class Command:
 
         parts = re.split(r'\s+', string)
 
-        command_string = "help"
         if len(parts[0]) < prefix_len or prefix_str != parts[0][:prefix_len]:
             return None, None
 
