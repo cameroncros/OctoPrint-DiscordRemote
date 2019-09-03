@@ -17,6 +17,8 @@ License : MIT
 
 [goscicki](https://github.com/goscicki) for their help testing the /gcode capability.
 
+[timothy-b](https://github.com/timothy-b) for their help fixing the help command handling.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
