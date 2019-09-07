@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import threading
 import time
 from datetime import timedelta, datetime
 
@@ -140,6 +141,22 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             '5': {'users': '', 'commands': ''}
         }
 
+    def configure_discord(self, send_test=False):
+        # Configure discord
+        if self.command is None:
+            self.command = Command(self)
+
+        if self.discord is None:
+            self.discord = Discord()
+
+        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
+                                       self._settings.get(['channelid'], merged=True),
+                                       self._logger,
+                                       self.command,
+                                       self.update_discord_status)
+        if send_test:
+            self.notify_event("test")
+
     def on_after_startup(self):
         # Use a different log file for DiscordRemote, as it is very noisy.
         self._logger = logging.getLogger("octoprint.plugins.discordremote")
@@ -153,16 +170,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
-        if self.command is None:
-            self.command = Command(self)
-        # Configure discord
-        if self.discord is None:
-            self.discord = Discord()
-        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                       self._settings.get(['channelid'], merged=True),
-                                       self._logger,
-                                       self.command,
-                                       self.update_discord_status)
+        self.configure_discord(False)
 
         # Transition settings
         allowed_users = self._settings.get(['allowedusers'], merged=True)
@@ -293,19 +301,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
         self._logger.info("Settings have saved. Send a test message...")
-        # Configure discord
-        if self.command is None:
-            self.command = Command(self)
-
-        if self.discord is None:
-            self.discord = Discord()
-
-        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                       self._settings.get(['channelid'], merged=True),
-                                       self._logger,
-                                       self.command,
-                                       self.update_discord_status)
-        self.notify_event("test")
+        thread = threading.Thread(target=self.configure_discord, args=(True,))
+        thread.start()
 
     # SimpleApiPlugin mixin
     def get_api_commands(self):
