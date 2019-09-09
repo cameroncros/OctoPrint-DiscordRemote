@@ -25,6 +25,7 @@ from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from .discord import Discord
 
+
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.StartupPlugin,
                           octoprint.plugin.ShutdownPlugin,
@@ -608,6 +609,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
+__plugin_pythoncompat__ = ">=2.7,<4"
 
 
 def __plugin_load__():
