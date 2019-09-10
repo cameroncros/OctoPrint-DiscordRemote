@@ -249,8 +249,9 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_file_manager().list_files.return_value = file_list
         flat_file_list = self.command.get_flat_file_list()
         self.plugin.get_file_manager().list_files.assert_called_once()
-        self.assertEqual(2, len(flat_file_list))
-        self.assertEqual(flatten_file_list, flat_file_list)
+        self.assertEqual(len(flatten_file_list), len(flat_file_list))
+        for file in flatten_file_list:
+            self.assertIn(file, flat_file_list)
 
     def test_find_file(self):
         self.plugin.get_file_manager().list_files = mock.Mock()

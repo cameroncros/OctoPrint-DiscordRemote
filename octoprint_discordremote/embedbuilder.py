@@ -137,8 +137,6 @@ class EmbedBuilder:
         return self
 
     def add_field(self, title, text, inline=False):
-        title = str(title)
-        text = str(text)
         if title is None or len(title) == 0:
             title = "DEVERROR: Passed an invalid title"
         if text is None or len(text) == 0:

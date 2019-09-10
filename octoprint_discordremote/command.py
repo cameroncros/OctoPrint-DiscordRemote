@@ -305,7 +305,7 @@ class Command:
         current_data = self.plugin.get_printer().get_current_data()
 
         if current_data.get('currentZ'):
-            builder.add_field(title='Current Z', text=current_data['currentZ'], inline=True)
+            builder.add_field(title='Current Z', text=str(current_data['currentZ']), inline=True)
         if operational:
             temperatures = self.plugin.get_printer().get_current_temperatures()
             for heater in temperatures.keys():
@@ -318,7 +318,7 @@ class Command:
                                   inline=True)
 
             if temperatures['bed']['actual']:
-                builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
+                builder.add_field(title='Bed Temp', text=str(temperatures['bed']['actual']), inline=True)
 
             printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
