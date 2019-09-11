@@ -14,7 +14,7 @@ class CoverageCommand(Command):
         pass
 
     def run(self):
-        os.system("python -m coverage run --source octoprint_discordremote/ setup.py test")
+        os.system("python -m coverage run --source octoprint_discordremote/ pytest")
         os.system("python -m coverage html")
 
 
