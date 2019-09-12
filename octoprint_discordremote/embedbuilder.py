@@ -1,8 +1,11 @@
+from __future__ import unicode_literals
+
 import datetime
 import io
 import math
 import zipfile
 import os
+
 
 DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -49,7 +52,7 @@ def upload_file(path, author=None):
     file_size = file_stat.st_size
 
     if file_size < DISCORD_MAX_FILE_SIZE:
-        fl = (file_name, open(path))
+        fl = (file_name, open(path, 'rb'))
         embeds = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
@@ -134,18 +137,18 @@ class EmbedBuilder:
         return self
 
     def add_field(self, title, text, inline=False):
-        if title is None or len(unicode(title)) == 0:
+        if title is None or len(title) == 0:
             title = "DEVERROR: Passed an invalid title"
-        if text is None or len(unicode(text)) == 0:
+        if text is None or len(text) == 0:
             text = "DEVERROR: Passed an invalid text"
 
-        if len(unicode(title)) > MAX_TITLE:
+        if len(title) > MAX_TITLE:
             title = title[0:MAX_TITLE - 3] + "..."
-        if len(unicode(text)) > MAX_VALUE:
+        if len(text) > MAX_VALUE:
             text = text[0:MAX_VALUE - 3] + "..."
 
-        while not self.embeds[-1].add_field({'name': unicode(title),
-                                             'value': unicode(text),
+        while not self.embeds[-1].add_field({'name': title,
+                                             'value': text,
                                              'inline': inline}):
             self.embeds.append(Embed())
 
@@ -174,7 +177,7 @@ class EmbedBuilder:
     def __str__(self):
         string = ""
         for embed in self.get_embeds():
-            string += unicode(embed)
+            string += embed
 
 
 class Embed:

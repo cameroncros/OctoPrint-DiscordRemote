@@ -3,6 +3,7 @@
 # Simple module to send messages through a Discord WebHook
 # post a message to discord api via a bot
 # bot must be added to the server and have write access to the channel
+from __future__ import unicode_literals
 
 import json
 from threading import Thread, Event
@@ -195,9 +196,9 @@ class Discord:
                     self.heartbeat_sent += 1
                     self.logger.info("Heartbeat: %s" % js)
                 except Exception as exc:
-                    self.logger.error("Exception caught: %s", unicode(exc))
+                    self.logger.error("Exception caught: %s", exc)
 
-            for i in range(self.heartbeat_interval / 1000):
+            for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
@@ -396,11 +397,11 @@ class Discord:
                 continue
             else:
                 self.logger.error("Failed to send message:")
-                self.logger.error("\tResponse: %s" % self.log_safe(r))
+                self.logger.error("\tResponse: %s" % self.log_safe(r.status_code))
                 self.logger.error("\tResponse Content: %s" % self.log_safe(r.content))
                 self.logger.error("\tResponse Headers: %s" % self.log_safe(r.headers))
                 self.logger.error("\tURL: %s" % self.log_safe(self.postURL))
-                self.logger.error("\tHeaders: %s" % self.log_safe(self.headers))
+                self.logger.error("\tHeaders: %s" % self.log_safe(str(self.headers)))
                 self.logger.error("\tData: %s" % data)
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
@@ -433,4 +434,4 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        return unicode(message).replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
+        return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")

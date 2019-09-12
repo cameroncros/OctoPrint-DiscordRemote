@@ -1,9 +1,13 @@
+from __future__ import unicode_literals
+
 import time
 
 import logging
 import os
 import socket
 import unittest
+
+import six
 import yaml
 from mock import mock
 
@@ -100,7 +104,7 @@ class TestSend(DiscordRemoteTestCase):
         large_file_path = self._get_path("large_file_temp")
         with open(large_file_path, 'w') as f:
             for i in range(0, DISCORD_MAX_FILE_SIZE):
-                f.write(unicode(i))
+                f.write(str(i))
 
         embeds = upload_file(large_file_path)
         self.discord.send(embeds=embeds)

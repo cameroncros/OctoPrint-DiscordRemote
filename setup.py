@@ -14,7 +14,7 @@ class CoverageCommand(Command):
         pass
 
     def run(self):
-        os.system("python -m coverage run --source octoprint_discordremote/ setup.py test")
+        os.system("python -m coverage run --source octoprint_discordremote/ pytest")
         os.system("python -m coverage html")
 
 
@@ -32,7 +32,7 @@ plugin_package = "octoprint_discordremote"
 plugin_name = "OctoPrint-DiscordRemote"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "2.48.0"
+plugin_version = "2.49.0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -51,7 +51,7 @@ plugin_url = "https://github.com/cameroncros/Octoprint-DiscordRemote"
 plugin_license = "MIT"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests", "humanfriendly", "OctoPrint>=1.3.11", "zipfile2"]
+plugin_requires = ["pillow", "websocket-client", "requests", "humanfriendly", "OctoPrint>=1.3.11", "zipfile2", "PyYAML"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
