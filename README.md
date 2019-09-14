@@ -37,7 +37,40 @@ or manually using this URL:
 See the following link for instructions on how to setup a Discord bot and get the Channel ID:
 
     https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
-    
+
+## API
+
+There are currently 2 API's available for interacting with the bot.
+These can be used by sending a POST request to `[octoprint_url]/api/plugin/discordremote`, with JSON in the body of the request.
+
+# Send command
+This API lets you send a command as if you typed it in discord.
+The response will be sent to discord.
+The JSON format is:
+
+    {
+        "command": "executeCommand",
+        "args": "COMMAND GOES HERE"
+    }
+
+# Send message
+This API lets you send a message directly to discord.
+The JSON format is:
+
+    {
+        "command": "sendMessage",
+        "title": "TITLE GOES HERE",
+        "description": "DESCRIPTION GOES HERE",
+        "color": 0x123456,
+        "image": "BASE64 ENCODED FILE DATA HERE",
+        "imagename": "IMAGE NAME GOES HERE"
+    }
+
+* All fields are optional, but at least a title, description or image should be provided.
+* The color is an integer value here that corresponds to the color you want.
+* The image is base64 bytes.
+* The image name defaults to "snapshot.png" if not provided.
+
 ## Commands
 
 To get a list of available commands and arguments, type ``/help`` into the discord channel. The bot will return all available commands.

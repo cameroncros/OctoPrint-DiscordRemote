@@ -385,7 +385,7 @@ class Discord:
                 if r:
                     return True
             except Exception as e:
-                self.logger.debug("Failed to send the message, exception occured: %s", e)
+                self.logger.debug("Failed to send the message, exception occured: %s", str(e))
                 self.error_counter += 1
                 self.check_errors()
                 self.queue_message(snapshot, embed)
@@ -397,10 +397,10 @@ class Discord:
                 continue
             else:
                 self.logger.error("Failed to send message:")
-                self.logger.error("\tResponse: %s" % self.log_safe(r.status_code))
-                self.logger.error("\tResponse Content: %s" % self.log_safe(r.content))
-                self.logger.error("\tResponse Headers: %s" % self.log_safe(r.headers))
-                self.logger.error("\tURL: %s" % self.log_safe(self.postURL))
+                self.logger.error("\tResponse: %s" % self.log_safe(str(r.status_code)))
+                self.logger.error("\tResponse Content: %s" % self.log_safe(str(r.content)))
+                self.logger.error("\tResponse Headers: %s" % self.log_safe(str(r.headers)))
+                self.logger.error("\tURL: %s" % self.log_safe(str(self.postURL)))
                 self.logger.error("\tHeaders: %s" % self.log_safe(str(self.headers)))
                 self.logger.error("\tData: %s" % data)
                 self.logger.error("\tFiles: %s" % files)
