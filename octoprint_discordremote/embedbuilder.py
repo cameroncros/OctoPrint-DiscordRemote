@@ -52,7 +52,11 @@ def upload_file(path, author=None):
     file_size = file_stat.st_size
 
     if file_size < DISCORD_MAX_FILE_SIZE:
-        fl = (file_name, open(path, 'rb'))
+        file_data = io.BytesIO()
+        with open(path, 'rb') as f:
+            file_data.write(f.read(DISCORD_MAX_FILE_SIZE))
+            file_data.seek(0)
+        fl = (file_name, file_data)
         embeds = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
@@ -77,13 +81,13 @@ def upload_file(path, author=None):
             i = 1
             while True:
                 part_name = "%s.zip.%.03i" % (file_name, i)
-                part_file = io.BytesIO()
+                file_data = io.BytesIO()
                 data = zip_file.read(DISCORD_MAX_FILE_SIZE)
                 if len(data) == 0:
                     break
-                part_file.write(data)
-                part_file.seek(0)
-                files.append((part_name, part_file))
+                file_data.write(data)
+                file_data.seek(0)
+                files.append((part_name, file_data))
                 i += 1
 
         os.remove("temp.zip")

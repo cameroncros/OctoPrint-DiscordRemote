@@ -113,6 +113,17 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
 
         self.assertIsNotNone(embeds)
 
+    def test_int_embed(self):
+        teststr = 1
+        embed_builder = EmbedBuilder()
+        embed_builder.set_title(teststr)
+        embed_builder.set_description(teststr)
+        embed_builder.set_author(teststr)
+        embed_builder.add_field(teststr, teststr)
+        embeds = embed_builder.get_embeds()
+
+        self.assertIsNotNone(embeds)
+
     def test_upload_file(self):
         small_file_path = self._get_path("test_pattern.png")
         files, embeds = upload_file(small_file_path, "Author")
