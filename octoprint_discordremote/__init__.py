@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import threading
 import time
+from base64 import b64decode
 from datetime import timedelta, datetime
 
 import humanfriendly
@@ -286,7 +287,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         if event == "PrintDone":
             self.stop_periodic_reporting()
-            payload['time_formatted'] = unicode(timedelta(seconds=int(payload["time"])))
+            payload['time_formatted'] = timedelta(seconds=int(payload["time"]))
             return self.notify_event("printing_done", payload)
 
         return True
@@ -307,7 +308,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     # SimpleApiPlugin mixin
     def get_api_commands(self):
         return dict(
-            executeCommand=['args']
+            executeCommand=['args'],
+            sendMessage=[]
         )
 
     def on_api_command(self, comm, data):
@@ -315,7 +317,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return make_response("Insufficient rights", 403)
 
         if comm == 'executeCommand':
-            self.execute_command(data)
+            return self.execute_command(data)
+
+        if comm == 'sendMessage':
+            return self.unpack_message(data)
 
     def execute_command(self, data):
         args = ""
@@ -323,7 +328,28 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             args = data['args']
 
         snapshots, embeds = self.command.parse_command(args)
-        self.discord.send(snapshots=snapshots, embeds=embeds)
+        if not self.discord.send(snapshots=snapshots, embeds=embeds):
+            return make_response("Failed to send message", 404)
+
+    def unpack_message(self, data):
+        builder = embedbuilder.EmbedBuilder()
+        if 'title' in data:
+            builder.set_title(data['title'])
+        if 'author' in data:
+            builder.set_author(data['author'])
+        if 'color' in data:
+            builder.set_color(data['color'])
+        if 'description' in data:
+            builder.set_description(data['description'])
+        if 'image' in data:
+            b64image = data['image']
+            imagename = data.get('imagename', 'snapshot.png')
+            bytes = b64decode(b64image)
+            image = BytesIO(bytes)
+            builder.set_image((imagename, image))
+
+        if not self.discord.send(embeds=builder.get_embeds()):
+            return make_response("Failed to send message", 404)
 
     def notify_event(self, event_id, data=None):
         self._logger.info("Received event: %s" % event_id)
@@ -396,7 +422,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_external_ip_address(self):
         if self.get_settings().get(['show_external_ip'], merged=True):
-            return unicode(ipgetter.myip())
+            return ipgetter.myip()
         else:
             return "External IP disabled"
 
@@ -609,6 +635,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
+__plugin_pythoncompat__ = ">=2.7,<4"
 
 
 def __plugin_load__():

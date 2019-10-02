@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
@@ -56,7 +57,7 @@ class EnclosureControl(AbstractPlugin):
                                        title="Turned ID %i on." % int(params[1]))
         return None, error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i on." % int(params[1]),
-                                 description=unicode(result.content))
+                                 description=result.content)
 
     def off(self, params):
         if len(params) > 2:
@@ -78,7 +79,7 @@ class EnclosureControl(AbstractPlugin):
                                        title="Turned ID %i off." % int(params[1]))
         return None, error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i off." % int(params[1]),
-                                 description=unicode(result.content))
+                                 description=result.content)
 
     def enc_status(self):
         result = self.api_command("state", -1)
@@ -89,8 +90,8 @@ class EnclosureControl(AbstractPlugin):
         builder.set_author(name=self.plugin.get_printer_name())
 
         for file in data:
-            title = ("ID: %s" % unicode(file['index_id']))
-            description = unicode(file['status'])
+            title = ("ID: %s" % file['index_id'])
+            description = file['status']
 
             builder.add_field(title=title, text=description)
 
