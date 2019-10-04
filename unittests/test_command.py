@@ -55,26 +55,25 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
     def setUp(self):
-        with mock.patch('octoprint_discordremote.DiscordRemotePlugin.discord'):
-            self.plugin = DiscordRemotePlugin()
+        self.plugin = DiscordRemotePlugin()
+        self.plugin.discord = mock.Mock()
+        self.plugin._printer = mock.Mock()
+        self.plugin._plugin_manager = mock.Mock()
+        self.plugin._file_manager = mock.Mock()
+        self.plugin._settings = mock.Mock()
+        self.plugin._settings.get = mock.Mock()
+        self.plugin._settings.get.side_effect = self._mock_settings_get
 
-            self.plugin._printer = mock.Mock()
-            self.plugin._plugin_manager = mock.Mock()
-            self.plugin._file_manager = mock.Mock()
-            self.plugin._settings = mock.Mock()
-            self.plugin._settings.get = mock.Mock()
-            self.plugin._settings.get.side_effect = self._mock_settings_get
+        self.plugin.get_printer_name = mock.Mock()
+        self.plugin.get_printer_name.return_value = 'OctoPrint'
 
-            self.plugin.get_printer_name = mock.Mock()
-            self.plugin.get_printer_name.return_value = 'OctoPrint'
+        self.plugin.get_ip_address = mock.Mock()
+        self.plugin.get_ip_address.return_value = "192.168.1.1"
 
-            self.plugin.get_ip_address = mock.Mock()
-            self.plugin.get_ip_address.return_value = "192.168.1.1"
+        self.plugin.get_external_address = mock.Mock()
+        self.plugin.get_external_address.return_value = "1.2.3.4"
 
-            self.plugin.get_external_address = mock.Mock()
-            self.plugin.get_external_address.return_value = "1.2.3.4"
-
-            self.command = Command(self.plugin)
+        self.command = Command(self.plugin)
 
     def _validate_embeds(self, embeds, color):
         self.assertIsNotNone(embeds)
