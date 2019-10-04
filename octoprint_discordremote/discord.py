@@ -37,33 +37,31 @@ GUILD_SYNC = 12
 
 class Discord:
     def __init__(self):
-        pass
+        self.channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
+        self.bot_token = None  # get from the bot page. must be a bot, not a discord app
+        self.gateway_url = "https://discordapp.com/api/gateway"
+        self.postURL = None  # URL to post messages to, as the bot
+        self.heartbeat_sent = 0
+        self.heartbeat_interval = None
+        self.last_sequence = None
+        self.session_id = None
+        self.web_socket = None  # WebSocket. Used for heartbeat.
+        self.logger = logging  # Logger, uses default logging unless overridden
+        self.headers = None  # Object containing the headers to send messages with.
+        self.queue = []  # Message queue, stores messages until the bot reconnects.
+        self.command = None  # Command parser
+        self.status_callback = None  # The callback to use when the status changes.
+        self.error_counter = 0  # The number of errors that have occured.
+        self.me = None  # The Bots ID.
 
-    channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
-    bot_token = None  # get from the bot page. must be a bot, not a discord app
-    gateway_url = "https://discordapp.com/api/gateway"
-    postURL = None  # URL to post messages to, as the bot
-    heartbeat_sent = 0
-    heartbeat_interval = None
-    last_sequence = None
-    session_id = None
-    web_socket = None  # WebSocket. Used for heartbeat.
-    logger = logging  # Logger, uses default logging unless overridden
-    headers = None  # Object containing the headers to send messages with.
-    queue = []  # Message queue, stores messages until the bot reconnects.
-    command = None  # Command parser
-    status_callback = None  # The callback to use when the status changes.
-    error_counter = 0  # The number of errors that have occured.
-    me = None  # The Bots ID.
+        # Threads:
+        self.manager_thread = None
+        self.heartbeat_thread = None
+        self.listener_thread = None
 
-    # Threads:
-    manager_thread = None
-    heartbeat_thread = None
-    listener_thread = None
-
-    # Events
-    restart_event = Event()  # Set to restart discord bot.
-    shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
+        # Events
+        self.restart_event = Event()  # Set to restart discord bot.
+        self.shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
     def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
         self.shutdown_event.clear()

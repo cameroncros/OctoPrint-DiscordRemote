@@ -43,7 +43,7 @@ See the following link for instructions on how to setup a Discord bot and get th
 There are currently 2 API's available for interacting with the bot.
 These can be used by sending a POST request to `[octoprint_url]/api/plugin/discordremote`, with JSON in the body of the request.
 
-# Send command
+### Send command
 This API lets you send a command as if you typed it in discord.
 The response will be sent to discord.
 The JSON format is:
@@ -53,7 +53,7 @@ The JSON format is:
         "args": "COMMAND GOES HERE"
     }
 
-# Send message
+### Send message
 This API lets you send a message directly to discord.
 The JSON format is:
 

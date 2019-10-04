@@ -35,15 +35,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
-    discord = None
-    command = None
-    last_progress_message = None
-    last_progress_percent = 0
-    is_muted = False
-    periodic_signal = None
-    periodic_thread = None
 
     def __init__(self):
+        self.discord = None
+        self.command = None
+        self.last_progress_message = None
+        self.last_progress_percent = 0
+        self.is_muted = False
+        self.periodic_signal = None
+        self.periodic_thread = None
         # Events definition here (better for intellisense in IDE)
         # referenced in the settings too.
         self.events = {
