@@ -5,15 +5,31 @@ api:
 plugins:
   announcements:
     _config_version: 1
+    channels:
+      _blog:
+        read_until: 1551867600
+      _important:
+        read_until: 1521111600
+      _octopi:
+        read_until: 1549966200
+      _plugins:
+        read_until: 1551657600
+      _releases:
+        read_until: 1544449800
   discovery:
     upnpUuid: 8177d9dc-adfd-481d-b020-594c148a8c96
   softwareupdate:
     _config_version: 6
     check_providers:
       discordremote: discordremote
+  tracking:
+    enabled: false
 printerProfiles:
   default: _default
 server:
+  commands:
+    serverRestartCommand: pig
+    systemRestartCommand: ashgas
   firstRun: false
   onlineCheck:
     enabled: false
@@ -23,6 +39,7 @@ server:
   seenWizards:
     corewizard: 3
     cura: null
+    tracking: null
 devel:
   virtualPrinter:
     enabled: true

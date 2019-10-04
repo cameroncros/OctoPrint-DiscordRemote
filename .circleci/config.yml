@@ -8,7 +8,7 @@ jobs:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:2.7-stretch-browsers
+      - image: themattrix/tox
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -32,9 +32,9 @@ jobs:
           command: |
             python -m virtualenv venv
             . venv/bin/activate
-            pip install https://get.octoprint.org/latest
+            pip install git+https://github.com/foosel/OctoPrint.git@devel
             pip install -r requirements.txt
-            pip install mock
+            pip install mock coverage tox
 
       - save_cache:
           paths:
@@ -50,4 +50,9 @@ jobs:
           name: Run tests
           command: |
             . venv/bin/activate
-            python setup.py test
+            python setup.py test coverage
+            python -m tox
+
+      - store_artifacts:
+          path: htmlcov/
+          destination: coverage-report

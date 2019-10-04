@@ -1,4 +1,12 @@
-class ExamplePlugin:
+from __future__ import unicode_literals
+from abc import abstractmethod
+
+
+class AbstractPlugin:
+    def __init__(self):
+        pass
+
+    @abstractmethod
     def setup(self, command, plugin):
         """
         Function to register commands. Use this to detect and

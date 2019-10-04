@@ -3,29 +3,80 @@
     <form class="form-horizontal">
         <div style="clear:both">
             <small>{{ _("See the github README.md for how to setup a bot and get the channel ID.
-                         Allowed users should be a list of discord user ID's.
-                         If allowed users is blank, all users can use the bot") }}</small>
+                Allowed users should be a list of discord user ID's.
+                If allowed users is blank, all users can use the bot") }}
+            </small>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Bot Token') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.bottoken"/>
+                <input type="text" class="input-block-level"
+                       data-bind="value: settings.plugins.discordremote.bottoken"/>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Channel ID') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.channelid"/>
+                <input type="text" class="input-block-level"
+                       data-bind="value: settings.plugins.discordremote.channelid"/>
             </div>
         </div>
+
+        <div style="clear:both">
+            <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
+        </div>
+
         <div class="control-group">
-            <label class="control-label">{{ _('Allowed users') }}</label>
+            <label class="control-label">{{ _('Base URL') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.allowedusers"/>
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.baseurl"/>
             </div>
         </div>
         <div style="clear:both">
-            <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
+            <small>{{ _("The base URL should be an address that you can access your octoprint installation from. Keep in
+                mind that if you do not have port forwarding set up, you can only download files from Discord on
+                your local network.") }}
+            </small>
+        </div>
+    </form>
+
+    <h3>{{ _('Access settings') }}</h3>
+    <form class="form-horizontal">
+        <div style="clear:both">
+            <small>{{ _("Access rules allow specific users to access specific commands.
+                In the users box, put a comma separated list of user id's, and in the command box,
+                put a comma separated list of commands that the users are allowed to use.
+                Putting a '*' will match all users or commands respectively.
+                If a user and command combination matches any of the rules, it will be allowed.") }}
+            </small>
+        </div>
+        <div id="settings_restrictedGroups" class="tab-pane">
+            <div class="row-fluid">
+                <span>
+                    <h4 class="span2">Rule</h4>
+                </span>
+                <span>
+                    <h4 class="span5">Users</h4>
+                </span>
+                <span>
+                    <h4 class="span5">Commands</h4>
+                </span>
+            </div>
+            <div data-bind="foreach: {data:Object.keys(settings.plugins.discordremote.permissions) }">
+                <div class="row-fluid" style="margin-bottom: 5px">
+                    <span>
+                        <span class="span2" data-bind="text: $data"/>
+                    </span>
+                    <span>
+                        <textarea rows="2" class="span5 block"
+                              data-bind="value: $parent.settings.plugins.discordremote.permissions[$data].users"></textarea>
+                    </span>
+                    <span>
+                        <textarea rows="2" class="span5 block"
+                              data-bind="value: $parent.settings.plugins.discordremote.permissions[$data].commands"></textarea>
+                    </span>
+                </div>
+            </div>
         </div>
     </form>
 
@@ -35,48 +86,91 @@
             <small>{{ _("For configuring the way the bot responds to commands") }}</small>
         </div>
         <div class="control-group">
+            <label class="control-label">{{ _('Command Prefix') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.prefix"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">{{ _('GCODE allowed') }}</label>
+            <div style="clear:both">
+                <small>{{ _("Whitelist for allowed GCODES to send when using the /gcode command. Comma seperated values.") }}</small>
+            </div>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.allowed_gcode"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("The prefix will be the character that precedes the command. The default value is '/'.
+                If you change this setting, be sure to choose a character that is not used often (no alphanumerics).
+                If left blank, this setting will default to the Pi's local IP.") }}
+            </small>
+        </div>
+        <div class="control-group">
             <label class="control-label">{{ _('Show Local IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level" data-bind="checked: settings.plugins.discordremote.show_local_ip"/>
+                <input type="checkbox" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Show External IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level" data-bind="checked: settings.plugins.discordremote.show_external_ip"/>
+                <input type="checkbox" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/>
             </div>
         </div>
     </form>
 
     <h3>{{ _('Messages settings') }}</h3>
     <form class="form-horizontal" data-bind="foreach: {data:Object.keys(settings.plugins.discordremote.events) }">
-        <div class="discordremote_message" data-bind="visible: $parent.settings.plugins.discordremote.events[$data].name">
+        <div class="discordremote_message"
+             data-bind="visible: $parent.settings.plugins.discordremote.events[$data].name">
             <h4>
-                <input type="checkbox" class="" data-bind="checked: $parent.settings.plugins.discordremote.events[$data].enabled"/>
+                <input type="checkbox" class=""
+                       data-bind="checked: $parent.settings.plugins.discordremote.events[$data].enabled"/>
                 <span data-bind="text: $parent.settings.plugins.discordremote.events[$data].name"/>
             </h4>
             <div class="control-group">
                 <label class="control-label">{{ _("Message") }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: $parent.settings.plugins.discordremote.events[$data].message"/>
+                    <textarea rows="3" class="block"
+                              data-bind="value: $parent.settings.plugins.discordremote.events[$data].message"></textarea>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _("Include snapshot") }}</label>
                 <div class="controls">
-                    <input type="checkbox" data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
+                    <input type="checkbox"
+                           data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
                 </div>
             </div>
+            <!-- Special Case for Percentage reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Notify every") }}</label>
                 <div class="controls">
-                    <input type="number" min="1" max="100" step="1" data-bind="value: $parent.settings.plugins.discordremote.events[$data].step"/>%
+                    <input type="number" min="1" max="100" step="1"
+                           data-bind="value: $parent.settings.plugins.discordremote.events[$data].step"/>%
                 </div>
+            </div>
+            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
+                <p>{{ _("If the minimum timeout has not passed when the next
+                    percentage trigger occurs, the notification will be swallowed") }}
+                </p>
             </div>
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Minimum timeout between messages") }}</label>
                 <div class="controls">
-                    <input type="number" data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
+                    <input type="number"
+                           data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
+                </div>
+            </div>
+            <!-- Special Case for Periodic reporting -->
+            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].period">
+                <label class="control-label">{{ _("Notify every") }}</label>
+                <div class="controls">
+                    <input type="number" min="1" step="1"
+                           data-bind="value: $parent.settings.plugins.discordremote.events[$data].period"/>s
                 </div>
             </div>
         </div>
@@ -84,25 +178,31 @@
     <h3>Scripts settings</h3>
     <form class="form-horizontal">
         <div style="clear:both">
-            <p>{{ _("To modify these settings, you need to set") }} <code>allow_scripts: true</code> {{ _("in your configuration file.") }}</p>
+            <p>{{ _("To modify these settings, you need to set") }} <code>allow_scripts: true</code> {{ _("in your
+                configuration file.") }}
+            </p>
         </div>
         <div data-bind="visible: settings.plugins.discordremote.allow_scripts">
             <div class="control-group">
                 <label class="control-label">{{ _('Before message, start:') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.script_before"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: settings.plugins.discordremote.script_before"/>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('After message, start:') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.script_after"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: settings.plugins.discordremote.script_after"/>
                 </div>
             </div>
             <div style="clear:both">
                 <p>
-                    {{ _("Here you can specify a file to be executed <strong>before</strong> and <strong>after</strong> each message is sent to Discord.") }}
-                    {{ _("<strong>The file should be executable by the user under which OctoPrint is running</strong>") }}
+                    {{ _("Here you can specify a file to be executed <strong>before</strong> and <strong>after</strong> each
+                    message is sent to Discord.") }}
+                    {{ _("<strong>The file should be executable by the user under which OctoPrint is running</strong>")
+                    }}
                 </p>
             </div>
         </div>

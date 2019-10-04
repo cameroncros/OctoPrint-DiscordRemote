@@ -1,21 +1,27 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import threading
+import time
+from base64 import b64decode
 from datetime import timedelta, datetime
 
-import ipgetter as ipgetter
+import humanfriendly
 import octoprint.plugin
 import octoprint.settings
-from octoprint.server import user_permission
 import os
 import requests
 import socket
 import subprocess
+import logging
 from PIL import Image
-from io import BytesIO
-from requests import ConnectionError
 from flask import make_response
+from io import BytesIO
+from octoprint.server import user_permission
+from requests import ConnectionError
+from threading import Thread, Event
 
+from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from .discord import Discord
@@ -29,11 +35,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
-    discord = None
-    command = None
-    last_progress_message = None
 
     def __init__(self):
+        self.discord = None
+        self.command = None
+        self.last_progress_message = None
+        self.last_progress_percent = 0
+        self.is_muted = False
+        self.periodic_signal = None
+        self.periodic_thread = None
         # Events definition here (better for intellisense in IDE)
         # referenced in the settings too.
         self.events = {
@@ -105,11 +115,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "message": "👎 Printing has failed! :("
             },
             "printing_progress": {
-                "name": "Printing progress",
+                "name": "Printing progress (Percentage)",
                 "enabled": True,
                 "with_snapshot": True,
                 "message": "📢 Printing is at {progress}%",
                 "step": 10
+            },
+            "printing_progress_periodic": {
+                "name": "Printing progress (Periodic)",
+                "enabled": False,
+                "with_snapshot": True,
+                "message": "📢 Printing is at {progress}%",
+                "period": 300
             },
             "test": {  # Not a real message, but we will treat it as one
                 "enabled": True,
@@ -117,20 +134,53 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "message": "Hello hello! If you see this message, it means that the settings are correct!"
             },
         }
+        self.permissions = {
+            '1': {'users': '*', 'commands': ''},
+            '2': {'users': '', 'commands': ''},
+            '3': {'users': '', 'commands': ''},
+            '4': {'users': '', 'commands': ''},
+            '5': {'users': '', 'commands': ''}
+        }
 
-    def on_after_startup(self):
-        self._logger.info("DiscordRemote is started !")
+    def configure_discord(self, send_test=False):
+        # Configure discord
         if self.command is None:
             self.command = Command(self)
-        # Configure discord
+
         if self.discord is None:
             self.discord = Discord()
+
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
-                                       self._settings.get(['allowedusers'], merged=True),
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
+        if send_test:
+            self.notify_event("test")
+
+    def on_after_startup(self):
+        # Use a different log file for DiscordRemote, as it is very noisy.
+        self._logger = logging.getLogger("octoprint.plugins.discordremote")
+        from octoprint.logging.handlers import CleaningTimedRotatingFileHandler
+        hdlr = CleaningTimedRotatingFileHandler(
+            self._settings.get_plugin_logfile_path(), when="D", backupCount=3)
+
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        hdlr.setFormatter(formatter)
+        self._logger.addHandler(hdlr)
+
+        # Initialise DiscordRemote
+        self._logger.info("DiscordRemote is started !")
+        self.configure_discord(False)
+
+        # Transition settings
+        allowed_users = self._settings.get(['allowedusers'], merged=True)
+        if allowed_users:
+            self._settings.set(["allowedusers"], None, True)
+            self._settings.set(['permissions'], {'1': {'users': allowed_users, 'commands': ''}}, True)
+
+            self.send_message(None, "⚠️⚠️⚠️ Allowed users has been changed to a more granular system. "
+                                    "Check the DiscordRemote settings and check that it is suitable⚠️⚠️⚠️")
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
@@ -143,13 +193,16 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return {
             'bottoken': "",
             'channelid': "",
-            'allowedusers': "",
+            'baseurl': "",
+            'prefix': "/",
             'show_local_ip': True,
             'show_external_ip': True,
             'events': self.events,
+            'permissions': self.permissions,
             'allow_scripts': False,
             'script_before': '',
-            'script_after': ''
+            'script_after': '',
+            'allowed_gcode': ''
         }
 
     # Restricts some paths to some roles only
@@ -159,11 +212,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return dict(never=[["events", "test"]],
                     admin=[["bottoken"],
                            ["channelid"],
-                           ["allowedusers"],
+                           ["permissions"],
+                           ['baseurl'],
+                           ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],
                            ['script_before'],
-                           ['script_after']])
+                           ['script_after'],
+                           ['allowed_gcode']])
 
     # AssetPlugin mixin
     def get_assets(self):
@@ -220,6 +276,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 return self.notify_event("printer_state_unknown")
 
         if event == "PrintStarted":
+            self.start_periodic_reporting()
             return self.notify_event("printing_started", payload)
         if event == "PrintPaused":
             return self.notify_event("printing_paused", payload)
@@ -229,55 +286,76 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return self.notify_event("printing_cancelled", payload)
 
         if event == "PrintDone":
-            payload['time_formatted'] = str(timedelta(seconds=int(payload["time"])))
+            self.stop_periodic_reporting()
+            payload['time_formatted'] = timedelta(seconds=int(payload["time"]))
             return self.notify_event("printing_done", payload)
 
         return True
 
     def on_print_progress(self, location, path, progress):
-        self.notify_event("printing_progress", {"progress": progress})
+        # Avoid sending duplicate percentage progress messages
+        if progress != self.last_progress_percent:
+            self.last_progress_percent = progress
+            self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
         self._logger.info("Settings have saved. Send a test message...")
-        # Configure discord
-        if self.command is None:
-            self.command = Command(self)
-
-        if self.discord is None:
-            self.discord = Discord()
-
-        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                       self._settings.get(['channelid'], merged=True),
-                                       self._settings.get(['allowedusers'], merged=True),
-                                       self._logger,
-                                       self.command,
-                                       self.update_discord_status)
-        self.notify_event("test")
+        thread = threading.Thread(target=self.configure_discord, args=(True,))
+        thread.start()
 
     # SimpleApiPlugin mixin
     def get_api_commands(self):
         return dict(
-            executeCommand=['args']
+            executeCommand=['args'],
+            sendMessage=[]
         )
 
-    def on_api_command(self, command, data):
+    def on_api_command(self, comm, data):
         if not user_permission.can():
             return make_response("Insufficient rights", 403)
 
-        if command == 'executeCommand':
-            self.execute_command(data)
+        if comm == 'executeCommand':
+            return self.execute_command(data)
+
+        if comm == 'sendMessage':
+            return self.unpack_message(data)
 
     def execute_command(self, data):
         args = ""
         if 'args' in data:
             args = data['args']
 
-        snapshots, embeds = self.command.parse_command(data['args'])
-        self.discord.send(snapshots=snapshots, embeds=embeds)
+        snapshots, embeds = self.command.parse_command(args)
+        if not self.discord.send(snapshots=snapshots, embeds=embeds):
+            return make_response("Failed to send message", 404)
+
+    def unpack_message(self, data):
+        builder = embedbuilder.EmbedBuilder()
+        if 'title' in data:
+            builder.set_title(data['title'])
+        if 'author' in data:
+            builder.set_author(data['author'])
+        if 'color' in data:
+            builder.set_color(data['color'])
+        if 'description' in data:
+            builder.set_description(data['description'])
+        if 'image' in data:
+            b64image = data['image']
+            imagename = data.get('imagename', 'snapshot.png')
+            bytes = b64decode(b64image)
+            image = BytesIO(bytes)
+            builder.set_image((imagename, image))
+
+        if not self.discord.send(embeds=builder.get_embeds()):
+            return make_response("Failed to send message", 404)
 
     def notify_event(self, event_id, data=None):
+        self._logger.info("Received event: %s" % event_id)
+        if self.is_muted:
+            return True
+
         if data is None:
             data = {}
         if event_id not in self.events:
@@ -293,6 +371,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Store IP address for message
         data['ipaddr'] = self.get_ip_address()
         data['externaddr'] = self.get_external_ip_address()
+        data['timeremaining'] = self.get_print_time_remaining()
+        data['timespent'] = self.get_print_time_spent()
 
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
@@ -310,7 +390,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 done_config = self._settings.get(["events", "printing_done"], merged=True)
                 # Don't send last message if the "printing_done" event is enabled.
                 if done_config["enabled"]:
-                    return
+                    return False
 
             # Otherwise work out if time since last message has passed.
             try:
@@ -340,9 +420,21 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         finally:
             s.close()
 
-    @staticmethod
-    def get_external_ip_address():
-        return str(ipgetter.myip())
+    def get_external_ip_address(self):
+        if self.get_settings().get(['show_external_ip'], merged=True):
+            return ipgetter.myip()
+        else:
+            return "External IP disabled"
+
+    def get_port(self):
+        port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
+        if port:
+            return port
+        port = self.get_settings().global_get(["server", "port"])
+        if port:
+            return port
+
+        return 5000  # Default to a sane value
 
     def exec_script(self, event_name, which=""):
 
@@ -387,8 +479,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(embeds=info_embed(title=message,
+        out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
+                                                  title=message,
                                                   snapshot=snapshot))
+        if not out:
+            self._logger.error("Failed to send message")
+            return out
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
@@ -396,6 +492,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return out
 
     def get_snapshot(self):
+        if 'FAKE_SNAPSHOT' in os.environ:
+            return self.get_snapshot_fake()
+        else:
+            return self.get_snapshot_camera()
+
+    @staticmethod
+    def get_snapshot_fake():
+        fl = open(os.environ['FAKE_SNAPSHOT'])
+        return [("snapshot.png", fl)]
+
+    def get_snapshot_camera(self):
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
@@ -441,8 +548,20 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return [("snapshot.png", new_image)]
         return [("snapshot.png", snapshot)]
 
+    def get_printer_name(self):
+        printer_name = self._settings.global_get(["appearance", "name"])
+        if printer_name is None:
+            printer_name = "OctoPrint"
+        return printer_name
+
     def update_discord_status(self, connected):
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
+
+    def mute(self):
+        self.is_muted = True
+
+    def unmute(self):
+        self.is_muted = False
 
     def get_file_manager(self):
         return self._file_manager
@@ -456,10 +575,67 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def get_plugin_manager(self):
         return self._plugin_manager
 
+    def get_print_time_spent(self):
+        current_data = self._printer.get_current_data()
+        try:
+            current_time_val = current_data['progress']['printTime']
+            return humanfriendly.format_timespan(current_time_val, max_units=2)
+        except (KeyError, ValueError):
+            return 'Unknown'
+
+    def get_print_time_remaining(self):
+        current_data = self._printer.get_current_data()
+        try:
+            remaining_time_val = current_data['progress']['printTimeLeft']
+            return humanfriendly.format_timespan(remaining_time_val, max_units=2)
+        except (KeyError, ValueError):
+            return 'Unknown'
+
+    def start_periodic_reporting(self):
+        self.stop_periodic_reporting()
+        self.last_progress_percent = 0
+
+        self.periodic_signal = Event()
+        self.periodic_signal.clear()
+
+        self.periodic_thread = Thread(target=self.periodic_reporting)
+        self.periodic_thread.start()
+
+    def stop_periodic_reporting(self):
+        if self.periodic_signal is None or self.periodic_thread is None:
+            return
+
+        self.periodic_signal.set()
+        self.periodic_thread.join(timeout=60)
+        if self.periodic_thread.is_alive():
+            self._logger.error("Periodic thread has hung, leaking it now.")
+        else:
+            self._logger.info("Periodic thread joined.")
+        self.periodic_thread = None
+        self.periodic_signal = None
+
+    def periodic_reporting(self):
+        if not self._settings.get(["events", "printing_progress_periodic", "enabled"]):
+            return
+        timeout = self._settings.get(["events", "printing_progress_periodic", "period"])
+
+        while True:
+            cur_time = time.time()
+            next_time = cur_time + int(timeout)
+            while time.time() < next_time:
+                time.sleep(1)
+                if self.periodic_signal.is_set():
+                    return
+                if not self._printer.is_printing():
+                    return
+
+            self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
+__plugin_pythoncompat__ = ">=2.7,<4"
 
 
 def __plugin_load__():

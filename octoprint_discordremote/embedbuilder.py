@@ -1,4 +1,13 @@
-from future.backports import datetime
+from __future__ import unicode_literals
+
+import datetime
+import io
+import math
+import zipfile
+import os
+
+
+DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
 COLOR_SUCCESS = 0x00AE86
 COLOR_ERROR = 0xE84A4A
@@ -11,7 +20,7 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(title=None, description=None, color=None, snapshot=None):
+def embed_simple(author, title=None, description=None, color=None, snapshot=None):
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -21,19 +30,64 @@ def embed_simple(title=None, description=None, color=None, snapshot=None):
         builder.set_description(description)
     if snapshot:
         builder.set_image(snapshot)
+    if author:
+        builder.set_author(author)
     return builder.get_embeds()
 
 
-def success_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_SUCCESS, snapshot)
+def success_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_ERROR, snapshot)
+def error_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(title=None, description=None, snapshot=None):
-    return embed_simple(title, description, COLOR_INFO, snapshot)
+def info_embed(author, title=None, description=None, snapshot=None):
+    return embed_simple(author, title, description, COLOR_INFO, snapshot)
+
+def upload_file(path, author=None):
+    file_name = os.path.basename(path)
+    file_stat = os.stat(path)
+    file_size = file_stat.st_size
+
+    if file_size < DISCORD_MAX_FILE_SIZE:
+        fl = (file_name, open(path, 'rb'))
+        embeds = EmbedBuilder() \
+            .set_author(author) \
+            .set_title("Uploaded %s" % file_name) \
+            .get_embeds()
+        return [fl], embeds
+
+    else:
+        with zipfile.ZipFile("temp.zip", 'w') as zip_file:
+            zip_file.write(path, file_name)
+
+        # Get the compressed file size
+        file_stat = os.stat("temp.zip")
+        file_size = file_stat.st_size
+        num_parts = int(math.ceil(float(file_size) / DISCORD_MAX_FILE_SIZE))
+
+        embedbuilder = EmbedBuilder() \
+            .set_author(author) \
+            .set_title("Uploaded %s in %i parts" % (file_name, num_parts))
+
+        files = []
+        with open("temp.zip", 'rb') as zip_file:
+            i = 1
+            while True:
+                part_name = "%s.zip.%.03i" % (file_name, i)
+                part_file = io.BytesIO()
+                data = zip_file.read(DISCORD_MAX_FILE_SIZE)
+                if len(data) == 0:
+                    break
+                part_file.write(data)
+                part_file.seek(0)
+                files.append((part_name, part_file))
+                i += 1
+
+        os.remove("temp.zip")
+        return files, embedbuilder.get_embeds()
 
 
 class EmbedBuilder:
@@ -41,6 +95,7 @@ class EmbedBuilder:
         self.color = COLOR_INFO
         self.embeds = [Embed()]
         self.timestamp = True
+        self.author = None
 
     def set_color(self, color):
         self.color = color
@@ -50,7 +105,7 @@ class EmbedBuilder:
         if title is None:
             title = ""
         elif len(title) > MAX_TITLE:
-            title = title[0:MAX_TITLE-3] + "..."
+            title = title[0:MAX_TITLE - 3] + "..."
 
         while not self.embeds[-1].set_title(title):
             self.embeds.append(Embed())
@@ -59,23 +114,41 @@ class EmbedBuilder:
 
     def set_description(self, description):
         if description is None:
-            description = ""
+            description = None
         elif len(description) > MAX_DESCRIPTION:
-            description = description[0:MAX_DESCRIPTION-3] + "..."
+            description = description[0:MAX_DESCRIPTION - 3] + "..."
 
         while not self.embeds[-1].set_description(description):
             self.embeds.append(Embed())
 
         return self
 
+    def set_author(self, name, url=None, icon_url=None):
+        if name is None:
+            self.author = None
+            return self
+        if len(name) > MAX_TITLE:
+                name = name[0:MAX_TITLE - 3] + "..."
+        self.author = {'name': name}
+        if url:
+            self.author['url'] = url
+        if icon_url:
+            self.author['icon_url'] = icon_url
+        return self
+
     def add_field(self, title, text, inline=False):
-        if title and len(str(title)) > MAX_TITLE:
-            title = title[0:MAX_TITLE-3] + "..."
-        if text and len(str(text)) > MAX_VALUE:
+        if title is None or len(title) == 0:
+            title = "DEVERROR: Passed an invalid title"
+        if text is None or len(text) == 0:
+            text = "DEVERROR: Passed an invalid text"
+
+        if len(title) > MAX_TITLE:
+            title = title[0:MAX_TITLE - 3] + "..."
+        if len(text) > MAX_VALUE:
             text = text[0:MAX_VALUE - 3] + "..."
 
-        while not self.embeds[-1].add_field({'name': str(title),
-                                             'value': str(text),
+        while not self.embeds[-1].add_field({'name': title,
+                                             'value': text,
                                              'inline': inline}):
             self.embeds.append(Embed())
 
@@ -96,13 +169,15 @@ class EmbedBuilder:
 
         for embed in self.embeds:
             embed.color = self.color
+            if self.author:
+                embed.set_author(self.author)
 
         return self.embeds
 
     def __str__(self):
         string = ""
         for embed in self.get_embeds():
-            string += str(embed)
+            string += embed
 
 
 class Embed:
@@ -115,6 +190,18 @@ class Embed:
         self.fields = []
         self.image = None
         self.files = []
+        self.author = None
+
+    def set_author(self, author):
+        current_length = 0
+        if self.author:
+            current_length = len(self.author['name'])
+        if self.embed_length - current_length + len(author['name']) > MAX_EMBED_LENGTH:
+            return False
+        self.embed_length -= current_length
+        self.author = author
+        self.embed_length += len(self.author['name'])
+        return True
 
     def set_title(self, title):
         current_length = 0
@@ -162,6 +249,8 @@ class Embed:
 
     def get_embed(self):
         embed = {'fields': self.fields}
+        if self.author:
+            embed['author'] = self.author
         if self.title:
             embed['title'] = self.title
         if self.description:
@@ -180,6 +269,15 @@ class Embed:
     def __str__(self):
         embed = self.get_embed()
         string = "\n---------------------------------\n"
+        if 'author' in embed:
+            string += "~~Author~~~~~~~~~~~~~~~~~~\n"
+            if 'name' in embed['author']:
+                string += "\tAuthor Name: %s\n" % embed['author']['name']
+            if 'url' in embed['author']:
+                string += "\tAuthor Url: %s\n" % embed['author']['url']
+            if 'icon_url' in embed['author']:
+                string += "\tAuthor Icon: %s\n" % embed['author']['icon_url']
+            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
         if 'color' in embed:
             string += "Color: %x\n" % embed['color']
         if 'title' in embed:
@@ -187,7 +285,7 @@ class Embed:
         if 'description' in embed:
             string += "Description: %s\n" % embed['description']
         for field in embed['fields']:
-            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+            string += "~~~Field~~~~~~~~~~~~~~~~~~\n"
             if 'name' in field:
                 string += "\tField Name: %s\n" % field['name']
             if 'value' in field:

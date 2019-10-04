@@ -1,27 +1,30 @@
-import os
+# This Python file uses the following encoding: utf-8
+from __future__ import unicode_literals
 import time
 
 import logging
+import os
+import zipfile
+
 import yaml
-from unittest import TestCase
 
 from octoprint_discordremote import Discord
-from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_DESCRIPTION, MAX_TITLE, success_embed, error_embed, \
-    info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR
+from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
+    info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
-class TestEmbedBuilder(TestCase):
+class TestEmbedBuilder(DiscordRemoteTestCase):
 
     def setUp(self):
         if "NET_TEST" in os.environ:
-            config_file = "config.yaml"
+            config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
-                    config = yaml.load(config.read())
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord = Discord()
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
-                                               allowed_users="",
                                                logger=logging.getLogger(),
                                                command=None)
                 time.sleep(5)
@@ -64,44 +67,105 @@ class TestEmbedBuilder(TestCase):
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_success_embed(self):
-        embeds = success_embed(title="title", description="description")
+        embeds = success_embed(author="OctoPrint", title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_SUCCESS, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
+                              title="title",
+                              description="description",
+                              color=COLOR_SUCCESS)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_error_embed(self):
-        embeds = error_embed(title="title", description="description")
+        embeds = error_embed(author="OctoPrint", title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_ERROR, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
+                              title="title",
+                              description="description",
+                              color=COLOR_ERROR)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
 
     def test_info_embed(self):
-        embeds = info_embed(title="title", description="description")
+        embeds = info_embed(author="OctoPrint", title="title", description="description")
 
-        self.assertEqual(1, len(embeds))
-        first_embed = embeds[0].get_embed()
-        self.assertEqual("title", first_embed['title'])
-        self.assertEqual("description", first_embed['description'])
-        self.assertEqual(COLOR_INFO, first_embed['color'])
-        self.assertIsNotNone(first_embed['timestamp'])
-        self.assertEqual(0, len(first_embed['fields']))
+        self.assertBasicEmbed(embeds,
+                              author="OctoPrint",
+                              title="title",
+                              description="description",
+                              color=COLOR_INFO)
 
         if "NET_TEST" in os.environ:
             self.assertTrue(self.discord.send(embeds=embeds))
 
+    def test_unicode_embed(self):
+        teststr = "٩(-̮̮̃-̃)۶ ٩(●̮̮̃•̃)۶ ٩(͡๏̯͡๏)۶ ٩(-̮̮̃•̃)."
+        embed_builder = EmbedBuilder()
+        embed_builder.set_title(teststr)
+        embed_builder.set_description(teststr)
+        embed_builder.set_author(teststr)
+        embed_builder.add_field(teststr, teststr)
+        embeds = embed_builder.get_embeds()
+
+        self.assertIsNotNone(embeds)
+
+    def test_upload_file(self):
+        small_file_path = self._get_path("test_pattern.png")
+        files, embeds = upload_file(small_file_path, "Author")
+        if "NET_TEST" in os.environ:
+            self.assertTrue(self.discord.send(embeds=embeds, snapshots=files))
+        self.assertIsNotNone(embeds)
+        self.assertBasicEmbed(embeds,
+                              author="Author",
+                              color=COLOR_INFO,
+                              title="Uploaded test_pattern.png",
+                              description=None)
+        self.assertEqual(1, len(files))
+        self.assertEqual(files[0][0], "test_pattern.png")
+        with open(small_file_path, 'rb') as f:
+            files[0][1].seek(0)
+            self.assertEqual(f.read(), files[0][1].read())
+
+        # create large file, that requires splitting
+        large_file_path = self._get_path("large_file_temp")
+        data = bytearray(1024)
+        for i in range(1024):
+            data[i] = i % 0xff
+        data = bytes(data)
+        with open(large_file_path, 'wb') as f:
+            for i in range(0, int(round(DISCORD_MAX_FILE_SIZE / 1024 * 6))):
+                f.write(data)
+
+        files, embeds = upload_file(large_file_path, author="Author")
+        if "NET_TEST" in os.environ:
+            self.assertTrue(self.discord.send(embeds=embeds, snapshots=files))
+        self.assertIsNotNone(embeds)
+        self.assertEqual(1, len(embeds))
+        self.assertEqual(7, len(files))
+        self.assertBasicEmbed(embeds,
+                              author="Author",
+                              color=COLOR_INFO,
+                              title="Uploaded large_file_temp in 7 parts",
+                              description=None)
+
+        with open("rebuilt.zip", 'wb') as f:
+            i = 1
+            for fl in files:
+                self.assertEquals("large_file_temp.zip.%.03i" % i, fl[0])
+                fl[1].seek(0)
+                data = fl[1].read()
+                self.assertGreater(len(data), 0)
+                self.assertLessEqual(len(data), DISCORD_MAX_FILE_SIZE)
+                f.write(data)
+                i += 1
+
+        with zipfile.ZipFile("rebuilt.zip", 'r') as zip_file:
+            with open(large_file_path, 'rb') as f:
+                self.assertEquals(f.read(), zip_file.read("large_file_temp"))
+
+        os.remove("rebuilt.zip")
+        os.remove(large_file_path)
