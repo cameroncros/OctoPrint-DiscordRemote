@@ -82,7 +82,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "name": "Printing process : started",
                 "enabled": True,
                 "with_snapshot": True,
-                "message": "🖨️ I've started printing {file}"
+                "message": "🖨️ I've started printing {path}"
             },
             "printing_paused": {
                 "name": "Printing process : paused",
