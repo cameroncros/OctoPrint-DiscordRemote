@@ -120,6 +120,22 @@
                        data-bind="checked: settings.plugins.discordremote.show_external_ip"/>
             </div>
         </div>
+        <div class="control-group">
+            <label class="control-label">{{ _('Use Hostname instead of External IP') }}</label>
+            <div class="controls">
+                <input type="checkbox" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.use_hostname"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">{{ _('Hostname') }}</label>
+            <div style="clear:both">
+                <small>{{ _("Hostname to use instead of External IP.") }}</small>
+            </div>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.hostname"/>
+            </div>
+        </div>
     </form>
 
     <h3>{{ _('Messages settings') }}</h3>

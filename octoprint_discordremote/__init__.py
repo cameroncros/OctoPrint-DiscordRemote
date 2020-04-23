@@ -197,6 +197,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'prefix': "/",
             'show_local_ip': True,
             'show_external_ip': True,
+            'use_hostname': False,
+            'hostname': "3d.example.com",
             'events': self.events,
             'permissions': self.permissions,
             'allow_scripts': False,
@@ -217,6 +219,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],
+                           ["use_hostname"],
+                           ["hostname"],
                            ['script_before'],
                            ['script_after'],
                            ['allowed_gcode']])
@@ -422,7 +426,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_external_ip_address(self):
         if self.get_settings().get(['show_external_ip'], merged=True):
-            return ipgetter.myip()
+            if self.get_settings().get(['use_hostname'], merged=True):
+                return self.get_settings().get(['hostname'])
+            else return ipgetter.myip()
         else:
             return "External IP disabled"
 

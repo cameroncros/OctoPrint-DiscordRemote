@@ -13,3 +13,5 @@ config.yaml
 .coverage
 htmlcov/
 .tox/
+
+.vscode
