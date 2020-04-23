@@ -434,7 +434,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_external_ip_address(self):
         if self.get_settings().get(['show_external_ip'], merged=True):
-            ipgetter.myip()
+            return ipgetter.myip()
         else:
             return "External IP disabled"
 
