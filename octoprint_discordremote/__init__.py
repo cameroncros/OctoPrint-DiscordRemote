@@ -198,7 +198,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'show_local_ip': True,
             'show_external_ip': True,
             'use_hostname': False,
-            'hostname': "3d.example.com",
+            'hostname': "YOUR.HOST.NAME",
+            'use_hostname_only': False,
             'events': self.events,
             'permissions': self.permissions,
             'allow_scripts': False,
@@ -221,6 +222,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ["show_external_ip"],
                            ["use_hostname"],
                            ["hostname"],
+                           ["use_hostname_only"],
                            ['script_before'],
                            ['script_after'],
                            ['allowed_gcode']])
@@ -378,6 +380,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['timeremaining'] = self.get_print_time_remaining()
         data['timespent'] = self.get_print_time_spent()
 
+        # Convert IP -> Hostname if desired
+        if self.get_settings().get(['use_hostname'], merged=True):
+            data['externaddr'] = self.get_settings().get(['hostname'], merged=True)
+            if self.get_settings().get(['use_hostname_only'], merged=True):
+                data['ipaddr'] = self.get_settings().get(['hostname'], merged=True)
+
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
             # Skip if just started
@@ -426,9 +434,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_external_ip_address(self):
         if self.get_settings().get(['show_external_ip'], merged=True):
-            if self.get_settings().get(['use_hostname'], merged=True):
-                return self.get_settings().get(['hostname'])
-            else return ipgetter.myip()
+            ipgetter.myip()
         else:
             return "External IP disabled"
 
