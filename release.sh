@@ -3,13 +3,13 @@ which py > /dev/null 2>&1
 if [[ $? == 0 ]]; then
     echo "Running in Windows"
     PYTHON='python'
-    py -2 -m virtualenv testenv
-    source testenv/Scripts/activate
+    py -3 -m venv testenv3
+    source testenv3/Scripts/activate
 else
     echo "Running in Linux"
-    PYTHON=python2
-    python2 -m virtualenv testenv
-    source testenv/bin/activate
+    PYTHON=python3
+    python3 -m venv testenv3
+    source testenv3/bin/activate
 fi
 
 ${PYTHON} -m pip install bumpversion
