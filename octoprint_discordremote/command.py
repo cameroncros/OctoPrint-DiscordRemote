@@ -295,21 +295,10 @@ class Command:
         if self.plugin.get_settings().get(['show_local_ip'], merged=True):
             ip_addr = self.plugin.get_ip_address()
             if ip_addr != '127.0.0.1':
-                if self.plugin.get_settings().get(['use_hostname'], merged=True) and \
-                        self.plugin.get_settings().get(['use_hostname_only'], merged=True):
-                    builder.add_field(title='Local IP',
-                                      text=self.plugin.get_settings().get(['hostname'], merged=True),
-                                      inline=True)
-                else:
-                    builder.add_field(title='Local IP', text=ip_addr, inline=True)
+                builder.add_field(title='Local IP', text=ip_addr, inline=True)
 
         if self.plugin.get_settings().get(['show_external_ip'], merged=True):
-            if self.plugin.get_settings().get(['use_hostname'], merged=True):
-                builder.add_field(title='External IP',
-                                  text=self.plugin.get_settings().get(['hostname'], merged=True),
-                                  inline=True)
-            else:
-                builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
+            builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
 
         operational = self.plugin.get_printer().is_operational()
         builder.add_field(title='Operational', text='Yes' if operational else 'No', inline=True)
