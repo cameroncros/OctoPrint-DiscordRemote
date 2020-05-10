@@ -197,6 +197,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'prefix': "/",
             'show_local_ip': True,
             'show_external_ip': True,
+            'use_hostname': False,
+            'hostname': "YOUR.HOST.NAME",
+            'use_hostname_only': False,
             'events': self.events,
             'permissions': self.permissions,
             'allow_scripts': False,
@@ -217,6 +220,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],
+                           ["use_hostname"],
+                           ["hostname"],
+                           ["use_hostname_only"],
                            ['script_before'],
                            ['script_after'],
                            ['allowed_gcode']])
@@ -373,6 +379,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['externaddr'] = self.get_external_ip_address()
         data['timeremaining'] = self.get_print_time_remaining()
         data['timespent'] = self.get_print_time_spent()
+
+        # Convert IP -> Hostname if desired
+        if self.get_settings().get(['use_hostname'], merged=True):
+            data['externaddr'] = self.get_settings().get(['hostname'], merged=True)
+            if self.get_settings().get(['use_hostname_only'], merged=True):
+                data['ipaddr'] = self.get_settings().get(['hostname'], merged=True)
 
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
