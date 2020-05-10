@@ -292,12 +292,12 @@ class Command:
         builder.set_title('Status')
         builder.set_author(name=self.plugin.get_printer_name())
 
-        if self.plugin.get_settings().get(['show_local_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_local_ip'], merged=True) != 'off':
             ip_addr = self.plugin.get_ip_address()
             if ip_addr != '127.0.0.1':
                 builder.add_field(title='Local IP', text=ip_addr, inline=True)
 
-        if self.plugin.get_settings().get(['show_external_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_external_ip'], merged=True) != 'off':
             builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
 
         operational = self.plugin.get_printer().is_operational()

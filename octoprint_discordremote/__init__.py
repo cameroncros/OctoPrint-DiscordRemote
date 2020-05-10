@@ -195,8 +195,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'channelid': "",
             'baseurl': "",
             'prefix': "/",
-            'show_local_ip': True,
-            'show_external_ip': True,
+            'show_local_ip': 'auto',
+            'show_external_ip': 'auto',
             'use_hostname': False,
             'hostname': "YOUR.HOST.NAME",
             'use_hostname_only': False,
@@ -380,12 +380,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['timeremaining'] = self.get_print_time_remaining()
         data['timespent'] = self.get_print_time_spent()
 
-        # Convert IP -> Hostname if desired
-        if self.get_settings().get(['use_hostname'], merged=True):
-            data['externaddr'] = self.get_settings().get(['hostname'], merged=True)
-            if self.get_settings().get(['use_hostname_only'], merged=True):
-                data['ipaddr'] = self.get_settings().get(['hostname'], merged=True)
-
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
             # Skip if just started
@@ -419,24 +413,30 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 
-    @staticmethod
-    def get_ip_address():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            return s.getsockname()[0]
-        except Exception as e:
-            print(e)
-            return '127.0.0.1'
-        finally:
-            s.close()
+    def get_ip_address(self):
+        if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
+            return self._settings.get(['hostname'], merged=True)
+        elif self._settings.get(['show_local_ip'], merged=True) == 'auto':
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                # doesn't even have to be reachable
+                s.connect(('10.255.255.255', 1))
+                return s.getsockname()[0]
+            except Exception as e:
+                print(e)
+                return '127.0.0.1'
+            finally:
+                s.close()
+        else:
+            return None
 
     def get_external_ip_address(self):
-        if self.get_settings().get(['show_external_ip'], merged=True):
+        if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
+            return self._settings.get(['hostname'], merged=True)
+        elif self._settings.get(['show_local_ip'], merged=True) == 'auto':
             return ipgetter.myip()
         else:
-            return "External IP disabled"
+            return None
 
     def get_port(self):
         port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
