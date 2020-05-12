@@ -34,9 +34,17 @@ or manually using this URL:
 
 ### Create the Discord Bot  in Discord
 
-See the following link for instructions on how to setup a Discord bot and get the Channel ID:
+See the following link for instructions on how to setup a Discord bot:
 
-    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
+    https://discordpy.readthedocs.io/en/latest/discord.html
+
+To get the channel ID:
+    
+    1. On Discord, open your User Settings -> Appearance -> Enable Developer Mode.
+
+    1. Right-click on the Discord text channel you want the bot to interact with and press "Copy ID".
+    
+    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord#get-the-channel-id-of-the-discord-text-channel
 
 ## API
 
