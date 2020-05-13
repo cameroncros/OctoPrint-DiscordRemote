@@ -3,6 +3,8 @@
 DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel via a discord bot. It also listens on the channel and can accept commands to control the printer.
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
 
+Note, using this plug-in requires building and setting up your own discord bot.
+
 [![](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote)
 
 License : MIT
@@ -37,6 +39,8 @@ or manually using this URL:
 See the following link for instructions on how to setup a Discord bot:
 
     https://discordpy.readthedocs.io/en/latest/discord.html
+    
+The bot token from step 7 needs to be stored.
 
 To get the channel ID:
     
@@ -45,6 +49,8 @@ To get the channel ID:
     1. Right-click on the Discord text channel you want the bot to interact with and press "Copy ID".
     
     https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord#get-the-channel-id-of-the-discord-text-channel
+    
+If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
 ## API
 
