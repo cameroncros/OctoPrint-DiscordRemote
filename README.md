@@ -1,6 +1,8 @@
 # OctoPrint-DiscordRemote
 
-DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel via a discord bot. It also listens on the channel and can accept commands to control the printer.
+DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel.
+The plugin acts as a Discord bot, which allows it to listen on the channel and respond to commands to control the printer.
+There is a small amount of configuration needed on Discord to create the bot, but no programming is required.
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
 
 Note, using this plug-in requires building and setting up your own discord bot.
