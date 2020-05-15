@@ -40,19 +40,14 @@ or manually using this URL:
 
 See the following link for instructions on how to setup a Discord bot:
 
-    https://discordpy.readthedocs.io/en/latest/discord.html
-    
-The bot token from step 7 needs to be stored.
+    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
 
-To get the channel ID:
-    
-    1. On Discord, open your User Settings -> Appearance -> Enable Developer Mode.
+#### Tips
 
-    1. Right-click on the Discord text channel you want the bot to interact with and press "Copy ID".
-    
-    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord#get-the-channel-id-of-the-discord-text-channel
-    
-If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
+- The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
+- When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
+- OAuth2 permissions are not necessary.  
+- If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
 ## API
 
