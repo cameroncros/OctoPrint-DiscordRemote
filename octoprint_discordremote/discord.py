@@ -16,8 +16,7 @@ import re
 
 # Constants
 MAX_ERRORS = 25
-# TODO: Remove this
-# CHANNEL_ID_LENGTH = 18
+CHANNEL_ID_LENGTH = 18
 BOT_TOKEN_LENGTH = 59
 
 # OP codes for web socket.
@@ -39,7 +38,7 @@ GUILD_SYNC = 12
 class Discord:
     def __init__(self):
         # enable dev mode on discord, right-click on the channel, copy ID (you can input multiple IDs separated with ",")
-        self.channels_id = None
+        self.channel_ids = None
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
         self.gateway_url = "https://discordapp.com/api/gateway"
         # URL to post messages to, as the bot
@@ -69,11 +68,11 @@ class Discord:
         self.restart_event = Event()  # Set to restart discord bot.
         self.shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
-    def configure_discord(self, bot_token, channels_id, logger, command, status_callback=None):
+    def configure_discord(self, bot_token, channel_ids, logger, command, status_callback=None):
         self.shutdown_event.clear()
         self.restart_event.clear()
         self.bot_token = bot_token
-        self.channels_id = channels_id
+        self.channel_ids = channel_ids
         if logger:
             self.logger = logger
         self.command = command
@@ -83,11 +82,17 @@ class Discord:
         if self.status_callback:
             self.status_callback(connected="disconnected")
 
-        if self.channels_id is None:
+        if self.channel_ids is None:
             self.logger.error(
-                "Incorrectly configured: Channels ID must not be empty."
+                "Incorrectly configured: Channel IDs must not be empty."
             self.shutdown_discord()
             return
+        for id in self.channel_ids.split(','):
+            if len(id.strip()) != CHANNEL_ID_LENGTH::
+                    self.logger.error(
+                "Incorrectly configured: Channel IDs are not correctly set."
+                   self.shutdown_discord()
+                    return
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
             self.logger.error(
                 "Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
@@ -253,8 +258,8 @@ class Discord:
             # Only care about message_create messages
             return
 
-        if not data['channel_id'] in self.channels_id:
-            # Only care about messages from correct channel
+        if not data['channel_id'] in self.channel_ids:
+            # Only care about messages from corrects channels
             return
 
         user=data['author']['id']
@@ -363,8 +368,8 @@ class Discord:
         if snapshots is not None:
             for snapshot in snapshots:
                 if channel_id == None:
-                    for f in self.channels_id.split(','):
-                        if not self._dispatch_message(f, snapshot=snapshot):
+                    for id in self.channel_ids.split(','):
+                        if not self._dispatch_message(id.strip(), snapshot=snapshot):
                             return False
                 else:
                     if not self._dispatch_message(channel_id, snapshot=snapshot):
@@ -373,8 +378,8 @@ class Discord:
         if embeds is not None:
             for embed in embeds:
                 if channel_id == None:
-                    for f in self.channels_id.split(','):
-                        if not self._dispatch_message(f, embed=embed):
+                    for id in self.channel_ids.split(','):
+                        if not self._dispatch_message(id.strip(), embed=embed):
                             return False
                 else:
                     if not self._dispatch_message(channel_id, embed=embed):
@@ -466,4 +471,8 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        return message.replace(self.bot_token, "[bot_token]").replace(self.channels_id, "[channels_id]")
+        clean_message=message.replace(self.bot_token, "[bot_token]")
+        for channel_id in self.channel_ids:
+            clean_message=clean_message.replace(
+                channel_id.strip(), "[channel_id]")
+        return clean_message
