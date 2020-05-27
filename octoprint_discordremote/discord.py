@@ -89,16 +89,17 @@ class Discord:
             return
         for id in self.channel_ids.split(','):
             if len(id.strip()) != CHANNEL_ID_LENGTH:
-                self.logger.error("Incorrectly configured: Each channel ID must be %d chars long." % CHANNEL_ID_LENGTH))
-                   self.shutdown_discord()
-                    return
+                self.logger.error(
+                    "Incorrectly configured: Each channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
+                self.shutdown_discord()
+                return
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
             self.logger.error(
                 "Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             self.shutdown_discord()
             return
 
-        self.headers={"Authorization": "Bot {}".format(self.bot_token),
+        self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
         if not self.manager_thread:
@@ -118,8 +119,8 @@ class Discord:
                 while not self.shutdown_event.is_set() and socket_url is None:
                     try:
                         r = requests.get(self.gateway_url,
-                                         headers = self.headers)
-                        socket_url=json.loads(r.content)['url']
+                                         headers=self.headers)
+                        socket_url = json.loads(r.content)['url']
                         self.logger.info("Socket URL is %s", socket_url)
                         break
                     except Exception as e:
@@ -128,13 +129,13 @@ class Discord:
                         time.sleep(5)
                         continue
 
-                self.heartbeat_sent=0
-                self.web_socket=websocket.WebSocketApp(socket_url,
+                self.heartbeat_sent = 0
+                self.web_socket = websocket.WebSocketApp(socket_url,
                                                          on_message=self.on_message,
                                                          on_error=self.on_error,
                                                          on_close=self.on_close)
 
-                self.listener_thread=Thread(
+                self.listener_thread = Thread(
                     target=self.web_socket.run_forever, kwargs={'ping_timeout': 1})
                 self.listener_thread.start()
                 self.logger.debug("WebSocket listener started")
@@ -161,7 +162,7 @@ class Discord:
                     except websocket.WebSocketConnectionClosedException as e:
                         self.logger.error(
                             "Failed to close websocket: %s" % e.message)
-                    self.web_socket=None
+                    self.web_socket = None
                 if self.listener_thread:
                     self.logger.info("Waiting for listener thread to join.")
 
@@ -171,7 +172,7 @@ class Discord:
                             "Listener thread has hung, leaking it now.")
                     else:
                         self.logger.info("Listener thread joined.")
-                    self.listener_thread=None
+                    self.listener_thread = None
 
     def shutdown_discord(self):
         self.logger.info("Shutdown has been triggered")
@@ -184,7 +185,7 @@ class Discord:
                 self.logger.error("Manager thread has hung, leaking it now.")
             else:
                 self.logger.info("Manager thread joined.")
-        self.manager_thread=None
+        self.manager_thread = None
 
         if self.heartbeat_thread:
             self.heartbeat_thread.join(timeout=60)
@@ -192,7 +193,7 @@ class Discord:
                 self.logger.error("HeartBeat thread has hung, leaking it now.")
             else:
                 self.logger.info("HeartBeat thread joined.")
-        self.heartbeat_thread=None
+        self.heartbeat_thread = None
 
     def heartbeat(self):
         self.check_errors()
@@ -205,8 +206,8 @@ class Discord:
                     self.status_callback(connected="disconnected")
                 self.restart_event.set()
             elif self.web_socket:
-                out={'op': HEARTBEAT, 'd': self.last_sequence}
-                js=json.dumps(out)
+                out = {'op': HEARTBEAT, 'd': self.last_sequence}
+                js = json.dumps(out)
                 try:
                     self.web_socket.send(js)
                     self.heartbeat_sent += 1
@@ -219,7 +220,7 @@ class Discord:
                     time.sleep(1)
 
     def on_message(self, message):
-        js=json.loads(message)
+        js = json.loads(message)
 
         if js['op'] == HELLO:
             self.handle_hello(js)
@@ -234,17 +235,17 @@ class Discord:
 
     def handle_dispatch(self, js):
         if 's' in js and js['s'] is not None:
-            self.last_sequence=js['s']
+            self.last_sequence = js['s']
 
-        data=js['d']
-        dispatch_type=js['t']
+        data = js['d']
+        dispatch_type = js['t']
 
         if not data or not dispatch_type:
             self.logger.debug("Invalid message type: %s" % json.dumps(js))
             return
 
         if dispatch_type == "READY":
-            self.me=data['user']['id']
+            self.me = data['user']['id']
             return self.handle_ready(js)
 
         if dispatch_type == "RESUMED":
@@ -261,21 +262,21 @@ class Discord:
             # Only care about messages from corrects channels
             return
 
-        user=data['author']['id']
+        user = data['author']['id']
         if self.me != None and user == self.me:
             # Don't respond to ourself.
             return
 
         if 'attachments' in data:
             for upload in data['attachments']:
-                filename=upload['filename']
-                url=upload['url']
-                snapshots, embeds=self.command.download_file(
+                filename = upload['filename']
+                url = upload['url']
+                snapshots, embeds = self.command.download_file(
                     filename, url, user)
                 self.send(embeds=embeds)
 
         if 'content' in data and len(data['content']) > 0:
-            snapshots, embeds=self.command.parse_command(
+            snapshots, embeds = self.command.parse_command(
                 data['content'], user)
             self.send(channel_id=data['channel_id'], snapshots=snapshots,
                       embeds=embeds)
@@ -290,7 +291,7 @@ class Discord:
             self.send_identify()
 
         # Setup heartbeat_interval
-        self.heartbeat_interval=js['d']['heartbeat_interval']
+        self.heartbeat_interval = js['d']['heartbeat_interval']
 
         # Debug output status of heartbeat thread.
         self.logger.info("Heartbeat thread: %s", self.heartbeat_thread)
@@ -301,7 +302,7 @@ class Discord:
         # Setup heartbeat_thread
         if not self.heartbeat_thread or not self.heartbeat_thread.is_alive():
             self.logger.info("Starting Heartbeat thread")
-            self.heartbeat_thread=Thread(target=self.heartbeat)
+            self.heartbeat_thread = Thread(target=self.heartbeat)
             self.heartbeat_thread.start()
 
         # Signal that we are connected.
@@ -309,7 +310,7 @@ class Discord:
 
     def send_identify(self):
         self.logger.info("Sending IDENTIFY message")
-        out={
+        out = {
             "op": IDENTIFY,
             "d": {
                 "token": self.bot_token,
@@ -318,12 +319,12 @@ class Discord:
                 "large_threshold": 250
             }
         }
-        out_js=json.dumps(out)
+        out_js = json.dumps(out)
         self.web_socket.send(out_js)
 
     def send_resume(self):
         self.logger.info("Sending RESUME message")
-        out={
+        out = {
             'op': RESUME,
             'd': {
                 'seq': self.last_sequence,
@@ -331,7 +332,7 @@ class Discord:
                 'token': self.bot_token
             }
         }
-        js=json.dumps(out)
+        js = json.dumps(out)
         self.web_socket.send(js)
 
     def handle_heartbeat_ack(self):
@@ -340,24 +341,24 @@ class Discord:
             self.status_callback(connected="connected")
         if self.error_counter > 0:
             self.error_counter -= 0
-        self.heartbeat_sent=0
+        self.heartbeat_sent = 0
         self.process_queue()
 
     def handle_ready(self, js):
         self.logger.info("Received READY message")
-        self.last_sequence=js['s']
-        self.session_id=js['d']['session_id']
+        self.last_sequence = js['s']
+        self.session_id = js['d']['session_id']
 
     def handle_invalid_session(self, js):
         self.logger.info("Received INVALID_SESSION message")
-        self.session_id=None
-        self.last_sequence=None
+        self.session_id = None
+        self.last_sequence = None
         time.sleep(5)
         self.send_identify()
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
-            snapshot, embed=self.queue.pop()
+            snapshot, embed = self.queue.pop()
             if self._dispatch_message(snapshot=snapshot, embed=embed):
                 continue
             else:
@@ -386,12 +387,12 @@ class Discord:
         return True
 
     def _dispatch_message(self, channel_id, snapshot=None, embed=None):
-        data=None
-        files=[]
+        data = None
+        files = []
 
         if embed is not None:
-            json_str=json.dumps({'embed': embed.get_embed()})
-            data={"payload_json": json_str}
+            json_str = json.dumps({'embed': embed.get_embed()})
+            data = {"payload_json": json_str}
             for attachment in embed.get_files():
                 attachment[1].seek(0)
                 files.append(("attachment", attachment))
@@ -401,14 +402,14 @@ class Discord:
             files.append(("file", snapshot))
 
         if len(files) == 0:
-            files=None
+            files = None
 
         if files is None and data is None:
             return False
 
         while True:
             try:
-                r=requests.post(self.postURL.format(channel_id),
+                r = requests.post(self.postURL.format(channel_id),
                                   headers=self.headers,
                                   data=data,
                                   files=files)
@@ -423,7 +424,7 @@ class Discord:
                 return False
 
             if int(r.status_code) == 429:  # HTTP 429: Too many requests.
-                retry_after=int(r.headers['Retry-After'])
+                retry_after = int(r.headers['Retry-After'])
                 time.sleep(retry_after / 1000)
                 continue
             else:
@@ -470,8 +471,8 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        clean_message=message.replace(self.bot_token, "[bot_token]")
+        clean_message = message.replace(self.bot_token, "[bot_token]")
         for channel_id in self.channel_ids:
-            clean_message=clean_message.replace(
+            clean_message = clean_message.replace(
                 channel_id.strip(), "[channel_id]")
         return clean_message
