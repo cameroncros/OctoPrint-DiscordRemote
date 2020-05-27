@@ -88,9 +88,8 @@ class Discord:
             self.shutdown_discord()
             return
         for id in self.channel_ids.split(','):
-            if len(id.strip()) != CHANNEL_ID_LENGTH::
-                    self.logger.error(
-                "Incorrectly configured: Channel IDs are not correctly set.")
+            if len(id.strip()) != CHANNEL_ID_LENGTH:
+                self.logger.error("Incorrectly configured: Each channel ID must be %d chars long." % CHANNEL_ID_LENGTH))
                    self.shutdown_discord()
                     return
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
@@ -103,7 +102,7 @@ class Discord:
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
         if not self.manager_thread:
-            self.manager_thread=Thread(target=self.monitor_thread)
+            self.manager_thread = Thread(target=self.monitor_thread)
             self.manager_thread.start()
         else:
             self.restart_event.set()
@@ -111,15 +110,15 @@ class Discord:
     def monitor_thread(self):
         while not self.shutdown_event.is_set():
             try:
-                socket_url=None
+                socket_url = None
 
                 if self.status_callback:
                     self.status_callback(connected="connecting")
 
                 while not self.shutdown_event.is_set() and socket_url is None:
                     try:
-                        r=requests.get(self.gateway_url,
-                                         headers=self.headers)
+                        r = requests.get(self.gateway_url,
+                                         headers = self.headers)
                         socket_url=json.loads(r.content)['url']
                         self.logger.info("Socket URL is %s", socket_url)
                         break
