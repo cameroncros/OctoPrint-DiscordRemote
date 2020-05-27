@@ -358,8 +358,8 @@ class Discord:
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
-            snapshot, embed = self.queue.pop()
-            if self._dispatch_message(snapshot=snapshot, embed=embed):
+            channel_id, snapshot, embed = self.queue.pop()
+            if self._dispatch_message(channel_id=channel_id, snapshot=snapshot, embed=embed):
                 continue
             else:
                 break
@@ -420,7 +420,7 @@ class Discord:
                     "Failed to send the message, exception occured: %s", str(e))
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(snapshot, embed)
+                self.queue_message(channel_id, snapshot, embed)
                 return False
 
             if int(r.status_code) == 429:  # HTTP 429: Too many requests.
@@ -443,7 +443,7 @@ class Discord:
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(snapshot, embed)
+                self.queue_message(channel_id, snapshot, embed)
                 return False
 
     def on_error(self, error):
@@ -454,10 +454,10 @@ class Discord:
         self.logger.info("WebSocket Closed")
         self.restart_event.set()
 
-    def queue_message(self, snapshot, embed):
+    def queue_message(self, channel_id, snapshot, embed):
         if snapshot is not None or embed is not None:
             self.logger.info("Message queued")
-            self.queue.append((snapshot, embed))
+            self.queue.append((channel_id, snapshot, embed))
 
     def check_errors(self):
         if self.error_counter > MAX_ERRORS:
