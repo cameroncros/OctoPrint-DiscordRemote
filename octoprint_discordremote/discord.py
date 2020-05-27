@@ -84,13 +84,13 @@ class Discord:
 
         if self.channel_ids is None:
             self.logger.error(
-                "Incorrectly configured: Channel IDs must not be empty."
+                "Incorrectly configured: Channel IDs must not be empty.")
             self.shutdown_discord()
             return
         for id in self.channel_ids.split(','):
             if len(id.strip()) != CHANNEL_ID_LENGTH::
                     self.logger.error(
-                "Incorrectly configured: Channel IDs are not correctly set."
+                "Incorrectly configured: Channel IDs are not correctly set.")
                    self.shutdown_discord()
                     return
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
