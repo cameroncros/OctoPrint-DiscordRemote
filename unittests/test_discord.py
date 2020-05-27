@@ -51,7 +51,7 @@ class TestSend(DiscordRemoteTestCase):
                 with open(config_file, "r") as config:
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord.configure_discord(bot_token=config['bottoken'],
-                                               channel_id=config['channelid'],
+                                               channel_ids=config['channelid'],
                                                logger=TestLogger(),
                                                command=None)
                 time.sleep(5)

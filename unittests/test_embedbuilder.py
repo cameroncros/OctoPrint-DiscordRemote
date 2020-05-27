@@ -24,7 +24,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
                 self.discord = Discord()
                 self.discord.configure_discord(bot_token=config['bottoken'],
-                                               channel_id=config['channelid'],
+                                               channel_ids=config['channelid'],
                                                logger=logging.getLogger(),
                                                command=None)
                 time.sleep(5)
