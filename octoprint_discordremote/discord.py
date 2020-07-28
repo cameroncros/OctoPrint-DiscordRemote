@@ -39,7 +39,7 @@ class Discord:
     def __init__(self):
         self.channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
-        self.gateway_url = "https://discordapp.com/api/gateway"
+        self.gateway_url = "https://discord.com/api/gateway"
         self.postURL = None  # URL to post messages to, as the bot
         self.heartbeat_sent = 0
         self.heartbeat_interval = None
@@ -86,7 +86,7 @@ class Discord:
             self.shutdown_discord()
             return
 
-        self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
+        self.postURL = "https://discord.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
 

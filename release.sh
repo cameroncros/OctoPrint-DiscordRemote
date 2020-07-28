@@ -12,16 +12,20 @@ else
     source testenv3/bin/activate
 fi
 
+git stash
+
 ${PYTHON} -m pip install bumpversion
 git checkout dev
 git pull
 git checkout master
 git pull
 git merge dev
+git tag v`cat .bumpversion.cfg | grep current_version | cut -d " " -f 3`
 git push
+git push --tags
 git checkout dev
-git stash
 bumpversion minor
 git commit setup.py .bumpversion.cfg -m "Bump version for next release"
 git push
+
 git stash pop
