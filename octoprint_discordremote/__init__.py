@@ -12,7 +12,6 @@ import json
 import octoprint.plugin
 import octoprint.settings
 import os
-os.environ['CURL_CA_BUNDLE'] = ''
 import requests
 import socket
 import subprocess
