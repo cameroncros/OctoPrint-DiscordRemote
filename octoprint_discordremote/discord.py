@@ -9,13 +9,16 @@ import datetime
 import json
 from threading import Thread, Event
 import time
+from typing import List
+
 import requests
 import websocket
 import logging
 import re
 
-
 # Constants
+from embedbuilder import Embed
+
 MAX_ERRORS = 25
 CHANNEL_ID_LENGTH = 18
 BOT_TOKEN_LENGTH = 59
@@ -70,7 +73,7 @@ class Discord:
         self.bot_token = bot_token
         self.channel_id = channel_id
         if logger:
-             self.logger = logger
+            self.logger = logger
         self.command = command
         self.status_callback = status_callback
         self.error_counter = 0
@@ -345,7 +348,7 @@ class Discord:
             else:
                 break
 
-    def send(self, snapshots=None, embeds=None):
+    def send(self, snapshots=None, embeds: List[Embed] = None):
         if snapshots is not None:
             for snapshot in snapshots:
                 if not self._dispatch_message(snapshot=snapshot):
