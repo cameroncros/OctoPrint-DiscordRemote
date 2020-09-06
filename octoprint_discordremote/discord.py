@@ -7,17 +7,16 @@ from __future__ import unicode_literals
 
 import datetime
 import json
-from threading import Thread, Event
+import logging
 import time
+from threading import Thread, Event
 from typing import List
 
 import requests
 import websocket
-import logging
-import re
 
 # Constants
-from embedbuilder import Embed
+from octoprint_discordremote.embedbuilder import Embed
 
 MAX_ERRORS = 25
 CHANNEL_ID_LENGTH = 18
