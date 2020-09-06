@@ -46,6 +46,7 @@ def error_embed(author, title=None, description=None, snapshot=None):
 def info_embed(author, title=None, description=None, snapshot=None):
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
+
 def upload_file(path, author=None):
     file_name = os.path.basename(path)
     file_stat = os.stat(path)

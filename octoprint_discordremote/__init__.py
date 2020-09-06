@@ -7,6 +7,8 @@ from base64 import b64decode
 from datetime import timedelta, datetime
 
 import humanfriendly
+import jinja2
+import json
 import octoprint.plugin
 import octoprint.settings
 import os
@@ -411,7 +413,36 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             self.last_progress_message = datetime.now()
 
-        return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
+        # Get snapshot if asked for
+        snapshot = None
+        if tmp_config["with_snapshot"]:
+            snapshots = self.get_snapshot()
+            if snapshots and len(snapshots) == 1:
+                snapshot = snapshots[0]
+
+        files = []
+
+        if tmp_config.get("use_custom_payload") and tmp_config.get("custom_payload"):
+            payload = tmp_config.get("custom_payload")
+            env = jinja2.Environment(block_start_string="@@",
+                                     block_end_string="@@",
+                                     variable_start_string="@=",
+                                     variable_end_string="=@")
+            template = env.from_string(payload)
+            message = template.render(**data)
+
+            msg_payload = json.loads(message)
+
+            if snapshot:
+                msg_payload["url"] = "attachment://%s" % snapshot[0]
+                files.append(snapshot)
+        else:
+            message = tmp_config["message"].format(**data)
+            msg_payload = {"embed": info_embed(author=self.get_printer_name(),
+                                               title=message,
+                                               snapshot=snapshot)[0].get_embed()}
+
+        return self.send_message(event_id, msg_payload)
 
     def get_ip_address(self):
         if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
@@ -476,24 +507,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
             return out
 
-    def send_message(self, event_id, message, with_snapshot=False):
+    def send_message(self, event_id, payload):
         # exec "before" script if any
         self.exec_script(event_id, "before")
-
-        # Get snapshot if asked for
-        snapshot = None
-        if with_snapshot:
-            snapshots = self.get_snapshot()
-            if snapshots and len(snapshots) == 1:
-                snapshot = snapshots[0]
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                  title=message,
-                                                  snapshot=snapshot))
+        out = self.discord._dispatch_message(message_payload=payload)
         if not out:
             self._logger.error("Failed to send message")
             return out

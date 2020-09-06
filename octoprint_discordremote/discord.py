@@ -5,6 +5,7 @@
 # bot must be added to the server and have write access to the channel
 from __future__ import unicode_literals
 
+import datetime
 import json
 from threading import Thread, Event
 import time
@@ -336,8 +337,10 @@ class Discord:
 
     def process_queue(self):
         while not self.shutdown_event.is_set() and len(self.queue):
-            snapshot, embed = self.queue.pop()
-            if self._dispatch_message(snapshot=snapshot, embed=embed):
+            snapshot, message_payload, files = self.queue.pop()
+            if self._dispatch_message(snapshot=snapshot,
+                                      message_payload=message_payload,
+                                      files=files):
                 continue
             else:
                 break
@@ -349,29 +352,30 @@ class Discord:
                     return False
         if embeds is not None:
             for embed in embeds:
-                if not self._dispatch_message(embed=embed):
+                if not self._dispatch_message(message_payload={"embed": embed.get_embed()}, files=embed.get_files()):
                     return False
         return True
 
-    def _dispatch_message(self, snapshot=None, embed=None):
+    def _dispatch_message(self, snapshot=None, message_payload=None, files=None):
         data = None
-        files = []
+        files_to_send = []
 
-        if embed is not None:
-            json_str = json.dumps({'embed': embed.get_embed()})
-            data = {"payload_json": json_str}
-            for attachment in embed.get_files():
+        if message_payload is not None:
+            data = {"payload_json": json.dumps(message_payload), "timestamp": datetime.datetime.utcnow().isoformat()}
+
+        if files is not None:
+            for attachment in files:
                 attachment[1].seek(0)
-                files.append(("attachment", attachment))
+                files_to_send.append(("attachment", attachment))
 
         if snapshot:
             snapshot[1].seek(0)
-            files.append(("file", snapshot))
+            files_to_send.append(("file", snapshot))
 
-        if len(files) == 0:
-            files = None
+        if len(files_to_send) == 0:
+            files_to_send = None
 
-        if files is None and data is None:
+        if files_to_send is None and data is None:
             return False
 
         while True:
@@ -379,14 +383,14 @@ class Discord:
                 r = requests.post(self.postURL,
                                   headers=self.headers,
                                   data=data,
-                                  files=files)
+                                  files=files_to_send)
                 if r:
                     return True
             except Exception as e:
                 self.logger.debug("Failed to send the message, exception occured: %s", str(e))
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(snapshot, embed)
+                self.queue_message(snapshot, message_payload, files)
                 return False
 
             if int(r.status_code) == 429:  # HTTP 429: Too many requests.
@@ -404,7 +408,7 @@ class Discord:
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
                 self.check_errors()
-                self.queue_message(snapshot, embed)
+                self.queue_message(snapshot, message_payload, files)
                 return False
 
     def on_error(self, error):
@@ -415,10 +419,10 @@ class Discord:
         self.logger.info("WebSocket Closed")
         self.restart_event.set()
 
-    def queue_message(self, snapshot, embed):
-        if snapshot is not None or embed is not None:
+    def queue_message(self, snapshot, message_payload, files):
+        if snapshot is not None or message_payload is not None or files is not None:
             self.logger.info("Message queued")
-            self.queue.append((snapshot, embed))
+            self.queue.append((snapshot, message_payload, files))
 
     def check_errors(self):
         if self.error_counter > MAX_ERRORS:
