@@ -1,7 +1,11 @@
 # OctoPrint-DiscordRemote
 
-DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel via a discord bot. It also listens on the channel and can accept commands to control the printer.
+DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel.
+The plugin acts as a Discord bot, which allows it to listen on the channel and respond to commands to control the printer.
+There is a small amount of configuration needed on Discord to create the bot, but no programming is required.
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
+
+Note, using this plug-in requires building and setting up your own discord bot.
 
 [![](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote)
 
@@ -34,9 +38,16 @@ or manually using this URL:
 
 ### Create the Discord Bot  in Discord
 
-See the following link for instructions on how to setup a Discord bot and get the Channel ID:
+See the following link for instructions on how to setup a Discord bot:
 
     https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
+
+#### Tips
+
+- The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
+- When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
+- OAuth2 permissions are not necessary.  
+- If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
 ## API
 
@@ -115,7 +126,7 @@ Here you can customize every message handled by DiscordRemote.
 ## Message format
 
 Messages are regular Discord messages, which means you can use :
-- `**markdown**` format (see [Discord Documentation](https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-))
+- `**markdown**` format (see [Discord Documentation](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-))
 - `:emoji:` shortcuts to display emojis
 - `@mentions` to notify someone
 

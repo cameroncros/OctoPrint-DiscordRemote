@@ -109,15 +109,36 @@
         <div class="control-group">
             <label class="control-label">{{ _('Show Local IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level"
-                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/>
+                <label>
+                <input id="auto" type="radio" value="auto" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Detect automatically
+                </label>
+                <label>
+                <input id="hostname" type="radio" value="hostname" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Hostname
+                </label>
+                <label>
+                <input id="off" type="radio" value="off" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Off
+                </label>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Show External IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level"
-                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/>
+                <label>
+                <input id="auto" type="radio" value="auto" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Detect automatically
+                </label>
+                <label>
+                <input id="hostname" type="radio" value="hostname" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Hostname
+                </label>
+                <label>
+                <input id="off" type="radio" value="off" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Off
+                </label>
+
             </div>
         </div>
     </form>
@@ -144,6 +165,30 @@
                     <input type="checkbox"
                            data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
                 </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _("Send raw message payload") }}</label>
+                <div class="controls">
+                    <input type="checkbox"
+                           data-bind="checked: $parent.settings.plugins.discordremote.events[$data].use_custom_payload"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _("Raw message JSON payload") }}</label>
+                <div class="controls">
+                    <textarea rows="3" class="block"
+                              data-bind="value: $parent.settings.plugins.discordremote.events[$data].custom_payload"></textarea>
+                </div>
+            </div>
+            <div class="control-group">
+                <p>{{ _("If set, overrides the message setting and sends the following payload to the Discord API directly. See ") }}
+                    <a href="https://discord.com/developers/docs/resources/channel#create-message">here</a>
+                    {{_(" for documentation on this API, or use a tool like ")}}
+                    <a href="https://embedbuilder.nadekobot.me/">this one</a>
+                    {{ _(" to generate your own payloads.") }}</p>
+            </div>
+            <div class="control-group">
+                <p>{{ _("When using macros with custom payloads, use ")}}<code>@=/=@</code>{{ _(" instead: ")}}<code>@=ipaddr=@</code></p>
             </div>
             <!-- Special Case for Percentage reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">

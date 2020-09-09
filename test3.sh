@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 which py > /dev/null 2>&1
 if [[ $? == 0 ]]; then
     echo "Running in Windows"

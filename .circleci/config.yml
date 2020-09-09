@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            python -m virtualenv venv
+            python -m venv venv
             . venv/bin/activate
             pip install git+https://github.com/foosel/OctoPrint.git@devel
             pip install -r requirements.txt
