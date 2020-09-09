@@ -347,7 +347,7 @@ class Discord:
             else:
                 break
 
-    def send(self, snapshots=None, embeds: List[Embed] = None):
+    def send(self, snapshots=None, embeds=None):
         if snapshots is not None:
             for snapshot in snapshots:
                 if not self._dispatch_message(snapshot=snapshot):

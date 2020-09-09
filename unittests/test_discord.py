@@ -93,7 +93,7 @@ class TestSend(DiscordRemoteTestCase):
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()
         mock_snapshot = mock.Mock()
-        mock_embed: Embed = mock.Mock(spec=Embed)
+        mock_embed = mock.Mock(spec=Embed)
         self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
 
         self.assertEqual(2, self.discord._dispatch_message.call_count)

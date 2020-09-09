@@ -23,6 +23,8 @@ License : MIT
 
 [timothy-b](https://github.com/timothy-b) for their help fixing the help command handling.
 
+[wchill](https://github.com/wchill) for the custom embed in notification change.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
