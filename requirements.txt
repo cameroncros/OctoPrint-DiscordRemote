@@ -5,7 +5,7 @@
 #
 # works as expected. Requirements can be found in setup.py.
 ###
-pillow
+pillow==6.2.2
 websocket-client
 requests
 humanfriendly

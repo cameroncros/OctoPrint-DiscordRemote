@@ -229,7 +229,7 @@ class Embed:
         return string
 
 
-def upload_file(path, author=None) -> Tuple[List[Tuple[str, Any]], List[Embed]]:
+def upload_file(path, author=None):  # -> Tuple[List[Tuple[str, Any]], List[Embed]]:
     file_name = os.path.basename(path)
     file_stat = os.stat(path)
     file_size = file_stat.st_size
@@ -273,11 +273,11 @@ def upload_file(path, author=None) -> Tuple[List[Tuple[str, Any]], List[Embed]]:
         return files, embedbuilder.get_embeds()
 
 
-def embed_simple(author: str,
-                 title: str = None,
-                 description: str = None,
-                 color: int = None,
-                 snapshot=None) -> List[Embed]:
+def embed_simple(author,  # str
+                 title=None,  # str
+                 description=None,  # str
+                 color=None,  # int
+                 snapshot=None):  # -> List[Embed]:
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -292,22 +292,22 @@ def embed_simple(author: str,
     return builder.get_embeds()
 
 
-def success_embed(author: str,
-                  title: str = None,
-                  description: str = None,
-                  snapshot=None) -> List[Embed]:
+def success_embed(author,  # str
+                  title=None,  # str
+                  description=None,  # str
+                  snapshot=None):  # -> List[Embed]:
     return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(author: str,
-                title: str = None,
-                description: str = None,
-                snapshot=None) -> List[Embed]:
+def error_embed(author,  # str
+                title=None,  # str
+                description=None,  # str
+                snapshot=None):  # -> List[Embed]:
     return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(author: str,
-               title: str = None,
-               description: str = None,
-               snapshot=None):
+def info_embed(author,  # str
+               title=None,  # str
+               description=None,  # str
+               snapshot=None):  # -> List[Embed]:
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
