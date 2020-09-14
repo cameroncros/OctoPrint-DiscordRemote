@@ -155,7 +155,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         with open("rebuilt.zip", 'wb') as f:
             i = 1
             for fl in files:
-                self.assertEqual("large_file_temp.zip.%.03i" % i, fl[0])
+                self.assertEquals("large_file_temp.zip.%.03i" % i, fl[0])
                 fl[1].seek(0)
                 data = fl[1].read()
                 self.assertGreater(len(data), 0)
