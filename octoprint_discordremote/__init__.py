@@ -511,7 +511,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     @staticmethod
     def get_snapshot_fake():
-        fl = open(os.environ['FAKE_SNAPSHOT'])
+        fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
         return [("snapshot.png", fl)]
 
     def get_snapshot_camera(self):
