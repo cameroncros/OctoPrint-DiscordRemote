@@ -109,15 +109,36 @@
         <div class="control-group">
             <label class="control-label">{{ _('Show Local IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level"
-                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/>
+                <label>
+                <input id="auto" type="radio" value="auto" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Detect automatically
+                </label>
+                <label>
+                <input id="hostname" type="radio" value="hostname" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Hostname
+                </label>
+                <label>
+                <input id="off" type="radio" value="off" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_local_ip"/> Off
+                </label>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Show External IP') }}</label>
             <div class="controls">
-                <input type="checkbox" class="input-block-level"
-                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/>
+                <label>
+                <input id="auto" type="radio" value="auto" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Detect automatically
+                </label>
+                <label>
+                <input id="hostname" type="radio" value="hostname" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Hostname
+                </label>
+                <label>
+                <input id="off" type="radio" value="off" class="input-block-level"
+                       data-bind="checked: settings.plugins.discordremote.show_external_ip"/> Off
+                </label>
+
             </div>
         </div>
     </form>

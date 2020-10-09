@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
+
 import collections
 import os
+import urllib
 import humanfriendly
 import re
 import time
@@ -7,7 +10,7 @@ import requests
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
-from command_plugins import plugin_list
+from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
@@ -50,16 +53,13 @@ class Command:
         prefix_len = len(prefix_str)
 
         parts = re.split(r'\s+', string)
-        if 'help' in parts[0].lower():
-            return self.help()
 
-        if prefix_str != parts[0][:prefix_len]:
+        if len(parts[0]) < prefix_len or prefix_str != parts[0][:prefix_len]:
             return None, None
 
         command_string = parts[0][prefix_len:]
-        command = self.command_dict.get(command_string)
-        if command is None:
-            return self.help()
+
+        command = self.command_dict.get(command_string, {'cmd': self.help})
 
         if user and not self.check_perms(command_string, user):
             return None, error_embed(author=self.plugin.get_printer_name(),
@@ -71,45 +71,35 @@ class Command:
             return command['cmd']()
 
     def timelapse(self):
+        path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
+        path = os.path.abspath(path)
 
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        builder = EmbedBuilder()
+        builder.set_title('Files and Details')
+        builder.set_description('Download with /gettimelapse {filename}')
+        builder.set_author(name=self.plugin.get_printer_name())
+
         baseurl = self.plugin.get_settings().get(["baseurl"])
         port = self.plugin.get_port()
         if baseurl is None or baseurl == "":
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
-        header = {'X-Api-Key': api_key}
 
-        builder = EmbedBuilder()
-        builder.set_title('Files and Details')
-        builder.set_author(name=self.plugin.get_printer_name())
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                try:
+                    file_path = os.path.join(root, name)
 
-        response = requests.get("http://127.0.0.1:%s/api/timelapse" % port, headers=header)
-        data = response.json()
+                    title = os.path.basename(file_path)
 
-        for video in data['files']:
-            description = ''
-            title = ''
-            try:
-                title = video['name']
-            except:
-                pass
+                    description = ''
+                    description += 'Size: %s\n' % os.path.getsize(file_path)
+                    description += 'Date of Creation: %s\n' % time.ctime(os.path.getctime(file_path))
+                    description += 'Download Path: %s\n' %\
+                                   ("http://" + baseurl + "/downloads/timelapse/" + urllib.quote(title))
 
-            try:
-                description += 'Size: %s\n' % video['size']
-            except:
-                pass
-
-            try:
-                description += 'Date of Creation: %s\n' % video['date']
-            except:
-                pass
-
-            try:
-                description += 'Download Path: %s\n' % ("http://" + baseurl + video['url'])
-            except:
-                pass
-
-            builder.add_field(title=title, text=description)
+                    builder.add_field(title=title, text=description)
+                except Exception as e:
+                    pass
 
         return None, builder.get_embeds()
 
@@ -302,12 +292,12 @@ class Command:
         builder.set_title('Status')
         builder.set_author(name=self.plugin.get_printer_name())
 
-        if self.plugin.get_settings().get(['show_local_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_local_ip'], merged=True) != 'off':
             ip_addr = self.plugin.get_ip_address()
             if ip_addr != '127.0.0.1':
                 builder.add_field(title='Local IP', text=ip_addr, inline=True)
 
-        if self.plugin.get_settings().get(['show_external_ip'], merged=True):
+        if self.plugin.get_settings().get(['show_external_ip'], merged=True) != 'off':
             builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
 
         operational = self.plugin.get_printer().is_operational()
@@ -315,16 +305,20 @@ class Command:
         current_data = self.plugin.get_printer().get_current_data()
 
         if current_data.get('currentZ'):
-            builder.add_field(title='Current Z', text=current_data['currentZ'], inline=True)
+            builder.add_field(title='Current Z', text=str(current_data['currentZ']), inline=True)
         if operational:
             temperatures = self.plugin.get_printer().get_current_temperatures()
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
-                builder.add_field(title='Extruder Temp (%s)' % heater, text=temperatures[heater]['actual'], inline=True)
+                if temperatures[heater]['actual'] is None or len(str(temperatures[heater]['actual'])) == 0:
+                    continue
+                builder.add_field(title='Extruder Temp (%s)' % heater,
+                                  text=str(temperatures[heater]['actual']),
+                                  inline=True)
 
             if temperatures['bed']['actual']:
-                builder.add_field(title='Bed Temp', text=temperatures['bed']['actual'], inline=True)
+                builder.add_field(title='Bed Temp', text=str(temperatures['bed']['actual']), inline=True)
 
             printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
@@ -387,9 +381,11 @@ class Command:
 
     @staticmethod
     def _parse_array(string):
-        if string and isinstance(string, basestring):
+        # noinspection PyBroadException
+        try:
             return re.split("[^a-zA-Z0-9*]+", string)
-        return None
+        except:
+            return None
 
     def check_perms(self, command, user):
         permissions = self.plugin.get_settings().get(['permissions'], merged=True)
@@ -429,7 +425,7 @@ class Command:
         except Exception as e:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to execute gcode",
-                                     description="Error: %s" % unicode(e))
+                                     description="Error: %s" % e)
 
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")

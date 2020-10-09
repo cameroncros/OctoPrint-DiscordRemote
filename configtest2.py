@@ -1,7 +1,7 @@
 import yaml
 
 config_file = "config.yaml"
-octoprint_config = "testenv/testconfig/config.yaml"
+octoprint_config = "testenv2/testconfig/config.yaml"
 bot_details = {}
 try:
     with open(config_file, "r") as config:
@@ -23,5 +23,5 @@ except:
 octo_config['plugins']['discordremote'] = bot_details
 
 with open(octoprint_config, "w") as config:
-    yaml.safe_dump(octo_config, stream=config, default_flow_style=False, indent="  ", allow_unicode=True)
+    yaml.safe_dump(octo_config, stream=config, default_flow_style=False, indent=2, allow_unicode=True)
 

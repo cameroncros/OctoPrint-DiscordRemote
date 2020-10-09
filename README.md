@@ -1,7 +1,11 @@
 # OctoPrint-DiscordRemote
 
-DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel via a discord bot. It also listens on the channel and can accept commands to control the printer.
+DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel.
+The plugin acts as a Discord bot, which allows it to listen on the channel and respond to commands to control the printer.
+There is a small amount of configuration needed on Discord to create the bot, but no programming is required.
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
+
+Note, using this plug-in requires building and setting up your own discord bot.
 
 [![](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote)
 
@@ -16,6 +20,10 @@ License : MIT
 [megasaturnv](https://github.com/megasaturnv) for their assistance with configuring the access settings.
 
 [goscicki](https://github.com/goscicki) for their help testing the /gcode capability.
+
+[timothy-b](https://github.com/timothy-b) for their help fixing the help command handling.
+
+[wchill](https://github.com/wchill) for the custom embed in notification change.
 
 ## Changelog
 
@@ -32,10 +40,50 @@ or manually using this URL:
 
 ### Create the Discord Bot  in Discord
 
-See the following link for instructions on how to setup a Discord bot and get the Channel ID:
+See the following link for instructions on how to setup a Discord bot:
 
     https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
-    
+
+#### Tips
+
+- The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
+- When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
+- OAuth2 permissions are not necessary.  
+- If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
+
+## API
+
+There are currently 2 API's available for interacting with the bot.
+These can be used by sending a POST request to `[octoprint_url]/api/plugin/discordremote`, with JSON in the body of the request.
+
+### Send command
+This API lets you send a command as if you typed it in discord.
+The response will be sent to discord.
+The JSON format is:
+
+    {
+        "command": "executeCommand",
+        "args": "COMMAND GOES HERE"
+    }
+
+### Send message
+This API lets you send a message directly to discord.
+The JSON format is:
+
+    {
+        "command": "sendMessage",
+        "title": "TITLE GOES HERE",
+        "description": "DESCRIPTION GOES HERE",
+        "color": 0x123456,
+        "image": "BASE64 ENCODED FILE DATA HERE",
+        "imagename": "IMAGE NAME GOES HERE"
+    }
+
+* All fields are optional, but at least a title, description or image should be provided.
+* The color is an integer value here that corresponds to the color you want.
+* The image is base64 bytes.
+* The image name defaults to "snapshot.png" if not provided.
+
 ## Commands
 
 To get a list of available commands and arguments, type ``/help`` into the discord channel. The bot will return all available commands.
@@ -80,7 +128,7 @@ Here you can customize every message handled by DiscordRemote.
 ## Message format
 
 Messages are regular Discord messages, which means you can use :
-- `**markdown**` format (see [Discord Documentation](https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-))
+- `**markdown**` format (see [Discord Documentation](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-))
 - `:emoji:` shortcuts to display emojis
 - `@mentions` to notify someone
 

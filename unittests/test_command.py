@@ -9,7 +9,7 @@ from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 file_list = {'local': {
-    u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530L, 'type': 'folder', 'typePath': ['folder'],
+    u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530, 'type': 'folder', 'typePath': ['folder'],
                  'display': u'folder1',
                  'children': {
                      u'test.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
@@ -18,7 +18,7 @@ file_list = {'local': {
                                               'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                              'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822075,
                                      'path': u'folder1/test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
-                                     'size': 6530L}
+                                     'size': 6530}
                  }},
     u'test2.gcode': {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'name': u'test.gcode',
                     'typePath': ['machinecode', 'gcode'], 'analysis': {
@@ -26,16 +26,16 @@ file_list = {'local': {
                              'minZ': None}, 'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
             'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'date': 1525822021,
                     'path': u'test.gcode', 'type': 'machinecode', 'display': u'test.gcode',
-                    'size': 6530L}}}
+                    'size': 6530}}}
 
 flatten_file_list = [
     {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822075,
-     'path': u'folder1/test.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'path': u'folder1/test.gcode', 'size': 6530, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'},
     {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'test.gcode', 'date': 1525822021,
-     'path': u'/test2.gcode', 'size': 6530L, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
+     'path': u'/test2.gcode', 'size': 6530, 'type': 'machinecode', 'typePath': ['machinecode', 'gcode'],
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
@@ -55,26 +55,25 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
     def setUp(self):
-        with mock.patch('octoprint_discordremote.DiscordRemotePlugin.discord'):
-            self.plugin = DiscordRemotePlugin()
+        self.plugin = DiscordRemotePlugin()
+        self.plugin.discord = mock.Mock()
+        self.plugin._printer = mock.Mock()
+        self.plugin._plugin_manager = mock.Mock()
+        self.plugin._file_manager = mock.Mock()
+        self.plugin._settings = mock.Mock()
+        self.plugin._settings.get = mock.Mock()
+        self.plugin._settings.get.side_effect = self._mock_settings_get
 
-            self.plugin._printer = mock.Mock()
-            self.plugin._plugin_manager = mock.Mock()
-            self.plugin._file_manager = mock.Mock()
-            self.plugin._settings = mock.Mock()
-            self.plugin._settings.get = mock.Mock()
-            self.plugin._settings.get.side_effect = self._mock_settings_get
+        self.plugin.get_printer_name = mock.Mock()
+        self.plugin.get_printer_name.return_value = 'OctoPrint'
 
-            self.plugin.get_printer_name = mock.Mock()
-            self.plugin.get_printer_name.return_value = 'OctoPrint'
+        self.plugin.get_ip_address = mock.Mock()
+        self.plugin.get_ip_address.return_value = "192.168.1.1"
 
-            self.plugin.get_ip_address = mock.Mock()
-            self.plugin.get_ip_address.return_value = "192.168.1.1"
+        self.plugin.get_external_address = mock.Mock()
+        self.plugin.get_external_address.return_value = "1.2.3.4"
 
-            self.plugin.get_external_address = mock.Mock()
-            self.plugin.get_external_address.return_value = "1.2.3.4"
-
-            self.command = Command(self.plugin)
+        self.command = Command(self.plugin)
 
     def _validate_embeds(self, embeds, color):
         self.assertIsNotNone(embeds)
@@ -108,15 +107,32 @@ class TestCommand(DiscordRemoteTestCase):
             self.assertIn(image[0], embeds[0].files)
 
     def test_parse_command(self):
-        for command in ['help', '/asdf']:
-            self.command.help = mock.Mock()
-            self.command.help.return_value = None, None
+        self.command.check_perms = mock.Mock()
+        self.command.check_perms.return_value = True
+        self.command.help = mock.Mock()
+        self.command.help.return_value = None, None
+
+        self.command.command_dict['help'] = {'cmd': self.command.help, 'description': "Mock help."}
+
+        for command in ['/asdf', "/", "/help", "/?"]:
+            self.command.check_perms.reset_mock()
+            self.command.help.reset_mock()
             snapshots, embeds = self.command.parse_command(command, user="Dummy")
             self.assertIsNone(snapshots)
             self.assertIsNone(embeds)
             self.command.help.assert_called_once()
+            self.command.check_perms.assert_called_once()
 
-        self.command.check_perms = mock.Mock()
+        for command in ['asdf / fdsa', 'help', 'whatever']:
+            self.command.check_perms.reset_mock()
+            self.command.help.reset_mock()
+            snapshots, embeds = self.command.parse_command(command, user="Dummy")
+            self.assertIsNone(snapshots)
+            self.assertIsNone(embeds)
+            self.command.help.assert_not_called()
+            self.command.check_perms.assert_not_called()
+
+        self.command.check_perms.reset_mock()
         self.command.check_perms.return_value = False
         snapshots, embeds = self.command.parse_command("/print", user="Dummy")
         self.assertIsNone(snapshots)
@@ -133,7 +149,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
 
         self._validate_embeds(embeds, COLOR_INFO)
@@ -189,25 +205,6 @@ class TestCommand(DiscordRemoteTestCase):
                                     description='/temp/path')
         self.assertIsNone(snapshots)
 
-    def test_parse_command_unknown(self):
-        self.command.help = mock.Mock()
-
-        # No prefix, cry for help
-        self.command.parse_command("HeLp")
-        self.command.help.assert_called_once()
-        self.command.help.reset_mock()
-
-        # Invalid command, return help
-        self.command.parse_command("/?")
-        self.command.help.assert_called_once()
-        self.command.help.reset_mock()
-
-        # No/Wrong prefix
-        snapshots, embeds = self.command.parse_command("not a command")
-        self.assertIsNone(embeds)
-        self.assertIsNone(snapshots)
-        self.command.help.assert_not_called()
-
     def test_parse_command_snapshot(self):
         # Fail: Camera not working.
         # TODO
@@ -233,9 +230,9 @@ class TestCommand(DiscordRemoteTestCase):
         # Success: Printed help
         snapshots, embeds = self.command.parse_command("/help")
 
-        message = ""
+        message = u""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
         for command, details in self.command.command_dict.items():
             self.assertIn(command, message)
@@ -251,8 +248,9 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_file_manager().list_files.return_value = file_list
         flat_file_list = self.command.get_flat_file_list()
         self.plugin.get_file_manager().list_files.assert_called_once()
-        self.assertEqual(2, len(flat_file_list))
-        self.assertEqual(flatten_file_list, flat_file_list)
+        self.assertEqual(len(flatten_file_list), len(flat_file_list))
+        for file in flatten_file_list:
+            self.assertIn(file, flat_file_list)
 
     def test_find_file(self):
         self.plugin.get_file_manager().list_files = mock.Mock()
@@ -374,7 +372,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         message = ""
         for embed in embeds:
-            message += unicode(embed)
+            message += str(embed)
         print(message)
 
         expected_terms = ['Status', 'Operational', 'Current Z',
@@ -427,7 +425,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         mock_request_val = mock.Mock()
         mock_request_val.iter_content = mock.Mock()
-        mock_request_val.iter_content.return_value = b'1234'
+        mock_request_val.iter_content.return_value = [b'1234']
         mock_get.return_value = mock_request_val
 
         # Upload, no user

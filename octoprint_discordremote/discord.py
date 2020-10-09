@@ -3,6 +3,7 @@
 # Simple module to send messages through a Discord WebHook
 # post a message to discord api via a bot
 # bot must be added to the server and have write access to the channel
+from __future__ import unicode_literals
 
 import json
 from threading import Thread, Event
@@ -36,33 +37,31 @@ GUILD_SYNC = 12
 
 class Discord:
     def __init__(self):
-        pass
+        self.channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
+        self.bot_token = None  # get from the bot page. must be a bot, not a discord app
+        self.gateway_url = "https://discord.com/api/gateway"
+        self.postURL = None  # URL to post messages to, as the bot
+        self.heartbeat_sent = 0
+        self.heartbeat_interval = None
+        self.last_sequence = None
+        self.session_id = None
+        self.web_socket = None  # WebSocket. Used for heartbeat.
+        self.logger = logging  # Logger, uses default logging unless overridden
+        self.headers = None  # Object containing the headers to send messages with.
+        self.queue = []  # Message queue, stores messages until the bot reconnects.
+        self.command = None  # Command parser
+        self.status_callback = None  # The callback to use when the status changes.
+        self.error_counter = 0  # The number of errors that have occured.
+        self.me = None  # The Bots ID.
 
-    channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
-    bot_token = None  # get from the bot page. must be a bot, not a discord app
-    gateway_url = "https://discordapp.com/api/gateway"
-    postURL = None  # URL to post messages to, as the bot
-    heartbeat_sent = 0
-    heartbeat_interval = None
-    last_sequence = None
-    session_id = None
-    web_socket = None  # WebSocket. Used for heartbeat.
-    logger = logging  # Logger, uses default logging unless overridden
-    headers = None  # Object containing the headers to send messages with.
-    queue = []  # Message queue, stores messages until the bot reconnects.
-    command = None  # Command parser
-    status_callback = None  # The callback to use when the status changes.
-    error_counter = 0  # The number of errors that have occured.
-    me = None  # The Bots ID.
+        # Threads:
+        self.manager_thread = None
+        self.heartbeat_thread = None
+        self.listener_thread = None
 
-    # Threads:
-    manager_thread = None
-    heartbeat_thread = None
-    listener_thread = None
-
-    # Events
-    restart_event = Event()  # Set to restart discord bot.
-    shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
+        # Events
+        self.restart_event = Event()  # Set to restart discord bot.
+        self.shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
     def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
         self.shutdown_event.clear()
@@ -87,7 +86,7 @@ class Discord:
             self.shutdown_discord()
             return
 
-        self.postURL = "https://discordapp.com/api/channels/{}/messages".format(self.channel_id)
+        self.postURL = "https://discord.com/api/channels/{}/messages".format(self.channel_id)
         self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                         "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
@@ -195,9 +194,9 @@ class Discord:
                     self.heartbeat_sent += 1
                     self.logger.info("Heartbeat: %s" % js)
                 except Exception as exc:
-                    self.logger.error("Exception caught: %s", unicode(exc))
+                    self.logger.error("Exception caught: %s", exc)
 
-            for i in range(self.heartbeat_interval / 1000):
+            for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
@@ -384,7 +383,7 @@ class Discord:
                 if r:
                     return True
             except Exception as e:
-                self.logger.debug("Failed to send the message, exception occured: %s", e)
+                self.logger.debug("Failed to send the message, exception occured: %s", str(e))
                 self.error_counter += 1
                 self.check_errors()
                 self.queue_message(snapshot, embed)
@@ -396,11 +395,11 @@ class Discord:
                 continue
             else:
                 self.logger.error("Failed to send message:")
-                self.logger.error("\tResponse: %s" % self.log_safe(r))
-                self.logger.error("\tResponse Content: %s" % self.log_safe(r.content))
-                self.logger.error("\tResponse Headers: %s" % self.log_safe(r.headers))
-                self.logger.error("\tURL: %s" % self.log_safe(self.postURL))
-                self.logger.error("\tHeaders: %s" % self.log_safe(self.headers))
+                self.logger.error("\tResponse: %s" % self.log_safe(str(r.status_code)))
+                self.logger.error("\tResponse Content: %s" % self.log_safe(str(r.content)))
+                self.logger.error("\tResponse Headers: %s" % self.log_safe(str(r.headers)))
+                self.logger.error("\tURL: %s" % self.log_safe(str(self.postURL)))
+                self.logger.error("\tHeaders: %s" % self.log_safe(str(self.headers)))
                 self.logger.error("\tData: %s" % data)
                 self.logger.error("\tFiles: %s" % files)
                 self.error_counter += 1
@@ -433,4 +432,4 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        return unicode(message).replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
+        return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
