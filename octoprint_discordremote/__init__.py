@@ -154,6 +154,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._settings.get(['channelid'], merged=True),
                                        self._logger,
                                        self.command,
+                                       self,
                                        self.update_discord_status)
         if send_test:
             self.notify_event("test")
