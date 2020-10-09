@@ -19,7 +19,7 @@ class Command:
         assert plugin
         self.plugin = plugin
         self.command_dict = collections.OrderedDict()
-        self.command_dict['connect'] = {'cmd': self.connect, 'params': "{port} {baudrate}",
+        self.command_dict['connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]",
                                         'description': "Connect to a printer."}
         self.command_dict['disconnect'] = {'cmd': self.disconnect, 'description': "Disconnect from a printer."}
         self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
