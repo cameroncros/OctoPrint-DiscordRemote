@@ -54,13 +54,11 @@ class Discord:
         self.error_counter = 0  # The number of errors that have occured.
         self.me = None  # The Bots ID.
         self.plugin = None
-        self.presence_cycle_id = 0
 
         # Threads:
         self.manager_thread = None
         self.heartbeat_thread = None
         self.listener_thread = None
-        self.presence_thread = None
 
         # Events
         self.restart_event = Event()  # Set to restart discord bot.
@@ -181,13 +179,13 @@ class Discord:
                 self.logger.info("HeartBeat thread joined.")
         self.heartbeat_thread = None
 
-        if self.presence_thread:
-            self.presence_thread.join(timeout=60)
-            if self.presence_thread.is_alive():
+        if self.plugin.presence_thread:
+            self.plugin.presence_thread.join(timeout=60)
+            if self.plugin.presence_thread.is_alive():
                 self.logger.error("Presence thread has hung, leaking it now.")
             else:
                 self.logger.info("Presence thread joined.")
-        self.presence_thread = None
+        self.plugin.presence_thread = None
 
     def heartbeat(self):
         self.check_errors()
@@ -211,53 +209,28 @@ class Discord:
             for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
-    
-    def generate_status(self):
-        if self.plugin.get_printer().is_operational():
-            if self.plugin.get_printer().is_printing():
-                return "Printing {} - {}%".format(self.plugin.get_printer().get_current_data()['job']['file']['name'], self.plugin.get_printer().get_current_data()['progress']['completion'])
-            else:
-                return "Idle."
-        else:
-            return "Not operational."
-    
-    def presence(self):
-        self.check_errors()
-        presence_cycle = {
-            0: "{}help".format(self.plugin.get_settings().get(["prefix"])),
-            1: "{}".format(self.generate_status())
-        }
-        while not self.shutdown_event.is_set():
-            
-            if self.web_socket:
-                presence_cycle[1] = "{}".format(self.generate_status())
-                out = {
-                    'op': PRESENCE, 
-                    'd': {
-                        "activities": [{
-                            "type": 0, 
-                            "name": str(presence_cycle[self.presence_cycle_id])
-                        }],
-                        "status": "online",
-                        "afk": False,
-                        "since": None
-                    }
-                }
-                js = json.dumps(out)
-                try:
-                    self.web_socket.send(js)
-                    self.logger.info("Presence: {} {}".format(js, self.presence_cycle_id))
-                except Exception as exc:
-                    self.logger.error("Exception caught: %s", exc)
-            
-            self.presence_cycle_id += 1
-            if self.presence_cycle_id == len(presence_cycle):
-                self.presence_cycle_id = 0
-            
-            for i in range(int(round(10))):
-                if not self.shutdown_event.is_set():
-                    time.sleep(1)
 
+    def update_presence(self, message):
+        if self.web_socket:
+            out = {
+                'op': self.PRESENCE, 
+                'd': {
+                    "activities": [{
+                        "type": 0, 
+                        "name": message
+                    }],
+                    "status": "online",
+                    "afk": False,
+                    "since": None
+                }
+            }
+            js = json.dumps(out)
+            try:
+                self.web_socket.send(js)
+                self.logger.info("Presence: {} {}".format(js, self.presence_cycle_id))
+            except Exception as exc:
+                self.logger.error("Exception caught: %s", exc)
+            
     def on_message(self, message):
         js = json.loads(message)
 
@@ -335,22 +308,21 @@ class Discord:
         if self.heartbeat_thread:
             self.logger.info("Heartbeat thread is_alive(): %s", self.heartbeat_thread.is_alive())
 
-        # Debug output status of heartbeat thread.
-        self.logger.info("Presence thread: %s", self.heartbeat_thread)
-        if self.presence_thread:
-            self.logger.info("Presence thread is_alive(): %s", self.presence_thread.is_alive())
-
         # Setup heartbeat_thread
         if not self.heartbeat_thread or not self.heartbeat_thread.is_alive():
             self.logger.info("Starting Heartbeat thread")
             self.heartbeat_thread = Thread(target=self.heartbeat)
             self.heartbeat_thread.start()
         
-        # Setup heartbeat_thread
-        if not self.presence_thread or not self.presence_thread.is_alive():
+        # Debug output status of heartbeat thread.
+        self.logger.info("presence thread: %s", self.plugin.presence_thread)
+        if self.plugin.presence_thread:
+            self.logger.info("presence_thread thread is_alive(): %s", self.plugin.presence_thread.is_alive())
+
+        if not self.plugin.presence_thread or not self.plugin.presence_thread.is_alive():
             self.logger.info("Starting Presence thread")
-            self.presence_thread = Thread(target=self.presence)
-            self.presence_thread.start()
+            self.plugin.presence_thread = Thread(target=self.plugin.presence)
+            self.plugin.presence_thread.start()
 
         # Signal that we are connected.
         self.process_queue()

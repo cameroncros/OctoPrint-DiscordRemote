@@ -14,6 +14,7 @@ import requests
 import socket
 import subprocess
 import logging
+import json
 from PIL import Image
 from flask import make_response
 from io import BytesIO
@@ -44,6 +45,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.is_muted = False
         self.periodic_signal = None
         self.periodic_thread = None
+        self.presence_cycle_id = 0
+
+        self.presence_thread = None
+
         # Events definition here (better for intellisense in IDE)
         # referenced in the settings too.
         self.events = {
@@ -158,6 +163,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self.update_discord_status)
         if send_test:
             self.notify_event("test")
+    
+    def start_presence_thread(self):
+        # Setup heartbeat_thread
+        if not self.presence_thread or not self.presence_thread.is_alive():
+            self._logger.info("Starting Presence thread")
+            self.presence_thread = Thread(target=self.presence)
+            self.presence_thread.start()
 
     def on_after_startup(self):
         # Use a different log file for DiscordRemote, as it is very noisy.
@@ -182,6 +194,38 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             self.send_message(None, "⚠️⚠️⚠️ Allowed users has been changed to a more granular system. "
                                     "Check the DiscordRemote settings and check that it is suitable⚠️⚠️⚠️")
+        
+        # self.start_presence_thread()
+
+    def generate_status(self):
+        if self.get_printer().is_operational():
+            if self.get_printer().is_printing():
+                return "Printing {} - {}%".format(self.get_printer().get_current_data()['job']['file']['name'], self.get_printer().get_current_data()['progress']['completion'])
+            else:
+                return "Idle."
+        else:
+            return "Not operational."
+    
+    def presence(self):
+        self.discord.check_errors()
+        presence_cycle = {
+            0: "{}help".format(self.get_settings().get(["prefix"])),
+            1: "{}".format(self.generate_status())
+        }
+        while not self.discord.shutdown_event.is_set():
+            
+            self._logger.info("BRUH")
+            presence_cycle[1] = "{}".format(self.generate_status())
+            
+            self.discord.update_presence(str(presence_cycle[self.presence_cycle_id]))
+
+            self.presence_cycle_id += 1
+            if self.presence_cycle_id == len(presence_cycle):
+                self.presence_cycle_id = 0
+            
+            for i in range(int(round(10))):
+                if not self.discord.shutdown_event.is_set():
+                    time.sleep(1)
 
     # ShutdownPlugin mixin
     def on_shutdown(self):
