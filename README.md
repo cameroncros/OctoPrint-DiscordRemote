@@ -25,6 +25,8 @@ License : MIT
 
 [wchill](https://github.com/wchill) for the custom embed in notification change.
 
+[SgtKiLLx](https://github.com/SgtKiLLx) for various typo fixes.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
