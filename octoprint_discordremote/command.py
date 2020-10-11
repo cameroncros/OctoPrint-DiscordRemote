@@ -285,11 +285,11 @@ class Command:
                                      title='Failed to disconnect')
 
         return None, success_embed(author=self.plugin.get_printer_name(),
-                                   title='Disconnected to printer')
+                                   title='Disconnected from printer')
 
     def status(self):
         builder = EmbedBuilder()
-        builder.set_title('Status')
+        builder.set_title('Current Status')
         builder.set_author(name=self.plugin.get_printer_name())
 
         if self.plugin.get_settings().get(['show_local_ip'], merged=True) != 'off':
