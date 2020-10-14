@@ -180,7 +180,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self._logger.info("DiscordRemote is started !")
         self.configure_discord(False)
 
-        self.configure_presence()
+        if self._settings.get(['presence']):
+            self.configure_presence()
 
         # Transition settings
         allowed_users = self._settings.get(['allowedusers'], merged=True)
@@ -203,6 +204,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'bottoken': "",
             'channelid': "",
             'baseurl': "",
+            'presence': True,
+            'presence_cycle_time': 10,
             'prefix': "/",
             'show_local_ip': 'auto',
             'show_external_ip': 'auto',
@@ -226,6 +229,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ["channelid"],
                            ["permissions"],
                            ['baseurl'],
+                           ['presence'],
+                           ['presence_cycle_time'],
                            ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],

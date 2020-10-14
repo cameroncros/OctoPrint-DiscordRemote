@@ -35,6 +35,28 @@
             </small>
         </div>
 
+        <div class="control-group">
+            <label class="control-label">{{ _('Enable Presence') }}</label>
+            <div class="controls">
+                <input type="checkbox" class="" data-bind="checked: settings.plugins.discordremote.presence"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("Check this box to enable a rotating status message within Discord, showing the currently configured prefix and printer status. May require a restart to apply.") }}
+            </small>
+        </div>   
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Presence Cycle') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.presence_cycle_time"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("Time between each presence cycle update, in seconds. The default is 10. May require a restart to apply.") }}
+            </small>
+        </div>
+
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
         </div>
