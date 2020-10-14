@@ -82,7 +82,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "name": "Printing process : started",
                 "enabled": True,
                 "with_snapshot": True,
-                "message": "🖨️ I've started printing {file}"
+                "message": "🖨️ I've started printing {path}"
             },
             "printing_paused": {
                 "name": "Printing process : paused",
@@ -195,8 +195,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             'channelid': "",
             'baseurl': "",
             'prefix': "/",
-            'show_local_ip': True,
-            'show_external_ip': True,
+            'show_local_ip': 'auto',
+            'show_external_ip': 'auto',
+            'use_hostname': False,
+            'hostname': "YOUR.HOST.NAME",
+            'use_hostname_only': False,
             'events': self.events,
             'permissions': self.permissions,
             'allow_scripts': False,
@@ -217,6 +220,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                            ['prefix'],
                            ["show_local_ip"],
                            ["show_external_ip"],
+                           ["use_hostname"],
+                           ["hostname"],
+                           ["use_hostname_only"],
                            ['script_before'],
                            ['script_after'],
                            ['allowed_gcode']])
@@ -407,24 +413,30 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
 
-    @staticmethod
-    def get_ip_address():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            return s.getsockname()[0]
-        except Exception as e:
-            print(e)
-            return '127.0.0.1'
-        finally:
-            s.close()
+    def get_ip_address(self):
+        if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
+            return self._settings.get(['hostname'], merged=True)
+        elif self._settings.get(['show_local_ip'], merged=True) == 'auto':
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                # doesn't even have to be reachable
+                s.connect(('10.255.255.255', 1))
+                return s.getsockname()[0]
+            except Exception as e:
+                print(e)
+                return '127.0.0.1'
+            finally:
+                s.close()
+        else:
+            return None
 
     def get_external_ip_address(self):
-        if self.get_settings().get(['show_external_ip'], merged=True):
+        if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
+            return self._settings.get(['hostname'], merged=True)
+        elif self._settings.get(['show_local_ip'], merged=True) == 'auto':
             return ipgetter.myip()
         else:
-            return "External IP disabled"
+            return None
 
     def get_port(self):
         port = self.get_settings().global_get(["plugins", "discovery", "publicPort"])
@@ -499,7 +511,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     @staticmethod
     def get_snapshot_fake():
-        fl = open(os.environ['FAKE_SNAPSHOT'])
+        fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
         return [("snapshot.png", fl)]
 
     def get_snapshot_camera(self):
