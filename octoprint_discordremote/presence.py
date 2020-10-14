@@ -40,8 +40,6 @@ class Presence:
             
             presence_cycle[1] = "{}".format(self.generate_status())
             
-            self.discord.logger.info(self.plugin.get_settings().get(['presence']))
-            
             if self.plugin.get_settings().get(['presence']):
                 self.discord.update_presence(presence_cycle[self.presence_cycle_id])
             else:
