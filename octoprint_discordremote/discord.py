@@ -220,7 +220,7 @@ class Discord:
                 out = {
                     'op': PRESENCE, 
                     'd': {
-                        "activities": None,
+                        "activities": [],
                         "status": "online",
                         "afk": False,
                         "since": None
