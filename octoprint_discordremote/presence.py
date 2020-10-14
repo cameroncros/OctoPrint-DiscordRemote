@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from logging import disable
 
 from threading import Thread
 import time
@@ -15,7 +16,7 @@ class Presence:
         self.plugin = plugin
         self.discord = discord
 
-        # Setup heartbeat_thread
+        # Setup presence thread
         if not self.presence_thread or not self.presence_thread.is_alive():
             self.discord.logger.info("Starting Presence thread")
             self.presence_thread = Thread(target=self.presence)
@@ -38,12 +39,16 @@ class Presence:
         while not self.discord.shutdown_event.is_set():
 
             presence_cycle[1] = "{}".format(self.generate_status())                
-            self.discord.update_presence(presence_cycle[self.presence_cycle_id])
+
+            if self.plugin.get_settings().get(['presence']):
+                self.discord.update_presence(presence_cycle[self.presence_cycle_id])
+            else:
+                self.discord.update_presence("", disable=True)
 
             self.presence_cycle_id += 1
             if self.presence_cycle_id == len(presence_cycle):
                 self.presence_cycle_id = 0
 
-            for i in range(int(round(10))):
+            for i in range(int(round(int(self.plugin.get_settings().get(['presence_cycle_time']))))):
                 if not self.discord.shutdown_event.is_set():
                     time.sleep(1)

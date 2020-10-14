@@ -201,20 +201,31 @@ class Discord:
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
-    def update_presence(self, msg):
+    def update_presence(self, msg, disable=False):
         if self.web_socket:
-            out = {
-                'op': PRESENCE, 
-                'd': {
-                    "activities": [{
-                        "type": 0, 
-                        "name": str(msg)
-                    }],
-                    "status": "online",
-                    "afk": False,
-                    "since": None
+            if not disable:
+                out = {
+                    'op': PRESENCE, 
+                    'd': {
+                        "activities": [{
+                            "type": 0, 
+                            "name": str(msg)
+                        }],
+                        "status": "online",
+                        "afk": False,
+                        "since": None
+                    }
                 }
-            }
+            else:
+                out = {
+                    'op': PRESENCE, 
+                    'd': {
+                        "activities": None,
+                        "status": "online",
+                        "afk": False,
+                        "since": None
+                    }
+                }
             js = json.dumps(out)
             try:
                 self.web_socket.send(js)
