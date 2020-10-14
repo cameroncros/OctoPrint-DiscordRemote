@@ -24,6 +24,7 @@ from threading import Thread, Event
 from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
+from octoprint_discordremote.presence import Presence
 from .discord import Discord
 
 
@@ -44,6 +45,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.is_muted = False
         self.periodic_signal = None
         self.periodic_thread = None
+        self.presence = None
         # Events definition here (better for intellisense in IDE)
         # referenced in the settings too.
         self.events = {
@@ -154,10 +156,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._settings.get(['channelid'], merged=True),
                                        self._logger,
                                        self.command,
-                                       self,
                                        self.update_discord_status)
         if send_test:
             self.notify_event("test")
+
+    def configure_presence(self):
+        if self.presence is None:
+            self.presence = Presence()
+        self.presence.configure_presence(self, self.discord)
 
     def on_after_startup(self):
         # Use a different log file for DiscordRemote, as it is very noisy.
@@ -173,6 +179,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
         self.configure_discord(False)
+
+        self.configure_presence()
 
         # Transition settings
         allowed_users = self._settings.get(['allowedusers'], merged=True)
