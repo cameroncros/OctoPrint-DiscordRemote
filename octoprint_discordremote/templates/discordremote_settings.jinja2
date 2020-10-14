@@ -22,10 +22,6 @@
             </div>
         </div>
 
-        <div style="clear:both">
-            <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
-        </div>
-
         <div class="control-group">
             <label class="control-label">{{ _('Base URL') }}</label>
             <div class="controls">
@@ -35,9 +31,14 @@
         <div style="clear:both">
             <small>{{ _("The base URL should be an address that you can access your octoprint installation from. Keep in
                 mind that if you do not have port forwarding set up, you can only download files from Discord on
-                your local network.") }}
+                your local network. If left blank, this setting will fall back to the Pi's local IP.") }}
             </small>
         </div>
+
+        <div style="clear:both">
+            <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
+        </div>
+
     </form>
 
     <h3>{{ _('Access settings') }}</h3>
@@ -91,20 +92,19 @@
                 <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.prefix"/>
             </div>
         </div>
+        <div style="clear:both">
+            <small>{{ _("The prefix will be the character that precedes the command. The default value is '/'.
+                If you change this setting, be sure to choose a character that is not used often (no alphanumerics).") }}
+            </small>
+        </div>
         <div class="control-group">
             <label class="control-label">{{ _('GCODE allowed') }}</label>
-            <div style="clear:both">
-                <small>{{ _("Whitelist for allowed GCODES to send when using the /gcode command. Comma seperated values.") }}</small>
-            </div>
             <div class="controls">
                 <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.allowed_gcode"/>
             </div>
         </div>
         <div style="clear:both">
-            <small>{{ _("The prefix will be the character that precedes the command. The default value is '/'.
-                If you change this setting, be sure to choose a character that is not used often (no alphanumerics).
-                If left blank, this setting will default to the Pi's local IP.") }}
-            </small>
+            <small>{{ _("Whitelist for allowed GCODES to send when using the /gcode command. Comma seperated values.") }}</small>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Show Local IP') }}</label>

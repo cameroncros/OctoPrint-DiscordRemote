@@ -34,14 +34,14 @@ class Command:
         self.command_dict['timelapse'] = {'cmd': self.timelapse,
                                           'description': "List all timelapses and respective download links."}
         self.command_dict['mute'] = {'cmd': self.mute,
-                                     'description': "Mute notifications"}
+                                     'description': "Mute notifications."}
         self.command_dict['unmute'] = {'cmd': self.unmute,
-                                       'description': "Unmute notifications"}
-        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': 'GCODE lines, seperated by \';\'',
-                                      'description': "Send a set of GCODE commands directly to the printer"}
-        self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "filename",
+                                       'description': "Unmute notifications."}
+        self.command_dict['gcode'] = {'cmd': self.gcode, 'params': '{GCODE}',
+                                      'description': "Send a set of GCODE commands directly to the printer. GCODE lines seperated by \';\'"}
+        self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "{filename}",
                                         'description': "Get a gcode file and upload to discord."}
-        self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "filename",
+        self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "{filename}",
                                              'description': "Get a timelapse file and upload to discord."}
 
         # Load plugins
