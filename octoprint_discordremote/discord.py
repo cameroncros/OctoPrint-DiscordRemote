@@ -53,17 +53,20 @@ class Discord:
         self.status_callback = None  # The callback to use when the status changes.
         self.error_counter = 0  # The number of errors that have occured.
         self.me = None  # The Bots ID.
+        self.plugin = None
+        self.presence_cycle_id = 0
 
         # Threads:
         self.manager_thread = None
         self.heartbeat_thread = None
         self.listener_thread = None
+        self.presence_thread = None
 
         # Events
         self.restart_event = Event()  # Set to restart discord bot.
         self.shutdown_event = Event()  # Set to stop all threads. Must also set restart_event
 
-    def configure_discord(self, bot_token, channel_id, logger, command, status_callback=None):
+    def configure_discord(self, bot_token, channel_id, logger, command, plugin, status_callback=None):
         self.shutdown_event.clear()
         self.restart_event.clear()
         self.bot_token = bot_token
@@ -73,6 +76,7 @@ class Discord:
         self.command = command
         self.status_callback = status_callback
         self.error_counter = 0
+        self.plugin = plugin
 
         if self.status_callback:
             self.status_callback(connected="disconnected")
@@ -176,6 +180,14 @@ class Discord:
             else:
                 self.logger.info("HeartBeat thread joined.")
         self.heartbeat_thread = None
+        
+        if self.presence_thread:
+            self.presence_thread.join(timeout=60)
+            if self.presence_thread.is_alive():
+                self.logger.error("Presence thread has hung, leaking it now.")
+            else:
+                self.logger.info("Presence thread joined.")
+        self.presence_thread = None
 
     def heartbeat(self):
         self.check_errors()
@@ -197,6 +209,52 @@ class Discord:
                     self.logger.error("Exception caught: %s", exc)
 
             for i in range(int(round(self.heartbeat_interval / 1000))):
+                if not self.shutdown_event.is_set():
+                    time.sleep(1)
+
+    def generate_status(self):
+        if self.plugin.get_printer().is_operational():
+            if self.plugin.get_printer().is_printing():
+                return "Printing {} - {}%".format(self.plugin.get_printer().get_current_data()['job']['file']['name'], self.plugin.get_printer().get_current_data()['progress']['completion'])
+            else:
+                return "Idle."
+        else:
+            return "Not operational."
+
+    def presence(self):
+        self.check_errors()
+        presence_cycle = {
+            0: "{}help".format(self.plugin.get_settings().get(["prefix"])),
+            1: "{}".format(self.generate_status())
+        }
+        while not self.shutdown_event.is_set():
+
+            if self.web_socket:
+                presence_cycle[1] = "{}".format(self.generate_status())
+                out = {
+                    'op': PRESENCE, 
+                    'd': {
+                        "activities": [{
+                            "type": 0, 
+                            "name": str(presence_cycle[self.presence_cycle_id])
+                        }],
+                        "status": "online",
+                        "afk": False,
+                        "since": None
+                    }
+                }
+                js = json.dumps(out)
+                try:
+                    self.web_socket.send(js)
+                    self.logger.info("Presence: {} {}".format(js, self.presence_cycle_id))
+                except Exception as exc:
+                    self.logger.error("Exception caught: %s", exc)
+
+            self.presence_cycle_id += 1
+            if self.presence_cycle_id == len(presence_cycle):
+                self.presence_cycle_id = 0
+
+            for i in range(int(round(10))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
@@ -277,11 +335,22 @@ class Discord:
         if self.heartbeat_thread:
             self.logger.info("Heartbeat thread is_alive(): %s", self.heartbeat_thread.is_alive())
 
+        # Debug output status of heartbeat thread.
+        self.logger.info("Presence thread: %s", self.heartbeat_thread)
+        if self.presence_thread:
+            self.logger.info("Presence thread is_alive(): %s", self.presence_thread.is_alive())
+
         # Setup heartbeat_thread
         if not self.heartbeat_thread or not self.heartbeat_thread.is_alive():
             self.logger.info("Starting Heartbeat thread")
             self.heartbeat_thread = Thread(target=self.heartbeat)
             self.heartbeat_thread.start()
+
+        # Setup heartbeat_thread
+        if not self.presence_thread or not self.presence_thread.is_alive():
+            self.logger.info("Starting Presence thread")
+            self.presence_thread = Thread(target=self.presence)
+            self.presence_thread.start()
 
         # Signal that we are connected.
         self.process_queue()
