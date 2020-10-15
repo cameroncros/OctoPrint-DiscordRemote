@@ -48,6 +48,6 @@ class Presence:
             else:
                 self.discord.update_presence("", disable=True)
 
-            for i in range(int(round(int(self.plugin.get_settings().get(['presence_cycle_time']))))):
+            for i in range(int(self.plugin.get_settings().get(['presence_cycle_time']))):
                 if not self.discord.shutdown_event.is_set():
                     time.sleep(1)
