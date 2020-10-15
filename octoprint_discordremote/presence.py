@@ -34,7 +34,7 @@ class Presence:
     def presence(self):
         presence_cycle = {
             0: "{}help".format(self.plugin.get_settings().get(["prefix"])),
-            1: "{}".format(self.generate_status())
+            1: self.generate_status()
         }
         while not self.discord.shutdown_event.is_set():                
 
