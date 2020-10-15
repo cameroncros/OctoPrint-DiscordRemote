@@ -39,7 +39,7 @@ class Presence:
         while not self.discord.shutdown_event.is_set():                
 
             if self.plugin.get_settings().get(['presence']):
-                presence_cycle[1] = "{}".format(self.generate_status())
+                presence_cycle[1] = self.generate_status()
                 self.discord.update_presence(presence_cycle[self.presence_cycle_id])
 
                 self.presence_cycle_id += 1
