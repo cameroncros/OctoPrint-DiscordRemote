@@ -40,7 +40,7 @@ class Presence:
 
             if self.plugin.get_settings().get(['presence']):
                 presence_cycle[1] = "{}".format(self.generate_status())
-                self.discord.update_presence(presence_cycle[self.presence_cycle_id] % len(presence_cycle))
+                self.discord.update_presence(presence_cycle[self.presence_cycle_id % len(presence_cycle)])
 
                 self.presence_cycle_id += 1
                 if self.presence_cycle_id == len(presence_cycle):
