@@ -15,7 +15,7 @@ License : MIT
 
 [Benjamin Chanudet](https://github.com/bchanudet) for their initial plugin, which this is based on.
 
-[OctopusProteins](https://github.com/OctopusProteins) for their work on the enclosure plugin, and file upload capabilities.
+[OctopusProteins](https://github.com/OctopusProteins) for their work on the enclosure plugin, file upload capabilities and presence updates.
 
 [megasaturnv](https://github.com/megasaturnv) for their assistance with configuring the access settings.
 
