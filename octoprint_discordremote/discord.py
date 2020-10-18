@@ -53,6 +53,7 @@ class Discord:
         self.status_callback = None  # The callback to use when the status changes.
         self.error_counter = 0  # The number of errors that have occured.
         self.me = None  # The Bots ID.
+        self.plugin = None
 
         # Threads:
         self.manager_thread = None
@@ -199,6 +200,38 @@ class Discord:
             for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
+
+    def update_presence(self, msg, disable=False):
+        if self.web_socket:
+            if not disable:
+                out = {
+                    'op': PRESENCE, 
+                    'd': {
+                        "activities": [{
+                            "type": 0, 
+                            "name": str(msg)
+                        }],
+                        "status": "online",
+                        "afk": False,
+                        "since": None
+                    }
+                }
+            else:
+                out = {
+                    'op': PRESENCE, 
+                    'd': {
+                        "activities": [],
+                        "status": "online",
+                        "afk": False,
+                        "since": None
+                    }
+                }
+            js = json.dumps(out)
+            try:
+                self.web_socket.send(js)
+                self.logger.info("Presence: {}".format(js))
+            except Exception as exc:
+                self.logger.error("Exception caught: %s", exc)
 
     def on_message(self, message):
         js = json.loads(message)
