@@ -1,35 +1,64 @@
-import os
+from __future__ import unicode_literals
 
-import logging
 import time
 
+import logging
+import os
 import socket
 import unittest
-from mock import mock
-from unittest import TestCase
 
+import six
 import yaml
+from mock import mock
 
 from octoprint_discordremote.discord import Discord
+from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
+from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
-class TestSend(TestCase):
+class TestLogger(logging.Logger):
+    def __init__(self):
+        super(TestLogger, self).__init__(name=None)
+
+    def setLevel(self, level):
+        pass
+
+    def debug(self, msg, *args):
+        print("DEBUG: %s" % msg, args)
+
+    def info(self, msg, *args):
+        print("INFO: %s" % msg, args)
+
+    def warning(self, msg, *args):
+        print("WARNING: %s" % msg, args)
+
+    def error(self, msg, *args):
+        print("ERROR: %s" % msg, args)
+
+    def exception(self, msg, *args):
+        print("EXCEPTION: %s" % msg, args)
+
+    def critical(self, msg, *args):
+        print("CRITICAL: %s" % msg, args)
+
+
+class TestSend(DiscordRemoteTestCase):
     def setUp(self):
-        config_file = "config.yaml"
-        try:
-            with open(config_file, "r") as config:
-                config = yaml.load(config.read())
-            self.discord = Discord()
-            self.discord.configure_discord(bot_token=config['bottoken'],
-                                           channel_id=config['channelid'],
-                                           allowed_users="",
-                                           logger=logging.getLogger(),
-                                           command=None)
-            time.sleep(5)
-        except:
-            self.fail("To test discord bot posting, you need to create a file "
-                      "called config.yaml in the root directory with your bot "
-                      "details. NEVER COMMIT THIS FILE.")
+        self.discord = Discord()
+        if "NET_TEST" in os.environ:
+            config_file = self._get_path("../config.yaml")
+            try:
+                with open(config_file, "r") as config:
+                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
+                self.discord.configure_discord(bot_token=config['bottoken'],
+                                               channel_id=config['channelid'],
+                                               logger=TestLogger(),
+                                               command=None)
+                time.sleep(5)
+            except:
+                self.fail("To test discord bot posting, you need to create a file "
+                          "called config.yaml in the root directory with your bot "
+                          "details. NEVER COMMIT THIS FILE.")
 
     def tearDown(self):
         self.discord.shutdown_discord()
@@ -46,27 +75,39 @@ class TestSend(TestCase):
         finally:
             s.close()
 
-        # Should result in 3 messages. 1 text only, 1 text+img and 1 image only
-        self.assertTrue(self.discord._dispatch_message("Test message 1"))
-        with open("unittests/test_pattern.png", "rb") as f:
-            self.assertTrue(self.discord._dispatch_message("Test message 2", f))
-            self.assertTrue(self.discord._dispatch_message(None, f))
+        # Should result in 3 messages, one embed, one embed with photo, and one photo.
+        builder = EmbedBuilder()
+        builder.set_title("Test title")
+        builder.set_description("No snapshot")
+
+        self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
+        with open(self._get_path("test_pattern.png"), "rb") as f:
+            builder.set_description("With snapshot")
+            builder.set_image(("snapshot.png", f))
+            self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+
+            f.seek(0)
+            self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
 
     def test_send(self):
         self.discord._dispatch_message = mock.Mock()
+        mock_snapshot = mock.Mock()
+        mock_embed = mock.Mock()
+        self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
 
-        with open("unittests/test_pattern.png", "rb") as f:
-            short_str = "x" * 1998
-            self.assertTrue(self.discord.send(short_str, f))
-            self.discord._dispatch_message.assert_called_once_with(message="`%s`" % short_str, snapshot=f)
-            self.discord._dispatch_message.reset_mock()
+        self.assertEqual(2, self.discord._dispatch_message.call_count)
+        calls = [mock.call(snapshot=mock_snapshot),
+                 mock.call(embed=mock_embed)]
+        self.discord._dispatch_message.assert_has_calls(calls=calls)
 
-            # split_text() doesnt properly deal with lines over 1998 chars long.
-            # Wont fix it til it comes up.
-            long_str = (short_str + '\n') * 5
-            self.assertTrue(self.discord.send(long_str, f))
-            self.assertEqual(6 , self.discord._dispatch_message.call_count)
-            self.discord._dispatch_message.reset_mock()
+        large_file_path = self._get_path("large_file_temp")
+        with open(large_file_path, 'w') as f:
+            for i in range(0, DISCORD_MAX_FILE_SIZE):
+                f.write(str(i))
+
+        embeds = upload_file(large_file_path)
+        self.discord.send(embeds=embeds)
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")
@@ -81,19 +122,33 @@ class TestSend(TestCase):
         self.discord.send_resume = mock.Mock()
         self.discord.send_resume.side_effect = orig_send_resume
 
+        orig_handle_invalid = self.discord.handle_invalid_session
+        self.discord.handle_invalid_session = mock.Mock()
+        self.discord.handle_invalid_session.side_effect = orig_handle_invalid
+
         while self.discord.restart_event.is_set():
             time.sleep(0.001)
 
+        self.discord.web_socket = None
         self.discord.restart_event.set()
 
-        resume_called_count = 0
+        resume_succeeded = 0
         for i in range(0, 1100):
             self.discord.send_resume.reset_mock()
+            while self.discord.restart_event.is_set():
+                time.sleep(1)
             self.discord.restart_event.set()
-            time.sleep(60)
             # Wait til resume is called
-            if self.discord.send_resume.called:
-                resume_called_count += 1
-                print("Resumed: %i" % i)
+            while not self.discord.send_resume.called:
+                time.sleep(1)
+            self.discord.send_resume.reset_mock()
 
-        print("Total Successful Resumes: %i" % resume_called_count)
+            # Check if invalid session occurred. Might not receive it til the next iteration.
+            if self.discord.handle_invalid_session.called:
+                resume_succeeded -= 1
+                self.discord.handle_invalid_session.reset_mock()
+
+            resume_succeeded += 1
+            print("Resumed: %i, Succeeded: %i" % (i, resume_succeeded))
+
+        print("Total Successful Resumes: %i" % resume_succeeded)

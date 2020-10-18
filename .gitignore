@@ -8,4 +8,10 @@ dist
 .DS_Store
 *.zip
 testenv/
+testenv3/
 config.yaml
+.coverage
+htmlcov/
+.tox/
+
+.vscode

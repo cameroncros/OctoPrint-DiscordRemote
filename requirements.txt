@@ -1,4 +1,3 @@
-PyYAML
 ###
 # This file is only here to make sure that something like
 #
@@ -6,9 +5,10 @@ PyYAML
 #
 # works as expected. Requirements can be found in setup.py.
 ###
+pillow
 websocket-client
 requests
-terminaltables
 humanfriendly
-ipgetter
-.
+#OctoPrint>=1.3.11
+zipfile2
+PyYAML

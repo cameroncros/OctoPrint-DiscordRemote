@@ -1,5 +1,23 @@
 # coding=utf-8
 
+import os
+from distutils.cmd import Command
+
+
+class CoverageCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        os.system("python -m coverage run --source octoprint_discordremote/ pytest")
+        os.system("python -m coverage html")
+
+
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
 
@@ -14,7 +32,7 @@ plugin_package = "octoprint_discordremote"
 plugin_name = "OctoPrint-DiscordRemote"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "2.14.0"
+plugin_version = "2.60.0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -33,7 +51,7 @@ plugin_url = "https://github.com/cameroncros/Octoprint-DiscordRemote"
 plugin_license = "MIT"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["Pillow==5.0.0", "websocket-client", "requests", "terminaltables", "humanfriendly", "ipgetter"]
+plugin_requires = ["pillow", "websocket-client", "requests", "humanfriendly", "OctoPrint>=1.3.11", "zipfile2", "PyYAML"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -59,7 +77,11 @@ plugin_ignored_packages = []
 # Example:
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {}
+additional_setup_parameters = {
+    'cmdclass': {
+        'coverage': CoverageCommand
+    }
+}
 
 ########################################################################################################################
 
