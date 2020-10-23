@@ -1,4 +1,5 @@
 # coding: utf-8
+# coding: utf-8
 
 # Simple module to send messages through a Discord WebHook
 # post a message to discord api via a bot
@@ -37,7 +38,7 @@ GUILD_SYNC = 12
 
 class Discord:
     def __init__(self):
-        self.channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
+        self.channel_id = []  # enable dev mode on discord, right-click on the channel, copy ID
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
         self.gateway_url = "https://discord.com/api/gateway"
         self.postURL = None  # URL to post messages to, as the bot
@@ -77,19 +78,22 @@ class Discord:
 
         if self.status_callback:
             self.status_callback(connected="disconnected")
-
-        if self.channel_id is None or len(self.channel_id) != CHANNEL_ID_LENGTH:
-            self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
-            self.shutdown_discord()
-            return
+        for p in range(len(channel_id)):
+            if self.channel_id is None or len(self.channel_id[p]) != CHANNEL_ID_LENGTH[p]:
+                self.logger.error("Incorrectly configured: Channel IDs must be %d chars long." % CHANNEL_ID_LENGTH)
+                self.shutdown_discord()
+                return
+            
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
             self.logger.error("Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             self.shutdown_discord()
             return
 
-        self.postURL = "https://discord.com/api/channels/{}/messages".format(self.channel_id)
-        self.headers = {"Authorization": "Bot {}".format(self.bot_token),
-                        "User-Agent": "myBotThing (http://some.url, v0.1)"}
+        
+        for p in range(len(channel_id)):
+            self.postURL = "https://discord.com/api/channels/{}/messages".format(self.channel_id[p])
+            self.headers = {"Authorization": "Bot {}".format(self.bot_token),
+                            "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
         if not self.manager_thread:
             self.manager_thread = Thread(target=self.monitor_thread)
@@ -465,4 +469,5 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
+        for p in range(len(channel_id)):
+            return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id[p], "[channel_id[p]]")
