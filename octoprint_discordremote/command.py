@@ -223,8 +223,9 @@ class Command:
     def find_filebynum(self, number):
         i=0
         flat_filelist = self.get_flat_file_list()
-        i=i+1
+        
         for file in flat_filelist:
+            i=i+1
             if i==number:
                 return file
         return None
