@@ -443,9 +443,9 @@ class Command:
                                    title="Sent script")
 
     
-    def getfile(self, number):
+    def getfile(self, params):
         filename = " ".join(params[1:])
-        foundfile = self.find_filebynum(filename)
+        foundfile = self.find_fileby(filename)
         if foundfile is None:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to find file matching the name given")
@@ -453,8 +453,8 @@ class Command:
 
         return upload_file(file_path)
     
-    def getfilebynum(self, params):
-        foundfile = self.find_file(number)
+    def getfilebynum(self, number):
+        foundfile = self.find_filebynum(number)
         if foundfile is None:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      tite="Failed to find file matching the number given")
