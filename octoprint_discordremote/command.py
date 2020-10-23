@@ -41,8 +41,12 @@ class Command:
                                       'description': "Send a set of GCODE commands directly to the printer. GCODE lines seperated by \';\'"}
         self.command_dict['getfile'] = {'cmd': self.getfile, 'params': "{filename}",
                                         'description': "Get a gcode file and upload to discord."}
+        self.command_dict['getfileN'] = {'cmd': self.getfilebynum, 'params': "{filename}",
+                                        'description': "Get a gcode file and upload to discord by using the place in list(i.e. by it's number)."}
         self.command_dict['gettimelapse'] = {'cmd': self.gettimelapse, 'params': "{filename}",
                                              'description': "Get a timelapse file and upload to discord."}
+        self.command_dict['gettimelapseN'] = {'cmd': self.gettimelapsebynum, 'params': "{number}",
+                                             'description': "Get a timelapse file and upload to discord by using The place in list(i.e. by it's number)."}
 
         # Load plugins
         for command_plugin in plugin_list:
@@ -214,6 +218,14 @@ class Command:
         flat_filelist = self.get_flat_file_list()
         for file in flat_filelist:
             if file_name.upper() in file.get('path').upper():
+                return file
+        return None
+    def find_filebynum(self, number):
+        i=0
+        flat_filelist = self.get_flat_file_list()
+        i=i+1
+        for file in flat_filelist:
+            if i==number:
                 return file
         return None
 
@@ -430,16 +442,26 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")
 
-    def getfile(self, params):
+    
+    def getfile(self, number):
         filename = " ".join(params[1:])
-        foundfile = self.find_file(filename)
+        foundfile = self.find_filebynum(filename)
         if foundfile is None:
             return None, error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to find file matching the name given")
         file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
 
         return upload_file(file_path)
+    
+    def getfilebynum(self, params):
+        foundfile = self.find_file(number)
+        if foundfile is None:
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     tite="Failed to find file matching the number given")
+        file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
 
+        return upload_file(file_path)
+    
     def gettimelapse(self, params):
         filename = " ".join(params[1:]).upper()
         path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
@@ -453,3 +475,19 @@ class Command:
 
         return None, error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to find file matching the name given")
+    def gettimelapsebynum(self, number):
+        i=0
+        path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
+        path = os.path.abspath(path)
+
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                i=i+1
+                file_path = os.path.join(root, name)
+                if i==number:
+                    return upload_file(file_path)
+
+        return None, error_embed(author=self.plugin.get_printer_name(),
+                                 title="Failed to find file matching the number given")
+    
+    
