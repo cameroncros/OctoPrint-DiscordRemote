@@ -47,7 +47,7 @@ class Discord:
                 self.channel_ids.append(temp)
                 temp=""
             else:
-                temp+==self.channel_ids[a]
+                temp+=self.channel_ids[a]
         self.channel_ids.append(temp)   
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
         self.gateway_url = "https://discord.com/api/gateway"
@@ -88,7 +88,7 @@ class Discord:
                 self.channel_ids.append(temp)
                 temp=""
             else:
-                temp+==self.channel_ids[a]
+                temp+=self.channel_ids[a]
         self.channel_ids.append(temp)  
         if logger:
              self.logger = logger
