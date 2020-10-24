@@ -297,7 +297,7 @@ class Discord:
             # Only care about message_create messages
             return
         for p in range(len(self.channel_ids)):
-            if data['channel_id'] != self.channel_id[p]:
+            if data['channel_id'] != self.channel_ids[p]:
                 # Only care about messages from correct channel
                 return
 
