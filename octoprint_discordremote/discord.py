@@ -37,7 +37,7 @@ GUILD_SYNC = 12
 
 class Discord:
     def __init__(self):
-        self.channel_id = none  # enable dev mode on discord, right-click on the channel, copy ID
+        self.channel_id = None  # enable dev mode on discord, right-click on the channel, copy ID
         self.channel_ids = []
         self.channel_ids.clear()
         temp=""
