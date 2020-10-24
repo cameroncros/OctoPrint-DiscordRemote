@@ -491,4 +491,4 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-            return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
+        return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
