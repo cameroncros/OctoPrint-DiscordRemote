@@ -295,8 +295,11 @@ class Discord:
         if dispatch_type != "MESSAGE_CREATE":
             # Only care about message_create messages
             return
+        n=0
         for p in range(len(self.channel_ids)):
             if data['channel_id'] != self.channel_ids[p]:
+                n+=1
+            if n+1==len(self.channel_ids):
                 # Only care about messages from correct channel
                 return
 
