@@ -38,7 +38,15 @@ GUILD_SYNC = 12
 
 class Discord:
     def __init__(self):
-        self.channel_id = []  # enable dev mode on discord, right-click on the channel, copy ID
+        self.channel_id = none  # enable dev mode on discord, right-click on the channel, copy ID
+        self.channel_ids = []
+        a=0
+        for p in range(len(self.channel_id)):
+            if self.channel_id[p]==","
+                a+=1
+            self.channel_ids[a]+=self.channel_ID[p]
+               
+            
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
         self.gateway_url = "https://discord.com/api/gateway"
         self.postURL = None  # URL to post messages to, as the bot
@@ -70,6 +78,11 @@ class Discord:
         self.restart_event.clear()
         self.bot_token = bot_token
         self.channel_id = channel_id
+        a=0
+        for p in range(len(self.channel_id)):
+            if self.channel_id[p]==","
+                a+=1
+            self.channel_ids[a]+=self.channel_ID[p]
         if logger:
              self.logger = logger
         self.command = command
@@ -78,8 +91,8 @@ class Discord:
 
         if self.status_callback:
             self.status_callback(connected="disconnected")
-        for p in range(len(channel_id)):
-            if self.channel_id is None or len(self.channel_id[p]) != CHANNEL_ID_LENGTH[p]:
+        for p in range(len(self.channel_IDs)):
+            if self.channel_ids[p][ is None or len(self.channel_ids[p]) != CHANNEL_ID_LENGTH:
                 self.logger.error("Incorrectly configured: Channel IDs must be %d chars long." % CHANNEL_ID_LENGTH)
                 self.shutdown_discord()
                 return
@@ -90,8 +103,8 @@ class Discord:
             return
 
         
-        for p in range(len(channel_id)):
-            self.postURL = "https://discord.com/api/channels/{}/messages".format(self.channel_id[p])
+        for p in range(len(self.channel_ids)):
+            self.postURL[p] = "https://discord.com/api/channels/{}/messages".format(self.channel_ids[p])
             self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                             "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
@@ -275,10 +288,10 @@ class Discord:
         if dispatch_type != "MESSAGE_CREATE":
             # Only care about message_create messages
             return
-
-        if data['channel_id'] != self.channel_id:
-            # Only care about messages from correct channel
-            return
+        for p in range(len(self.channel_ids)):
+            if data['channel_id'] != self.channel_id[p]:
+                # Only care about messages from correct channel
+                return
 
         user = data['author']['id']
         if self.me != None and user == self.me:
@@ -413,36 +426,37 @@ class Discord:
 
         while True:
             try:
-                r = requests.post(self.postURL,
-                                  headers=self.headers,
-                                  data=data,
-                                  files=files)
-                if r:
-                    return True
-            except Exception as e:
-                self.logger.debug("Failed to send the message, exception occured: %s", str(e))
-                self.error_counter += 1
-                self.check_errors()
-                self.queue_message(snapshot, embed)
-                return False
+                forp in range(len(self.postURL)):                   
+                    r = requests.post(self.postURL[p],
+                                      headers=self.headers,
+                                      data=data,
+                                      files=files)
+                    if r:
+                        return True
+                except Exception as e:
+                    self.logger.debug("Failed to send the message, exception occured: %s", str(e))
+                    self.error_counter += 1
+                    self.check_errors()
+                    self.queue_message(snapshot, embed)
+                    return False
 
-            if int(r.status_code) == 429:  # HTTP 429: Too many requests.
-                retry_after = int(r.headers['Retry-After'])
-                time.sleep(retry_after / 1000)
-                continue
-            else:
-                self.logger.error("Failed to send message:")
-                self.logger.error("\tResponse: %s" % self.log_safe(str(r.status_code)))
-                self.logger.error("\tResponse Content: %s" % self.log_safe(str(r.content)))
-                self.logger.error("\tResponse Headers: %s" % self.log_safe(str(r.headers)))
-                self.logger.error("\tURL: %s" % self.log_safe(str(self.postURL)))
-                self.logger.error("\tHeaders: %s" % self.log_safe(str(self.headers)))
-                self.logger.error("\tData: %s" % data)
-                self.logger.error("\tFiles: %s" % files)
-                self.error_counter += 1
-                self.check_errors()
-                self.queue_message(snapshot, embed)
-                return False
+                if int(r.status_code) == 429:  # HTTP 429: Too many requests.
+                    retry_after = int(r.headers['Retry-After'])
+                    time.sleep(retry_after / 1000)
+                    continue
+                else:
+                    self.logger.error("Failed to send message:")
+                    self.logger.error("\tResponse: %s" % self.log_safe(str(r.status_code)))
+                    self.logger.error("\tResponse Content: %s" % self.log_safe(str(r.content)))
+                    self.logger.error("\tResponse Headers: %s" % self.log_safe(str(r.headers)))
+                    self.logger.error("\tURL: %s" % self.log_safe(str(self.postURL[p])))
+                    self.logger.error("\tHeaders: %s" % self.log_safe(str(self.headers)))
+                    self.logger.error("\tData: %s" % data)
+                    self.logger.error("\tFiles: %s" % files)
+                    self.error_counter += 1
+                    self.check_errors()
+                    self.queue_message(snapshot, embed)
+                    return False
 
     def on_error(self, error):
         self.logger.error("Connection error: %s" % error)
@@ -469,5 +483,5 @@ class Discord:
                 self.status_callback(connected="disconnected")
 
     def log_safe(self, message):
-        for p in range(len(channel_id)):
-            return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id[p], "[channel_id[p]]")
+        for p in range(len(self.channel_ids)):
+            return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id[p], "[channel_id]")
