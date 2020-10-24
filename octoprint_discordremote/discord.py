@@ -434,7 +434,7 @@ class Discord:
 
         while True:
             try:
-                forp in range(len(self.postURL)):                   
+                for p in range(len(self.postURL)):                   
                     r = requests.post(self.postURL[p],
                                       headers=self.headers,
                                       data=data,
