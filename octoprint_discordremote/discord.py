@@ -40,13 +40,15 @@ class Discord:
     def __init__(self):
         self.channel_id = none  # enable dev mode on discord, right-click on the channel, copy ID
         self.channel_ids = []
-        a=0
+        self.channel_ids.clear()
+        temp=""
         for p in range(len(self.channel_id)):
             if self.channel_id[p]==","
-                a+=1
-            self.channel_ids[a]+=self.channel_ID[p]
-               
-            
+                self.channel_ids.append(temp)
+                temp=""
+            else:
+                temp+==self.channel_ids[a]
+        self.channel_ids.append(temp)   
         self.bot_token = None  # get from the bot page. must be a bot, not a discord app
         self.gateway_url = "https://discord.com/api/gateway"
         self.postURL = None  # URL to post messages to, as the bot
@@ -79,10 +81,15 @@ class Discord:
         self.bot_token = bot_token
         self.channel_id = channel_id
         a=0
+        temp=""
+        self.channel_ids.clear()
         for p in range(len(self.channel_id)):
             if self.channel_id[p]==","
-                a+=1
-            self.channel_ids[a]+=self.channel_ID[p]
+                self.channel_ids.append(temp)
+                temp=""
+            else:
+                temp+==self.channel_ids[a]
+        self.channel_ids.append(temp)  
         if logger:
              self.logger = logger
         self.command = command
@@ -92,7 +99,7 @@ class Discord:
         if self.status_callback:
             self.status_callback(connected="disconnected")
         for p in range(len(self.channel_IDs)):
-            if self.channel_ids[p][ is None or len(self.channel_ids[p]) != CHANNEL_ID_LENGTH:
+            if self.channel_ids[ is None or len(self.channel_ids[p]) != CHANNEL_ID_LENGTH:
                 self.logger.error("Incorrectly configured: Channel IDs must be %d chars long." % CHANNEL_ID_LENGTH)
                 self.shutdown_discord()
                 return
@@ -104,7 +111,8 @@ class Discord:
 
         
         for p in range(len(self.channel_ids)):
-            self.postURL[p] = "https://discord.com/api/channels/{}/messages".format(self.channel_ids[p])
+            self.postURL.clear()
+            self.postURL.append("https://discord.com/api/channels/{}/messages".format(self.channel_ids[p]))
             self.headers = {"Authorization": "Bot {}".format(self.bot_token),
                             "User-Agent": "myBotThing (http://some.url, v0.1)"}
 
