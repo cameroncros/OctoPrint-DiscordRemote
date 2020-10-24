@@ -1,5 +1,4 @@
 # coding: utf-8
-# coding: utf-8
 
 # Simple module to send messages through a Discord WebHook
 # post a message to discord api via a bot
