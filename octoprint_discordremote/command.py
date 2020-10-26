@@ -334,11 +334,14 @@ class Command:
 
                 builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
                 builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
+        
         #get throttled for pi
-        sb2 = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE)
-        cmd_out2 = sb2.communicate()
-        string_value2 = cmd_out2[0].decode().split('=')
-        result2 = int(string_value2[1].strip(), 0)
+        sb3 = subprocess.Popen(['cd', '/home/pi'], stdout=subprocess.PIPE)
+        if sb3.communicate()!="-bash: cd: /home/pi: No such file or directory":
+            sb2 = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE)
+            cmd_out2 = sb2.communicate()
+            string_value2 = cmd_out2[0].decode().split('=')
+            result2 = int(string_value2[1].strip(), 0)
 
 
         if result2==0: 
