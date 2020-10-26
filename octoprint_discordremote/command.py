@@ -347,7 +347,7 @@ class Command:
         if result2==1: 
             builder.add_field(title='WARNING', text="OCTOPI has capped it's arm frequency ", inline=True)
         if result2==2: 
-            builder.add_field(title='WARNING', text="OCTOPI is currentlythrottled", inline=True)
+            builder.add_field(title='WARNING', text="OCTOPI is currently throttled", inline=True)
         if result2==6:
             builder.add_field(title='WARNING', text="under-voltage has occurred", inline=True)
         if result2==17:
