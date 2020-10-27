@@ -343,18 +343,18 @@ class Command:
             result2 = int(string_value2[1].strip(), 0)
         catch FileNotFoundError:
             pass
-        if result2==0: 
-            builder.add_field(title='WARNING', text="OCTOPI is under-voltage", inline=True)
-        if result2==1: 
-            builder.add_field(title='WARNING', text="OCTOPI has capped it's arm frequency ", inline=True)
-        if result2==2: 
-            builder.add_field(title='WARNING', text="OCTOPI is currently throttled", inline=True)
-        if result2==6:
-            builder.add_field(title='WARNING', text="under-voltage has occurred", inline=True)
-        if result2==17:
-            builder.add_field(title='WARNING', text="arm frequency capped has occurred", inline =True)
-        if result2==18:
-            builder.add_field(title='WARNING', text="throttling has occurred", inline = True)
+            if result2==0: 
+                builder.add_field(title='WARNING', text="OCTOPI is under-voltage", inline=True)
+            if result2==1: 
+                builder.add_field(title='WARNING', text="OCTOPI has capped it's arm frequency ", inline=True)
+            if result2==2: 
+                builder.add_field(title='WARNING', text="OCTOPI is currently throttled", inline=True)
+            if result2==6:
+                builder.add_field(title='WARNING', text="under-voltage has occurred", inline=True)
+            if result2==17:
+                builder.add_field(title='WARNING', text="arm frequency capped has occurred", inline =True)
+            if result2==18:
+                builder.add_field(title='WARNING', text="throttling has occurred", inline = True)
             
                     
 
