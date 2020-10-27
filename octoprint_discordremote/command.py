@@ -334,7 +334,7 @@ class Command:
 
                 builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
                 builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
-        
+        result2=20
         #get throttled for pi
         try:
             sb2 = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE)
