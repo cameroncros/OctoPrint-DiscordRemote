@@ -36,6 +36,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
+  
+    @property
+    def allowed(self):
+        list = 'zip'
+        for i in range(0,100):
+            list += ','
+            list += str(i).zfill(3)
+        return list
+
+    def get_extension_tree(self, *args, **kwargs):
+        return dict(machinecode=dict(discordremote=self.allowed.split(",")))
 
     def __init__(self):
         self.discord = None
@@ -669,5 +680,6 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.filemanager.extension_tree": __plugin_implementation__.get_extension_tree
     }
