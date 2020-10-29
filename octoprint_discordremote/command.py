@@ -446,6 +446,8 @@ class Command:
                 with open(path + f, 'wb') as file:
                     with zip.open(f) as source:
                         file.write(source.read())
+                        
+            self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
 
         return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=str(filestounpack))
 
