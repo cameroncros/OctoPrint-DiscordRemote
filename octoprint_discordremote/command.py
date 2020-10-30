@@ -7,15 +7,11 @@ import humanfriendly
 import re
 import time
 import requests
-import subprocess
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
-
-
-
 
 
 class Command:
@@ -334,29 +330,6 @@ class Command:
 
                 builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
                 builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
-        result2=20
-        #get throttled for pi
-        try:
-            sb2 = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE)
-            cmd_out2 = sb2.communicate()
-            string_value2 = cmd_out2[0].decode().split('=')
-            result2 = int(string_value2[1].strip(), 0)
-        except OSError as e:
-            pass
-        if result2==0: 
-            builder.add_field(title='WARNING', text="OCTOPI is under-voltage", inline=True)
-        if result2==1: 
-            builder.add_field(title='WARNING', text="OCTOPI has capped it's arm frequency ", inline=True)
-        if result2==2: 
-            builder.add_field(title='WARNING', text="OCTOPI is currently throttled", inline=True)
-        if result2==6:
-            builder.add_field(title='WARNING', text="under-voltage has occurred", inline=True)
-        if result2==17:
-            builder.add_field(title='WARNING', text="arm frequency capped has occurred", inline =True)
-        if result2==18:
-            builder.add_field(title='WARNING', text="throttling has occurred", inline = True)
-            
-                    
 
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
