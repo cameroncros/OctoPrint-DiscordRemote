@@ -647,14 +647,22 @@ class TestCommand(DiscordRemoteTestCase):
                     packet.write(data)
                 filecount += 1
 
-        #reroute any call to Octoprint's local folder to project local folder
+        #reroute calls to Octoprint's local folder to project local folder
         def path_sideeff(*args, **kwargs):
-            if args[0] is 'local':
+            if args[0] == 'local':
                 return os.path.join('./', args[1])
+            return None
+
+        def file_exists_sideeff(*args, **kwargs):
+            if args[0] == 'local':
+                return os.path.isfile(os.path.join('./', args[1]))
             return None
 
         self.plugin.get_file_manager().path_on_disk = mock.Mock()
         self.plugin.get_file_manager().path_on_disk.side_effect = path_sideeff
+
+        self.plugin.get_file_manager().file_exists = mock.Mock()
+        self.plugin.get_file_manager().file_exists.side_effect = file_exists_sideeff
 
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = []
