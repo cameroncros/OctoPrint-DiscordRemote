@@ -39,7 +39,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     #extend Octoprint's allowed file types by .zip, .zip.001, .zip.002, ...)
     def get_extension_tree(self, *args, **kwargs):
-        allowed_list = [zip]
+        allowed_list = ['zip']
         for i in range(0, 100):
             allowed_list.append(str(i).zfill(3))
         return dict(machinecode=dict(discordremote=allowed_list))
