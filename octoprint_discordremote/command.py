@@ -420,34 +420,40 @@ class Command:
             unzippable = upload_file_path
 
         else:
-            return None, error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.", description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % self.plugin.get_settings().get(
-                                         ["prefix"]))
+            return None, error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.", description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (self.plugin.get_settings().get(
+                                         ["prefix"]), self.plugin.get_settings().get(
+                                         ["prefix"])))
 
         if unzippable == None:
             return None, error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
 
 
-        with zipfile.ZipFile(unzippable) as zip:
+        try:
+            with zipfile.ZipFile(unzippable) as zip:
 
-            fileOK = zip.testzip()
+                fileOK = zip.testzip()
 
-            if fileOK is not None:
-                return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
+                if fileOK is not None:
+                    return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
 
-            availablefiles = zip.namelist()
-            filestounpack = []
-            for f in availablefiles:
-                if f.endswith('.gcode'):
-                    filestounpack.append(f)
+                availablefiles = zip.namelist()
+                filestounpack = []
+                for f in availablefiles:
+                    if f.endswith('.gcode'):
+                        filestounpack.append(f)
 
-            path = unzippable.rpartition('/')[0] + '/'
+                path = unzippable.rpartition('/')[0] + '/'
 
-            for f in filestounpack:
-                with open(path + f, 'wb') as file:
-                    with zip.open(f) as source:
-                        file.write(source.read())
-                        
-            self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
+                for f in filestounpack:
+                    with open(path + f, 'wb') as file:
+                        with zip.open(f) as source:
+                            file.write(source.read())
+
+                self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
+
+        except:
+            return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
+                                 description='In case of multi-volume files, one could be missing.')
 
         return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=str(filestounpack))
 
