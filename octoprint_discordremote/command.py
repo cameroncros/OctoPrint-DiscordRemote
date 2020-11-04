@@ -7,6 +7,7 @@ import humanfriendly
 import re
 import time
 import requests
+import zipfile
 import subprocess
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
@@ -29,6 +30,8 @@ class Command:
         self.command_dict['print'] = {'cmd': self.start_print, 'params': "{filename}", 'description': "Print a file."}
         self.command_dict['files'] = {'cmd': self.list_files,
                                       'description': "List all files and respective download links."}
+        self.command_dict['unzip'] = {'cmd': self.unzip, 'params': "{filename}",
+                                      'description': "Unzip .zip files and .zip.001, .zip.002,... files"}
         self.command_dict['abort'] = {'cmd': self.cancel_print, 'description': "Abort a print."}
         self.command_dict['snapshot'] = {'cmd': self.snapshot, 'description': "Take a snapshot with the camera."}
         self.command_dict['status'] = {'cmd': self.status, 'description': "Get the current printer status."}
@@ -395,6 +398,93 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='File Received',
                                    description=filename)
+    
+    
+    def unzip(self, params):
+        if len(params) != 2:
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title='Wrong number of arguments',
+                                     description='try "%sunzip [filename]"' % self.plugin.get_settings().get(
+                                         ["prefix"]))
+
+        file_name = params[1]
+
+        flat_filelist = self.get_flat_file_list()
+
+        unzippable = None
+
+        if file_name.endswith('.zip'):
+            for file in flat_filelist:
+                if file_name.upper() in file.get('path').upper():
+                    unzippable = self.plugin.get_file_manager().path_on_disk(file.get('location'), file_name)
+                    break
+
+        elif file_name.endswith('.zip.001'):
+            files = []
+            truncated = file_name[:-3]
+            current = 1
+            found = True
+            while found:
+                found = False
+                fn = truncated + str(current).zfill(3)
+                for file in flat_filelist:
+                    if fn.upper() in file.get('path').upper():
+                        files.append(fn)
+                        current += 1
+                        found = True
+                        break
+            upload_file_path = self.plugin.get_file_manager().path_on_disk('local', truncated[:-1])
+            if self.plugin.get_file_manager().file_exists('local', upload_file_path.rpartition('/')[2]):
+                self.plugin.get_file_manager().remove_file('local', upload_file_path.rpartition('/')[2])
+            with open(upload_file_path, 'ab') as combined:
+                for f in files:
+                    path = self.plugin.get_file_manager().path_on_disk('local', f)
+                    with open(path, 'rb') as temp:
+                        combined.write(temp.read())
+                    self.plugin.get_file_manager().remove_file('local', f.rpartition('/')[2])
+
+
+            unzippable = upload_file_path
+
+        else:
+            return None, error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.", description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (self.plugin.get_settings().get(
+                                         ["prefix"]), self.plugin.get_settings().get(
+                                         ["prefix"])))
+
+        if unzippable == None:
+            return None, error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
+
+
+        try:
+            with zipfile.ZipFile(unzippable) as zip:
+
+                fileOK = zip.testzip()
+
+                if fileOK is not None:
+                    return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
+
+                availablefiles = zip.namelist()
+                filestounpack = []
+                for f in availablefiles:
+                    if f.endswith('.gcode'):
+                        filestounpack.append(f)
+
+                path = unzippable.rpartition('/')[0] + '/'
+
+                for f in filestounpack:
+                    with open(path + f, 'wb') as file:
+                        with zip.open(f) as source:
+                            file.write(source.read())
+
+                self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
+
+        except:
+            return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
+                                 description='In case of multi-volume files, one could be missing.')
+
+        return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=str(filestounpack))
+
+    
 
     def mute(self):
         self.plugin.mute()
