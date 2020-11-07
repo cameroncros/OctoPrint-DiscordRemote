@@ -285,8 +285,16 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                snapshots, embeds = self.command.download_file(filename, url, user)
+
+                self.command.download_file(filename, url, user)
+                #check if file is eligible for unzipping
+                ready_to_unpack, embeds = self.command.judge_zip_completion(filename)
                 self.send(embeds=embeds)
+
+                if ready_to_unpack is True:
+                    snapshots, embeds2 = self.command.unzip(['local', filename])
+                    self.send(embeds=embeds2)
+
 
         if 'content' in data and len(data['content']) > 0:
             snapshots, embeds = self.command.parse_command(data['content'], user)

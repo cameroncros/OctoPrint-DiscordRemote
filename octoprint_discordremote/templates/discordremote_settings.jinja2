@@ -56,6 +56,17 @@
             <small>{{ _("Time between each presence cycle update, in seconds. The default is 10. May require a restart to apply.") }}
             </small>
         </div>
+
+        <div class="control-group">
+            <label class="control-label">{{ _('Enable Auto-Unzipping') }}</label>
+            <div class="controls">
+                <input type="checkbox" class="" data-bind="checked: settings.plugins.discordremote.auto_unzip"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("With auto-unzipping enabled, sent .zip and .zip.001, .zip.002, ... files will have their GCODE files extracted automatically.") }}
+            </small>
+        </div>
         
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>

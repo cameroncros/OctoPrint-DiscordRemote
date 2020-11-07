@@ -9,6 +9,7 @@ import time
 import requests
 import zipfile
 import subprocess
+import struct
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
@@ -16,6 +17,9 @@ from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
+#Constants
+ZIP_HEADER_READ_START = 18
+ZIP_HEADER_READ_BLOCK = 4
 
 
 
@@ -419,7 +423,7 @@ class Command:
                     unzippable = self.plugin.get_file_manager().path_on_disk(file.get('location'), file_name)
                     break
 
-        elif file_name.endswith('.zip.001'):
+        elif file_name[:-4].endswith('.zip'):
             files = []
             truncated = file_name[:-3]
             current = 1
@@ -461,6 +465,7 @@ class Command:
                 fileOK = zip.testzip()
 
                 if fileOK is not None:
+                    self.plugin.get_file_manager().remove_file('local', unzippable)
                     return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
 
                 availablefiles = zip.namelist()
@@ -476,15 +481,102 @@ class Command:
                         with zip.open(f) as source:
                             file.write(source.read())
 
-                self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
+                self.plugin.get_file_manager().remove_file('local', unzippable)
 
         except:
+            self.plugin.get_file_manager().remove_file('local', unzippable)
             return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
                                  description='In case of multi-volume files, one could be missing.')
 
-        return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=str(filestounpack))
+        filelist_string = ''
+        for f in filestounpack:
+            filelist_string += (f + '\n')
 
-    
+        return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=filelist_string)
+
+    #check if received file is eligible for unzipping
+    def judge_zip_completion(self, filename):
+
+        #auto-unzip disabled
+        if not self.plugin.get_settings().get(['auto_unzip']):
+            return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
+                                        description=filename)
+
+        truncated = filename[:-4]
+
+        #file is a single zip
+        if filename.endswith('.zip'):
+            return True, success_embed(author=self.plugin.get_printer_name(),
+                                       title='File Received, unzipping...',
+                                       description=filename)
+
+        #file is part of a multi-volume zip
+        elif truncated.endswith('.zip'):
+
+
+            #find all available multi-volumes belonging to the file in question
+            filelist = self.get_flat_file_list()
+            available_files = []
+            available_files_sizes = []
+
+            #get all available parts of the zip
+            for f in filelist:
+
+                temp_path = f.get('path')
+
+                #check for file ending in .zip.XXX
+                if truncated.upper() in temp_path.upper():
+
+                    trunc_filename = filename[:-3] + temp_path[-3:]
+                    real_path = self.plugin.get_file_manager().path_on_disk(f.get('location'), trunc_filename)
+
+                    available_files.append(trunc_filename)
+                    available_files_sizes.append(int(os.path.getsize(real_path)))
+
+
+            smallest_filesize = available_files_sizes[0]
+            last_index = 0
+            differing_found = False
+
+            for i in range(1, len(available_files)):
+                #once we find one smaller file this must mean it's the last volume - every other file size is the same
+                # i is the index of that last volume
+                if available_files_sizes[i] < smallest_filesize:
+                    differing_found = True
+                    last_index = int(available_files[i][-3:])
+                    break
+
+
+            #sort the filenames nicely so missing files can be easily identified
+            available_files.sort(key=lambda x: int(x[-3:]))
+            string_availablefiles = ''
+            for f in available_files:
+                string_availablefiles += f + '\n'
+
+            #we don't have the last file yet, can't find out how many volumes
+            if not differing_found is True:
+                return False, success_embed(author=self.plugin.get_printer_name(),
+                                            title='%s of ??? Files Received' % (str(len(available_files))),
+                                            description=string_availablefiles)
+
+
+            #we have the first and last file, can't unzip but we know how many volumes there are now
+            elif not len(available_files) is last_index:
+                return False, success_embed(author=self.plugin.get_printer_name(),
+                                            title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
+                                            description=string_availablefiles)
+
+            #we have everything!
+            else:
+                return True, success_embed(author=self.plugin.get_printer_name(),
+                                           title='All Files Received, unzipping...',
+                                           description=string_availablefiles)
+
+        #file can't be unzipped
+        else:
+            return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
+                                       description=filename)
+
 
     def mute(self):
         self.plugin.mute()
