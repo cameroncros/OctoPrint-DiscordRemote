@@ -17,12 +17,6 @@ from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
-#Constants
-ZIP_HEADER_READ_START = 18
-ZIP_HEADER_READ_BLOCK = 4
-
-
-
 class Command:
     def __init__(self, plugin):
         assert plugin
@@ -544,6 +538,11 @@ class Command:
                 if available_files_sizes[i] < smallest_filesize:
                     differing_found = True
                     last_index = int(available_files[i][-3:])
+                    break
+
+                elif available_files_sizes[i] > smallest_filesize:
+                    differing_found = True
+                    last_index = int(available_files[0][-3:])
                     break
 
 
