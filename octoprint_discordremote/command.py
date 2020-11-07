@@ -553,19 +553,23 @@ class Command:
             #sort the filenames nicely so missing files can be easily identified
             #for multiple files in a row, don't display all of them
             available_files.sort(key=lambda x: int(x[-3:]))
-            blocks_availablefiles = []
-            current_block = [available_files[0]]
 
-            previous_index = 1
-            for i in range(1, len(available_files)):
-                file_number = int(available_files[i][-3:])
-                if file_number is not previous_index + 1:
-                    blocks_availablefiles.append(current_block)
-                    current_block = []
-                    previous_index = i
+            blocks_availablefiles = []
+            current_block = []
+            prev_index = int(available_files[0][-3:]) - 1
+            for i in range(0, len(available_files)):
+                curr_index = int(available_files[i][-3:])
+                if curr_index is prev_index + 1:
+                    current_block.append(available_files[i])
                 else:
-                    previous_index += 1
-                current_block.append(available_files[i])
+                    blocks_availablefiles.append(current_block)
+                    current_block = [available_files[i]]
+
+                prev_index = curr_index
+            blocks_availablefiles.append(current_block)
+
+
+
 
             string_availablefiles = ''
 
