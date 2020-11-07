@@ -396,7 +396,7 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(),
                                    title='File Received',
                                    description=filename)
-    
+
     def unzip(self, params):
         if len(params) != 2:
             return None, error_embed(author=self.plugin.get_printer_name(),
@@ -551,10 +551,31 @@ class Command:
                     break
 
             #sort the filenames nicely so missing files can be easily identified
+            #for multiple files in a row, don't display all of them
             available_files.sort(key=lambda x: int(x[-3:]))
+            blocks_availablefiles = []
+            current_block = [available_files[0]]
+
+            previous_index = 1
+            for i in range(1, len(available_files)):
+                file_number = int(available_files[i][-3:])
+                if file_number is not previous_index + 1:
+                    blocks_availablefiles.append(current_block)
+                    current_block = []
+                    previous_index = i
+                else:
+                    previous_index += 1
+                current_block.append(available_files[i])
+
             string_availablefiles = ''
-            for f in available_files:
-                string_availablefiles += f + '\n'
+
+            for b in blocks_availablefiles:
+                line = b[0]
+                if len(b) >= 2:
+                    line += ' - ' + b[-1]
+
+                string_availablefiles += line + '\n'
+
 
             #we don't have the last file yet, can't find out how many volumes
             if differing_found is not True:
@@ -570,7 +591,7 @@ class Command:
 
             #still inform the user how many files there are and how to unzip them
             elif autounzip is not True:
-                descr = truncated + '.001 - ' + truncated + '.' + str(last_index).zfill(3) + '\n'
+                descr = string_availablefiles
                 descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), available_files[0])
                 return False, success_embed(author=self.plugin.get_printer_name(),
                                             title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
