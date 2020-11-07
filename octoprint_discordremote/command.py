@@ -397,7 +397,6 @@ class Command:
                                    title='File Received',
                                    description=filename)
     
-    
     def unzip(self, params):
         if len(params) != 2:
             return None, error_embed(author=self.plugin.get_printer_name(),
@@ -441,17 +440,17 @@ class Command:
                         combined.write(temp.read())
                     self.plugin.get_file_manager().remove_file('local', f.rpartition('/')[2])
 
-
             unzippable = upload_file_path
 
         else:
-            return None, error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.", description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (self.plugin.get_settings().get(
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Not a valid Zip file.",
+                                     description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (self.plugin.get_settings().get(
                                          ["prefix"]), self.plugin.get_settings().get(
                                          ["prefix"])))
 
         if unzippable == None:
             return None, error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
-
 
         try:
             with zipfile.ZipFile(unzippable) as zip:
@@ -460,7 +459,9 @@ class Command:
 
                 if fileOK is not None:
                     self.plugin.get_file_manager().remove_file('local', unzippable)
-                    return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
+                    return None, error_embed(author=self.plugin.get_printer_name(),
+                                             title="Bad zip file.",
+                                             description='In case of multi-volume files, one could be missing.')
 
                 availablefiles = zip.namelist()
                 filestounpack = []
@@ -479,8 +480,9 @@ class Command:
 
         except:
             self.plugin.get_file_manager().remove_file('local', unzippable)
-            return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
-                                 description='In case of multi-volume files, one could be missing.')
+            return None, error_embed(author=self.plugin.get_printer_name(),
+                                     title="Bad zip file.",
+                                     description='In case of multi-volume files, one could be missing.')
 
         filelist_string = ''
         for f in filestounpack:
@@ -491,22 +493,26 @@ class Command:
     #check if received file is eligible for unzipping
     def judge_zip_completion(self, filename):
 
-        #auto-unzip disabled
-        if not self.plugin.get_settings().get(['auto_unzip']):
-            return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
-                                        description=filename)
-
+        autounzip = self.plugin.get_settings().get(['auto_unzip'])
         truncated = filename[:-4]
 
         #file is a single zip
         if filename.endswith('.zip'):
-            return True, success_embed(author=self.plugin.get_printer_name(),
-                                       title='File Received, unzipping...',
-                                       description=filename)
+            #unzip
+            if autounzip:
+                return True, success_embed(author=self.plugin.get_printer_name(),
+                                           title='File Received, unzipping...',
+                                           description=filename)
+
+            #inform the user that he can unzip the file himself
+            else:
+                descr = filename + '\n'
+                descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), filename)
+                return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
+                                           description=descr)
 
         #file is part of a multi-volume zip
         elif truncated.endswith('.zip'):
-
 
             #find all available multi-volumes belonging to the file in question
             filelist = self.get_flat_file_list()
@@ -527,7 +533,6 @@ class Command:
                     available_files.append(trunc_filename)
                     available_files_sizes.append(int(os.path.getsize(real_path)))
 
-
             smallest_filesize = available_files_sizes[0]
             last_index = 0
             differing_found = False
@@ -545,7 +550,6 @@ class Command:
                     last_index = int(available_files[0][-3:])
                     break
 
-
             #sort the filenames nicely so missing files can be easily identified
             available_files.sort(key=lambda x: int(x[-3:]))
             string_availablefiles = ''
@@ -553,28 +557,33 @@ class Command:
                 string_availablefiles += f + '\n'
 
             #we don't have the last file yet, can't find out how many volumes
-            if not differing_found is True:
+            if differing_found is not True:
                 return False, success_embed(author=self.plugin.get_printer_name(),
                                             title='%s of ??? Files Received' % (str(len(available_files))),
                                             description=string_availablefiles)
 
-
             #we have the first and last file, can't unzip but we know how many volumes there are now
-            elif not len(available_files) is last_index:
+            elif len(available_files) is not last_index:
                 return False, success_embed(author=self.plugin.get_printer_name(),
                                             title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
                                             description=string_availablefiles)
 
-            #we have everything!
+            #still inform the user how many files there are and how to unzip them
+            elif autounzip is not True:
+                descr = truncated + '.001 - ' + truncated + '.' + str(last_index).zfill(3) + '\n'
+                descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), available_files[0])
+                return False, success_embed(author=self.plugin.get_printer_name(),
+                                            title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
+                                            description=descr)
+
             else:
                 return True, success_embed(author=self.plugin.get_printer_name(),
                                            title='All Files Received, unzipping...',
                                            description=string_availablefiles)
 
-        #file can't be unzipped
-        else:
-            return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
-                                       description=filename)
+        return False, success_embed(author=self.plugin.get_printer_name(),
+                                    title='File Received',
+                                    description=filename)
 
 
     def mute(self):
