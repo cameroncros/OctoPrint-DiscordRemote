@@ -729,3 +729,89 @@ class TestCommand(DiscordRemoteTestCase):
         os.remove('./testzipMV.zip.003')
 
 
+    def test_judge_is_unzippable(self):
+
+        # reroute calls to Octoprint's local folder to project local folder
+        def path_sideeff(*args, **kwargs):
+            if args[0] == 'local':
+                return os.path.join('./', args[1])
+            return None
+
+        #fake file sizes; returns 400 for the first two files, 200 for the last one
+        #this is used to test whether the .zip.XXX file is the last file
+        def getsize_sideeff(*args, **kwargs):
+            if args[0].endswith('.003'):
+                return 200
+            else:
+                return 400
+
+    #CASE 1: File is a .zip and we're allowed to auto-unzip
+        self.plugin.get_settings().get = mock.Mock()
+        self.plugin.get_settings().get.return_value = True
+
+        payload, embeds = self.command.judge_is_unzippable("test.zip")
+        self.assertTrue(payload)
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received, unzipping...")
+
+    #CASE 2: File is a .zip but we're not allowed to auto-unzip
+        self.plugin.get_settings().get.return_value = False
+
+        payload, embeds = self.command.judge_is_unzippable("test.zip")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received")
+
+    #CASE 3: File is not a .zip file
+        self.plugin.get_settings().get.return_value = True
+
+        payload, embeds = self.command.judge_is_unzippable("test.nope")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received")
+
+    #CASE 4: File is a multi-volume .zip.001, ... file, all volumes present
+
+        self.command.get_flat_file_list = mock.Mock()
+        self.command.get_flat_file_list.return_value = zip_flat_file_list
+
+        os.path.getsize = mock.Mock()
+        os.path.getsize.side_effect = getsize_sideeff
+
+        self.plugin.get_file_manager().path_on_disk = mock.Mock()
+        self.plugin.get_file_manager().path_on_disk.side_effect = path_sideeff
+
+        payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
+        self.assertTrue(payload)
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="All Files Received, unzipping...")
+
+    #CASE 5: File is a multi-volume .zip.001, ... file, one volume present
+
+        self.command.get_flat_file_list.return_value = [zip_flat_file_list[2]]
+
+        payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_INFO, title="1 of ??? Files Received")
+
+    #CASE 6: File is a multi-volume .zip.001, ... file, two volumes present, last one not included
+
+        self.command.get_flat_file_list.return_value = [zip_flat_file_list[1], zip_flat_file_list[2]]
+
+        payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_INFO, title="2 of ??? Files Received")
+
+    #CASE 7: File is a multi-volume .zip.001, ... file, two volumes present, last one included
+
+        self.command.get_flat_file_list.return_value = [zip_flat_file_list[2], zip_flat_file_list[3]]
+
+        payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_INFO, title="2 of 3 Files Received")
+
+    #CASE 8: File is a multi-volume .zip.001, ... file, all volumes present but we're not allowed to auto-unzip
+
+        self.plugin.get_settings().get.return_value = False
+        self.command.get_flat_file_list.return_value = zip_flat_file_list
+
+        payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
+        self.assertFalse(payload)
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="3 of 3 Files Received")
+

@@ -491,7 +491,7 @@ class Command:
         return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=filelist_string)
 
     #check if received file is eligible for unzipping
-    def judge_zip_completion(self, filename):
+    def judge_is_unzippable(self, filename):
 
         autounzip = self.plugin.get_settings().get(['auto_unzip'])
         truncated = filename[:-4]
@@ -583,13 +583,13 @@ class Command:
 
             #we don't have the last file yet, can't find out how many volumes
             if differing_found is not True:
-                return False, success_embed(author=self.plugin.get_printer_name(),
+                return False, info_embed(author=self.plugin.get_printer_name(),
                                             title='%s of ??? Files Received' % (str(len(available_files))),
                                             description=string_availablefiles)
 
             #we have the first and last file, can't unzip but we know how many volumes there are now
             elif len(available_files) is not last_index:
-                return False, success_embed(author=self.plugin.get_printer_name(),
+                return False, info_embed(author=self.plugin.get_printer_name(),
                                             title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
                                             description=string_availablefiles)
 

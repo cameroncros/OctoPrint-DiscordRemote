@@ -288,7 +288,7 @@ class Discord:
 
                 self.command.download_file(filename, url, user)
                 #check if file is eligible for unzipping
-                ready_to_unpack, embeds = self.command.judge_zip_completion(filename)
+                ready_to_unpack, embeds = self.command.judge_is_unzippable(filename)
                 self.send(embeds=embeds)
 
                 if ready_to_unpack is True:
