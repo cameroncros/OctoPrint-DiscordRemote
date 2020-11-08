@@ -280,6 +280,10 @@ class Discord:
         if self.me != None and user == self.me:
             # Don't respond to ourself.
             return
+        
+        if data['author'].get("bot", False):
+            # Don't respond to bots.
+            return
 
         if 'attachments' in data:
             for upload in data['attachments']:
