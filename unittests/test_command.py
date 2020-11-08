@@ -53,6 +53,7 @@ zip_flat_file_list = [
      'path': u'/testzipMV.zip.003', 'size': 6530}
 ]
 
+
 class TestCommand(DiscordRemoteTestCase):
 
     def _mock_settings_get(self, *args, **kwards):
@@ -342,7 +343,8 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
         self.plugin.get_printer().disconnect.assert_called_once_with()
 
-    def test_parse_command_status(self):
+    @mock.patch("subprocess.Popen")
+    def test_parse_command_status(self, mock_popen):
         self.plugin.get_ip_address = mock.Mock()
         self.plugin.get_ip_address.return_value = "192.168.1.1"
 
@@ -373,6 +375,18 @@ class TestCommand(DiscordRemoteTestCase):
             'extruder1': {'actual': 350}
         }
 
+        mock_popen.return_value.communicate.return_value = [b"throttled=0xf000f"]  # All flags raised
+        expected_throttled_terms = [
+            "PI is under-voltage",
+            "PI has capped it's ARM frequency",
+            "PI is currently throttled",
+            "PI has reached temperature limit",
+            "PI Under-voltage has occurred",
+            "PI ARM frequency capped has occurred",
+            "PI Throttling has occurred",
+            "PI temperature limit has occurred",
+        ]
+
         self.plugin.get_snapshot = mock.Mock()
 
         with open(self._get_path('test_pattern.png')) as input_file:
@@ -393,6 +407,7 @@ class TestCommand(DiscordRemoteTestCase):
                           'Time Spent', 'Time Remaining',
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
                           self.plugin.get_ip_address.return_value, self.plugin.get_external_ip_address.return_value]
+        expected_terms += expected_throttled_terms
 
         self.assertEqual(3, self.plugin.get_settings().get.call_count)
 
@@ -626,14 +641,14 @@ class TestCommand(DiscordRemoteTestCase):
 
     def test_unzip(self):
 
-        #prepare a working  dummy zip
+        # prepare a working  dummy zip
         with ZipFile('./testzip.zip', 'w') as zipf:
             zipf.writestr('test.gcode', "Proper GCODE file!")
             zipf.writestr('test.txt', "Don't extract that!")
             zipf.close()
 
-        #create a multi-volume dummy zip, too
-        #code adapted, taken from Jeronimo's answer in https://stackoverflow.com/questions/52193680/split-a-zip-archive-into-multiple-chunks
+        # create a multi-volume dummy zip, too
+        # code adapted, taken from Jeronimo's answer in https://stackoverflow.com/questions/52193680/split-a-zip-archive-into-multiple-chunks
         outfile = './testzipMV.zip'
         packet_size = int(100)  # bytes
 
@@ -647,7 +662,7 @@ class TestCommand(DiscordRemoteTestCase):
                     packet.write(data)
                 filecount += 1
 
-        #reroute calls to Octoprint's local folder to project local folder
+        # reroute calls to Octoprint's local folder to project local folder
         def path_sideeff(*args, **kwargs):
             if args[0] == 'local':
                 return os.path.join('./', args[1])
@@ -667,13 +682,12 @@ class TestCommand(DiscordRemoteTestCase):
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = []
 
-    # CASE 1: File doesn't exist
+        # CASE 1: File doesn't exist
         snapshot, embeds = self.command.unzip(["/unzip", "testzip.zip"])
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds, COLOR_ERROR, title="File testzip.zip not found.")
 
-
-    # CASE 2: File exists but is not a zip file
+        # CASE 2: File exists but is not a zip file
         self.plugin.get_settings().get = mock.Mock()
         self.plugin.get_settings().get.return_value = ''
 
@@ -685,14 +699,14 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.command.get_flat_file_list.return_value = zip_flat_file_list
 
-    # CASE 3: File is a working zip file
+        # CASE 3: File is a working zip file
         snapshot, embeds = self.command.unzip(["/unzip", "testzip.zip"])
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="File(s) unzipped. ")
 
-        #make sure it didn't extract the unwanted .txt in the zip file, only the gcode file
+        # make sure it didn't extract the unwanted .txt in the zip file, only the gcode file
         self.assertTrue(os.path.isfile('./test.gcode'))
         self.assertFalse(os.path.isfile('./test.txt'))
 
@@ -702,19 +716,17 @@ class TestCommand(DiscordRemoteTestCase):
         os.remove('./test.gcode')
         os.remove('./testzip.zip')
 
-
-    # CASE 4: File is a working multi-volume zip file
+        # CASE 4: File is a working multi-volume zip file
         snapshot, embeds = self.command.unzip(["/unzip", "testzipMV.zip.001"])
         self.assertIsNone(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="File(s) unzipped. ")
-        #no need to test for unwanted extracted files, code is the same as for single-volume zips
+        # no need to test for unwanted extracted files, code is the same as for single-volume zips
         os.remove('./test.gcode')
         os.remove('./testzipMV.zip')
 
-
-    # CASE 5: File is a multi-volume zip file, but it's missing volumes
+        # CASE 5: File is a multi-volume zip file, but it's missing volumes
         os.remove('./testzipMV.zip.002')
         self.command.get_flat_file_list.return_value = [zip_flat_file_list[0], zip_flat_file_list[2]]
 
@@ -737,15 +749,15 @@ class TestCommand(DiscordRemoteTestCase):
                 return os.path.join('./', args[1])
             return None
 
-        #fake file sizes; returns 400 for the first two files, 200 for the last one
-        #this is used to test whether the .zip.XXX file is the last file
+        # fake file sizes; returns 400 for the first two files, 200 for the last one
+        # this is used to test whether the .zip.XXX file is the last file
         def getsize_sideeff(*args, **kwargs):
             if args[0].endswith('.003'):
                 return 200
             else:
                 return 400
 
-    #CASE 1: File is a .zip and we're allowed to auto-unzip
+        # CASE 1: File is a .zip and we're allowed to auto-unzip
         self.plugin.get_settings().get = mock.Mock()
         self.plugin.get_settings().get.return_value = True
 
@@ -753,21 +765,21 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertTrue(payload)
         self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received, unzipping...")
 
-    #CASE 2: File is a .zip but we're not allowed to auto-unzip
+        # CASE 2: File is a .zip but we're not allowed to auto-unzip
         self.plugin.get_settings().get.return_value = False
 
         payload, embeds = self.command.judge_is_unzippable("test.zip")
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received")
 
-    #CASE 3: File is not a .zip file
+        # CASE 3: File is not a .zip file
         self.plugin.get_settings().get.return_value = True
 
         payload, embeds = self.command.judge_is_unzippable("test.nope")
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received")
 
-    #CASE 4: File is a multi-volume .zip.001, ... file, all volumes present
+        # CASE 4: File is a multi-volume .zip.001, ... file, all volumes present
 
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = zip_flat_file_list
@@ -782,7 +794,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertTrue(payload)
         self._validate_simple_embed(embeds, COLOR_SUCCESS, title="All Files Received, unzipping...")
 
-    #CASE 5: File is a multi-volume .zip.001, ... file, one volume present
+        # CASE 5: File is a multi-volume .zip.001, ... file, one volume present
 
         self.command.get_flat_file_list.return_value = [zip_flat_file_list[2]]
 
@@ -790,7 +802,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_INFO, title="1 of ??? Files Received")
 
-    #CASE 6: File is a multi-volume .zip.001, ... file, two volumes present, last one not included
+        # CASE 6: File is a multi-volume .zip.001, ... file, two volumes present, last one not included
 
         self.command.get_flat_file_list.return_value = [zip_flat_file_list[1], zip_flat_file_list[2]]
 
@@ -798,7 +810,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_INFO, title="2 of ??? Files Received")
 
-    #CASE 7: File is a multi-volume .zip.001, ... file, two volumes present, last one included
+        # CASE 7: File is a multi-volume .zip.001, ... file, two volumes present, last one included
 
         self.command.get_flat_file_list.return_value = [zip_flat_file_list[2], zip_flat_file_list[3]]
 
@@ -806,7 +818,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_INFO, title="2 of 3 Files Received")
 
-    #CASE 8: File is a multi-volume .zip.001, ... file, all volumes present but we're not allowed to auto-unzip
+        # CASE 8: File is a multi-volume .zip.001, ... file, all volumes present but we're not allowed to auto-unzip
 
         self.plugin.get_settings().get.return_value = False
         self.command.get_flat_file_list.return_value = zip_flat_file_list

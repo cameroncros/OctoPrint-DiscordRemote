@@ -27,6 +27,10 @@ License : MIT
 
 [SgtKiLLx](https://github.com/SgtKiLLx) for various typo fixes.
 
+[Zinc-OS](https://github.com/Zinc-OS) for adding Raspberry Pi throttling status to the status message.
+
+[Stwend](https://github.com/Stwend) for adding split zip support, to get around the 8mb discord limit.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.

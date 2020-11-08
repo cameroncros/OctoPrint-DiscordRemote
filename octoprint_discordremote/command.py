@@ -9,12 +9,14 @@ import time
 import requests
 import zipfile
 import subprocess
-import struct
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
+
+
+
 
 
 class Command:
@@ -335,29 +337,29 @@ class Command:
 
                 builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
                 builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
-        result2=20
-        #get throttled for pi
+
         try:
-            sb2 = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE)
-            cmd_out2 = sb2.communicate()
-            string_value2 = cmd_out2[0].decode().split('=')
-            result2 = int(string_value2[1].strip(), 0)
+            cmd_response = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE).communicate()
+            throttled_string = cmd_response[0].decode().split('=')[1].strip()
+            throttled_value = int(throttled_string, 0)
+            if throttled_value & (1 << 0):
+                builder.add_field(title='WARNING', text="PI is under-voltage", inline=True)
+            if throttled_value & (1 << 1):
+                builder.add_field(title='WARNING', text="PI has capped it's ARM frequency", inline=True)
+            if throttled_value & (1 << 2):
+                builder.add_field(title='WARNING', text="PI is currently throttled", inline=True)
+            if throttled_value & (1 << 3):
+                builder.add_field(title='WARNING', text="PI has reached temperature limit", inline=True)
+            if throttled_value & (1 << 16):
+                builder.add_field(title='WARNING', text="PI Under-voltage has occurred", inline=True)
+            if throttled_value & (1 << 17):
+                builder.add_field(title='WARNING', text="PI ARM frequency capped has occurred", inline=True)
+            if throttled_value & (1 << 18):
+                builder.add_field(title='WARNING', text="PI Throttling has occurred", inline=True)
+            if throttled_value & (1 << 19):
+                builder.add_field(title='WARNING', text="PI temperature limit has occurred", inline=True)
         except OSError as e:
             pass
-        if result2==0: 
-            builder.add_field(title='WARNING', text="OCTOPI is under-voltage", inline=True)
-        if result2==1: 
-            builder.add_field(title='WARNING', text="OCTOPI has capped it's arm frequency ", inline=True)
-        if result2==2: 
-            builder.add_field(title='WARNING', text="OCTOPI is currently throttled", inline=True)
-        if result2==6:
-            builder.add_field(title='WARNING', text="under-voltage has occurred", inline=True)
-        if result2==17:
-            builder.add_field(title='WARNING', text="arm frequency capped has occurred", inline =True)
-        if result2==18:
-            builder.add_field(title='WARNING', text="throttling has occurred", inline = True)
-            
-                    
 
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
