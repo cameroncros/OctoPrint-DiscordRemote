@@ -286,7 +286,7 @@ class Discord:
                 filename = upload['filename']
                 url = upload['url']
 
-                if filename.endswith((".g", ".gco", ".gcode")):
+                if filename.endswith((".g", ".gco", ".gcode", ".zip")):
                     snapshots, embeds = self.command.download_file(filename, url, user)
                     self.send(embeds=embeds)
 
