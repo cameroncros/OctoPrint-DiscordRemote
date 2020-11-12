@@ -411,6 +411,8 @@ class Command:
         flat_filelist = self.get_flat_file_list()
 
         unzippable = None
+        is_multivolume = False
+        mv_paths = []
 
         if file_name.endswith('.zip'):
             for file in flat_filelist:
@@ -420,6 +422,7 @@ class Command:
 
         elif file_name[:-4].endswith('.zip'):
             files = []
+            is_multivolume = True
             truncated = file_name[:-3]
             current = 1
             found = True
@@ -440,7 +443,7 @@ class Command:
                     path = self.plugin.get_file_manager().path_on_disk('local', f)
                     with open(path, 'rb') as temp:
                         combined.write(temp.read())
-                    self.plugin.get_file_manager().remove_file('local', f.rpartition('/')[2])
+                    mv_paths.append(f.rpartition('/')[2])
 
             unzippable = upload_file_path
 
@@ -460,10 +463,12 @@ class Command:
                 fileOK = zip.testzip()
 
                 if fileOK is not None:
-                    self.plugin.get_file_manager().remove_file('local', unzippable)
-                    return None, error_embed(author=self.plugin.get_printer_name(),
-                                             title="Bad zip file.",
-                                             description='In case of multi-volume files, one could be missing.')
+                    raise zipfile.BadZipfile()
+                elif is_multivolume:
+                    for f in mv_paths:
+                        self.plugin.get_file_manager().remove_file('local', f)
+
+
 
                 availablefiles = zip.namelist()
                 filestounpack = []
