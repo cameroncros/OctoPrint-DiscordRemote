@@ -780,7 +780,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         payload, embeds = self.command.judge_is_unzippable("test.zip")
         self.assertTrue(payload)
-        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received, unzipping...")
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="File Received, starting to unzip....")
 
         # CASE 2: File is a .zip but we're not allowed to auto-unzip
         self.plugin.get_settings().get.return_value = False
@@ -803,7 +803,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
         self.assertTrue(payload)
-        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="All Files Received, unzipping...")
+        self._validate_simple_embed(embeds, COLOR_SUCCESS, title="All Files Received, starting to unzip....")
 
         # CASE 5: File is a multi-volume .zip.001, ... file, one volume present
 

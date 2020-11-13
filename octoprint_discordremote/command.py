@@ -514,7 +514,7 @@ class Command:
             #unzip
             if autounzip:
                 return True, success_embed(author=self.plugin.get_printer_name(),
-                                           title='File Received, unzipping...',
+                                           title='File Received, starting to unzip....',
                                            description=filename)
 
             # inform the user that they can unzip the file themselves
@@ -626,7 +626,7 @@ class Command:
 
             else:
                 return True, success_embed(author=self.plugin.get_printer_name(),
-                                           title='All Files Received, unzipping...',
+                                           title='All Files Received, starting to unzip....',
                                            description=string_availablefiles)
 
         return False, success_embed(author=self.plugin.get_printer_name(),
