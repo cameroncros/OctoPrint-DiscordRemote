@@ -743,19 +743,36 @@ class TestCommand(DiscordRemoteTestCase):
 
     def test_judge_is_unzippable(self):
 
+        # prepare a working  dummy zip
+        with ZipFile('./testzip.zip', 'w') as zipf:
+            zipf.writestr('test.gcode', "Proper GCODE file!")
+            zipf.writestr('test.txt', "Don't extract that!")
+            zipf.close()
+
+        # create a multi-volume dummy zip, too
+        # code adapted, taken from Jeronimo's answer in https://stackoverflow.com/questions/52193680/split-a-zip-archive-into-multiple-chunks
+        outfile = './testzipMV.zip'
+        packet_size = int(100)  # bytes
+
+        with open('./testzip.zip', "rb") as output:
+            filecount = 1
+            while True:
+                data = output.read(packet_size)
+                if not data:
+                    break  # we're done
+                with open("{}.{:03}".format(outfile, filecount), "wb") as packet:
+                    packet.write(data)
+                filecount += 1
+
         # reroute calls to Octoprint's local folder to project local folder
         def path_sideeff(*args, **kwargs):
             if args[0] == 'local':
                 return os.path.join('./', args[1])
             return None
 
-        # fake file sizes; returns 400 for the first two files, 200 for the last one
-        # this is used to test whether the .zip.XXX file is the last file
-        def getsize_sideeff(*args, **kwargs):
-            if args[0].endswith('.003'):
-                return 200
-            else:
-                return 400
+        self.plugin.get_file_manager().path_on_disk = mock.Mock()
+        self.plugin.get_file_manager().path_on_disk.side_effect = path_sideeff
+
 
         # CASE 1: File is a .zip and we're allowed to auto-unzip
         self.plugin.get_settings().get = mock.Mock()
@@ -783,12 +800,6 @@ class TestCommand(DiscordRemoteTestCase):
 
         self.command.get_flat_file_list = mock.Mock()
         self.command.get_flat_file_list.return_value = zip_flat_file_list
-
-        os.path.getsize = mock.Mock()
-        os.path.getsize.side_effect = getsize_sideeff
-
-        self.plugin.get_file_manager().path_on_disk = mock.Mock()
-        self.plugin.get_file_manager().path_on_disk.side_effect = path_sideeff
 
         payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
         self.assertTrue(payload)
@@ -826,4 +837,9 @@ class TestCommand(DiscordRemoteTestCase):
         payload, embeds = self.command.judge_is_unzippable("testzipMV.zip.002")
         self.assertFalse(payload)
         self._validate_simple_embed(embeds, COLOR_SUCCESS, title="3 of 3 Files Received")
+
+        os.remove('./testzip.zip')
+        os.remove('./testzipMV.zip.001')
+        os.remove('./testzipMV.zip.002')
+        os.remove('./testzipMV.zip.003')
 

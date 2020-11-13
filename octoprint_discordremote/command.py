@@ -15,8 +15,14 @@ from octoprint.printer import InvalidFileLocation, InvalidFileType
 from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
+# maximum comment length = 65535 bytes
+# + commentary offset = 65535 + 22 bytes EOCD length = 65557 bytes we need to check
+# lots of bytes to check but sadly we have to
+MAX_ZIP_SIGNATURE_BLOCK = 65557
 
-
+# 0x06054b50 is the EOCD signature, little-endian format;
+# this signature is unique to the end of the zip file -> any file which has that signature is the last multi-volume
+ZIP_EOCD_SIGNATURE = bytearray.fromhex('504b0506')
 
 
 class Command:
@@ -497,13 +503,13 @@ class Command:
 
         return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=filelist_string)
 
-    #check if received file is eligible for unzipping
+    # check if received file is eligible for unzipping
     def judge_is_unzippable(self, filename):
 
         autounzip = self.plugin.get_settings().get(['auto_unzip'])
         truncated = filename[:-4]
 
-        #file is a single zip
+        # file is a single zip
         if filename.endswith('.zip'):
             #unzip
             if autounzip:
@@ -511,54 +517,35 @@ class Command:
                                            title='File Received, unzipping...',
                                            description=filename)
 
-            #inform the user that he can unzip the file himself
+            # inform the user that they can unzip the file themselves
             else:
                 descr = filename + '\n'
                 descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), filename)
                 return False, success_embed(author=self.plugin.get_printer_name(), title='File Received',
                                            description=descr)
 
-        #file is part of a multi-volume zip
+        # file is part of a multi-volume zip
         elif truncated.endswith('.zip'):
 
-            #find all available multi-volumes belonging to the file in question
+            # find all available multi-volumes belonging to the file in question
             filelist = self.get_flat_file_list()
             available_files = []
-            available_files_sizes = []
 
-            #get all available parts of the zip
+            # get all available parts of the zip
             for f in filelist:
 
                 temp_path = f.get('path')
 
-                #check for file ending in .zip.XXX
+                # check for file ending in .zip.XXX
                 if truncated.upper() in temp_path.upper():
 
                     trunc_filename = filename[:-3] + temp_path[-3:]
                     real_path = self.plugin.get_file_manager().path_on_disk(f.get('location'), trunc_filename)
 
-                    available_files.append(trunc_filename)
-                    available_files_sizes.append(int(os.path.getsize(real_path)))
+                    available_files.append(real_path)
 
-            smallest_filesize = available_files_sizes[0]
-            last_index = 0
-            differing_found = False
-
-            for i in range(1, len(available_files)):
-                #once we find one smaller file this must mean it's the last volume - every other file size is the same
-                # i is the index of that last volume
-                if available_files_sizes[i] < smallest_filesize:
-                    differing_found = True
-                    last_index = int(available_files[i][-3:])
-                    break
-
-                elif available_files_sizes[i] > smallest_filesize:
-                    differing_found = True
-                    last_index = int(available_files[0][-3:])
-                    break
-
-            #sort the filenames nicely so missing files can be easily identified
-            #for multiple files in a row, don't display all of them
+            # sort the filenames nicely so missing files can be easily identified
+            # for multiple files in a row, don't display all of them
             available_files.sort(key=lambda x: int(x[-3:]))
 
             blocks_availablefiles = []
@@ -567,15 +554,44 @@ class Command:
             for i in range(0, len(available_files)):
                 curr_index = int(available_files[i][-3:])
                 if curr_index is prev_index + 1:
-                    current_block.append(available_files[i])
+                    current_block.append(available_files[i].rpartition('/')[2])
                 else:
                     blocks_availablefiles.append(current_block)
-                    current_block = [available_files[i]]
+                    current_block = [available_files[i].rpartition('/')[2]]
 
                 prev_index = curr_index
             blocks_availablefiles.append(current_block)
 
+            differing_found = False
+            last_index = -1
 
+            # combine neighbour files into larger blocks
+            # it could be that the EOCD signature is split between two or more volumes if volumes are smaller than 65kb
+            # this enables us to still find it
+            blockedfiles = []
+            for block in blocks_availablefiles:
+                temp_filename = 'TEMP_' + block[-1]
+                temp_filepath = self.plugin.get_file_manager().path_on_disk('local', temp_filename)
+                with open(temp_filepath, 'ab') as combined:
+                    for f in block:
+                        path = self.plugin.get_file_manager().path_on_disk('local', f)
+                        with open(path, 'rb') as temp:
+                            combined.write(temp.read())
+                    combined.close()
+
+                with open(temp_filepath, 'rb') as combined:
+
+                    combined.seek(0)
+                    if os.path.getsize(temp_filepath) > MAX_ZIP_SIGNATURE_BLOCK:
+                        combined.seek(-MAX_ZIP_SIGNATURE_BLOCK, os.SEEK_END)
+                    block = bytearray(combined.read())
+
+                    if ZIP_EOCD_SIGNATURE in block:
+                        differing_found = True
+                        last_index = int(temp_filepath[-3:])
+
+                #for some reason, the file manager doesn't find these files
+                os.remove(temp_filepath)
 
 
             string_availablefiles = ''
@@ -594,7 +610,7 @@ class Command:
                                             title='%s of ??? Files Received' % (str(len(available_files))),
                                             description=string_availablefiles)
 
-            #we have the first and last file, can't unzip but we know how many volumes there are now
+            #we have the last file, volumes are missing but we know how many volumes there are now
             elif len(available_files) is not last_index:
                 return False, info_embed(author=self.plugin.get_printer_name(),
                                             title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
@@ -603,7 +619,7 @@ class Command:
             #still inform the user how many files there are and how to unzip them
             elif autounzip is not True:
                 descr = string_availablefiles
-                descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), available_files[0])
+                descr += 'Use %sunzip %s to extract all gcode files.' % (self.plugin.get_settings().get(["prefix"]), available_files[0].rpartition('/')[2])
                 return False, success_embed(author=self.plugin.get_printer_name(),
                                             title='%s of %s Files Received' % (str(len(available_files)), str(last_index)),
                                             description=descr)
