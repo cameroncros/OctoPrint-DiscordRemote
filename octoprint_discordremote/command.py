@@ -565,32 +565,44 @@ class Command:
             differing_found = False
             last_index = -1
 
-            # combine neighbour files into larger blocks
+            # search for signature in last block
             # it could be that the EOCD signature is split between two or more volumes if volumes are smaller than 65kb
-            # this enables us to still find it
-            blockedfiles = []
-            for block in blocks_availablefiles:
-                temp_filename = 'TEMP_' + block[-1]
-                temp_filepath = self.plugin.get_file_manager().path_on_disk('local', temp_filename)
-                with open(temp_filepath, 'ab') as combined:
-                    for f in block:
-                        path = self.plugin.get_file_manager().path_on_disk('local', f)
-                        with open(path, 'rb') as temp:
-                            combined.write(temp.read())
-                    combined.close()
+            # search for volumes in reverse order until combined size exceeds MAX_ZIP_SIGNATURE_BLOCK
+            signatureblock = blocks_availablefiles[-1]
+            temp_filename = 'TEMP_' + signatureblock[-1]
+            temp_filepath = self.plugin.get_file_manager().path_on_disk('local', temp_filename)
+            temp_combinedsize = 0
+            minimized_block_paths = []
 
-                with open(temp_filepath, 'rb') as combined:
+            # minimize block size, take only as many volumes as needed to grow beyond MAX_ZIP_SIGNATURE_BLOCK
+            # the rest of the block's volumes can't have the signature inside them if it exists
+            for i in range(len(signatureblock) - 1, 0, -1):
+                path = self.plugin.get_file_manager().path_on_disk('local', signatureblock[i])
+                temp_combinedsize += os.path.getsize(path)
+                minimized_block_paths.append(path)
+                if temp_combinedsize >= MAX_ZIP_SIGNATURE_BLOCK:
+                    # if the signature exists it's guaranteed to be found inside combined now
+                    break
 
-                    combined.seek(0)
-                    if os.path.getsize(temp_filepath) > MAX_ZIP_SIGNATURE_BLOCK:
-                        combined.seek(-MAX_ZIP_SIGNATURE_BLOCK, os.SEEK_END)
-                    block = bytearray(combined.read())
+            # concatenate the shortened block
+            with open(temp_filepath, 'ab') as combined:
+                for path in reversed(minimized_block_paths):
+                    with open(path, 'rb') as temp:
+                        combined.write(temp.read())
+                combined.close()
 
-                    if ZIP_EOCD_SIGNATURE in block:
-                        differing_found = True
-                        last_index = int(temp_filepath[-3:])
+            # search for signature
+            with open(temp_filepath, 'rb') as combined:
+                if os.path.getsize(temp_filepath) > MAX_ZIP_SIGNATURE_BLOCK:
+                    combined.seek(-MAX_ZIP_SIGNATURE_BLOCK, os.SEEK_END)
+                block = bytearray(combined.read())
+
+                if ZIP_EOCD_SIGNATURE in block:
+                    differing_found = True
+                    last_index = int(temp_filepath[-3:])
 
                 #for some reason, the file manager doesn't find these files
+                combined.close()
                 os.remove(temp_filepath)
 
 
