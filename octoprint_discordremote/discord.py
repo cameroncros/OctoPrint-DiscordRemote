@@ -285,8 +285,10 @@ class Discord:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                snapshots, embeds = self.command.download_file(filename, url, user)
-                self.send(embeds=embeds)
+
+                if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
+                    snapshots, embeds = self.command.download_file(filename, url, user)
+                    self.send(embeds=embeds)
 
         if 'content' in data and len(data['content']) > 0:
             snapshots, embeds = self.command.parse_command(data['content'], user)
