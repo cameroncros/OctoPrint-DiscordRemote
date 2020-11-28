@@ -31,6 +31,8 @@ License : MIT
 
 [Stwend](https://github.com/Stwend) for adding split zip support, to get around the 8mb discord limit.
 
+[Mary](https://github.com/kijk2869) for preventing the bot replying to other bots, and avoiding downloading non-gcode/zip files.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
