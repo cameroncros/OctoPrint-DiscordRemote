@@ -357,7 +357,7 @@ class Discord:
         if self.status_callback:
             self.status_callback(connected="connected")
         if self.error_counter > 0:
-            self.error_counter -= 0
+            self.error_counter = 0
         self.heartbeat_sent = 0
         self.process_queue()
 
