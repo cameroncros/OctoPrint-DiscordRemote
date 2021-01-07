@@ -113,9 +113,13 @@ If you don't receive it, something is most likely wrong!
 ### Access Settings
 
 The access settings allow specific commands to be limited to specific users.
-- In the commands section, put a comma-separated list of commands.
-- In the users section, put a comma-separated list of user IDs.
-- A '*' in either section can be used to match all commands/users.
+* In the commands section, put a comma-separated list of commands.
+* In the users section, put a comma-separated list of user IDs.
+* The user ID needs to be the numerical form, which is a number like: 165259232034275409
+  * In a text channel, find a message sent by you (or send one) and then right-click your name over that message and click "Copy ID"
+  * Or, join a voice channel, and then right-click your name in the sidebar, and click "Copy ID" 
+  * The text user ID (like "MyUser" or "MyUser#1234") will result in "Permission Denied" responses to commands.
+* A '*' in either section can be used to match all commands/users.
 
 If the current command and user combination matches any of the rules, it will be executed.
 If additional rules are required, manually editing the config will be required.
