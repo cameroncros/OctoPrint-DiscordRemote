@@ -114,8 +114,10 @@ If you don't receive it, something is most likely wrong!
 
 The access settings allow specific commands to be limited to specific users.
 * In the commands section, put a comma-separated list of commands.
+  * Check out [this wiki page](https://github.com/cameroncros/OctoPrint-DiscordRemote/wiki/Default-Commands,-Parameters-and-Description) for the list of commands
+  * The command list should look like "help, status, snapshot, mute, unmute" and is useful for tailoring access to any other users you might invite to avoid them issuing a command like /abort!
 * In the users section, put a comma-separated list of user IDs.
-* The user ID needs to be the numerical form, which is a number like: 165259232034275409
+  * The user ID needs to be the numerical form, which is a number like: 165259232034275409
   * In a text channel, find a message sent by you (or send one) and then right-click your name over that message and click "Copy ID"
   * Or, join a voice channel, and then right-click your name in the sidebar, and click "Copy ID" 
   * The text user ID (like "MyUser" or "MyUser#1234") will result in "Permission Denied" responses to commands.
