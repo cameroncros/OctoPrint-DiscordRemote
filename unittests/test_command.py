@@ -2,6 +2,8 @@ import humanfriendly
 import mock
 import os
 
+from zipfile import ZipFile
+
 from octoprint.printer import InvalidFileType, InvalidFileLocation
 
 from octoprint_discordremote import Command, DiscordRemotePlugin
@@ -39,6 +41,18 @@ flatten_file_list = [
      'analysis': {'printingArea': {'maxZ': None, 'maxX': None, 'maxY': None, 'minX': None, 'minY': None, 'minZ': None},
                   'dimensions': {'width': 0.0, 'depth': 0.0, 'height': 0.0},
                   'filament': {'tool0': {'volume': 0.0, 'length': 0.0}}}, 'display': u'test.gcode'}]
+
+zip_flat_file_list = [
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'testzip.zip',
+     'date': 1525822021, 'path': u'/testzip.zip', 'size': 6530},
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'testzipMV.zip.001', 'date': 1525822021,
+     'path': u'/testzipMV.zip.001', 'size': 6530},
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'testzipMV.zip.002', 'date': 1525822021,
+     'path': u'/testzipMV.zip.002', 'size': 6530},
+    {'hash': 'e2337a4310c454a0198718425330e62fcbe4329e', 'location': 'local', 'name': u'testzipMV.zip.003', 'date': 1525822021,
+     'path': u'/testzipMV.zip.003', 'size': 6530}
+]
+
 
 class TestCommand(DiscordRemoteTestCase):
 
@@ -329,7 +343,8 @@ class TestCommand(DiscordRemoteTestCase):
         self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
         self.plugin.get_printer().disconnect.assert_called_once_with()
 
-    def test_parse_command_status(self):
+    @mock.patch("subprocess.Popen")
+    def test_parse_command_status(self, mock_popen):
         self.plugin.get_ip_address = mock.Mock()
         self.plugin.get_ip_address.return_value = "192.168.1.1"
 
@@ -360,6 +375,18 @@ class TestCommand(DiscordRemoteTestCase):
             'extruder1': {'actual': 350}
         }
 
+        mock_popen.return_value.communicate.return_value = [b"throttled=0xf000f"]  # All flags raised
+        expected_throttled_terms = [
+            "PI is under-voltage",
+            "PI has capped it's ARM frequency",
+            "PI is currently throttled",
+            "PI has reached temperature limit",
+            "PI Under-voltage has occurred",
+            "PI ARM frequency capped has occurred",
+            "PI Throttling has occurred",
+            "PI temperature limit has occurred",
+        ]
+
         self.plugin.get_snapshot = mock.Mock()
 
         with open(self._get_path('test_pattern.png')) as input_file:
@@ -380,6 +407,7 @@ class TestCommand(DiscordRemoteTestCase):
                           'Time Spent', 'Time Remaining',
                           humanfriendly.format_timespan(300), humanfriendly.format_timespan(500),
                           self.plugin.get_ip_address.return_value, self.plugin.get_external_ip_address.return_value]
+        expected_terms += expected_throttled_terms
 
         self.assertEqual(3, self.plugin.get_settings().get.call_count)
 
@@ -610,3 +638,104 @@ class TestCommand(DiscordRemoteTestCase):
         snapshots, embeds = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
         self.assertTrue(snapshots)
         self.assertTrue(embeds)
+
+    def test_unzip(self):
+
+        # prepare a working  dummy zip
+        with ZipFile('./testzip.zip', 'w') as zipf:
+            zipf.writestr('test.gcode', "Proper GCODE file!")
+            zipf.writestr('test.txt', "Don't extract that!")
+            zipf.close()
+
+        # create a multi-volume dummy zip, too
+        # code adapted, taken from Jeronimo's answer in https://stackoverflow.com/questions/52193680/split-a-zip-archive-into-multiple-chunks
+        outfile = './testzipMV.zip'
+        packet_size = int(100)  # bytes
+
+        with open('./testzip.zip', "rb") as output:
+            filecount = 1
+            while True:
+                data = output.read(packet_size)
+                if not data:
+                    break  # we're done
+                with open("{}.{:03}".format(outfile, filecount), "wb") as packet:
+                    packet.write(data)
+                filecount += 1
+
+        # reroute calls to Octoprint's local folder to project local folder
+        def path_sideeff(*args, **kwargs):
+            if args[0] == 'local':
+                return os.path.join('./', args[1])
+            return None
+
+        def file_exists_sideeff(*args, **kwargs):
+            if args[0] == 'local':
+                return os.path.isfile(os.path.join('./', args[1]))
+            return None
+
+        self.plugin.get_file_manager().path_on_disk = mock.Mock()
+        self.plugin.get_file_manager().path_on_disk.side_effect = path_sideeff
+
+        self.plugin.get_file_manager().file_exists = mock.Mock()
+        self.plugin.get_file_manager().file_exists.side_effect = file_exists_sideeff
+
+        self.command.get_flat_file_list = mock.Mock()
+        self.command.get_flat_file_list.return_value = []
+
+        # CASE 1: File doesn't exist
+        snapshot, embeds = self.command.unzip(["/unzip", "testzip.zip"])
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds, COLOR_ERROR, title="File testzip.zip not found.")
+
+        # CASE 2: File exists but is not a zip file
+        self.plugin.get_settings().get = mock.Mock()
+        self.plugin.get_settings().get.return_value = ''
+
+        snapshot, embeds = self.command.unzip(["/unzip", "testzip.nope"])
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Not a valid Zip file.")
+
+        self.command.get_flat_file_list.return_value = zip_flat_file_list
+
+        # CASE 3: File is a working zip file
+        snapshot, embeds = self.command.unzip(["/unzip", "testzip.zip"])
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File(s) unzipped. ")
+
+        # make sure it didn't extract the unwanted .txt in the zip file, only the gcode file
+        self.assertTrue(os.path.isfile('./test.gcode'))
+        self.assertFalse(os.path.isfile('./test.txt'))
+
+        with open('./test.gcode') as f:
+            self.assertEqual("Proper GCODE file!", f.read())
+
+        os.remove('./test.gcode')
+        os.remove('./testzip.zip')
+
+        # CASE 4: File is a working multi-volume zip file
+        snapshot, embeds = self.command.unzip(["/unzip", "testzipMV.zip.001"])
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_SUCCESS,
+                                    title="File(s) unzipped. ")
+        # no need to test for unwanted extracted files, code is the same as for single-volume zips
+        os.remove('./test.gcode')
+        os.remove('./testzipMV.zip')
+
+        # CASE 5: File is a multi-volume zip file, but it's missing volumes
+        os.remove('./testzipMV.zip.002')
+        self.command.get_flat_file_list.return_value = [zip_flat_file_list[0], zip_flat_file_list[2]]
+
+        snapshot, embeds = self.command.unzip(["/unzip", "testzipMV.zip.001"])
+        self.assertIsNone(snapshot)
+        self._validate_simple_embed(embeds,
+                                    COLOR_ERROR,
+                                    title="Bad zip file.")
+
+        os.remove('./testzipMV.zip')
+        os.remove('./testzipMV.zip.001')
+        os.remove('./testzipMV.zip.003')

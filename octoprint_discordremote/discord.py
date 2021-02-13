@@ -280,13 +280,19 @@ class Discord:
         if self.me != None and user == self.me:
             # Don't respond to ourself.
             return
+        
+        if data['author'].get("bot", False):
+            # Don't respond to bots.
+            return
 
         if 'attachments' in data:
             for upload in data['attachments']:
                 filename = upload['filename']
                 url = upload['url']
-                snapshots, embeds = self.command.download_file(filename, url, user)
-                self.send(embeds=embeds)
+
+                if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
+                    snapshots, embeds = self.command.download_file(filename, url, user)
+                    self.send(embeds=embeds)
 
         if 'content' in data and len(data['content']) > 0:
             snapshots, embeds = self.command.parse_command(data['content'], user)
