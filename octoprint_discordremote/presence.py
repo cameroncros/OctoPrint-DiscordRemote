@@ -3,7 +3,7 @@ from logging import disable
 
 from threading import Thread
 import time
-
+import humanfriendly
 
 class Presence:
     def __init__(self):
@@ -25,7 +25,10 @@ class Presence:
     def generate_status(self):
         if self.plugin.get_printer().is_operational():
             if self.plugin.get_printer().is_printing():
-                return "Printing {} - {}%".format(self.plugin.get_printer().get_current_data()['job']['file']['name'], self.plugin.get_printer().get_current_data()['progress']['completion'])
+                job_name = self.plugin.get_printer().get_current_data()['job']['file']['name']
+                job_percent = self.plugin.get_printer().get_current_data()['progress']['completion']
+                return "Printing {} - {}%".format(job_name,
+                                                  humanfriendly.format_number(job_percent, num_decimals=2))
             else:
                 return "Idle."
         else:
