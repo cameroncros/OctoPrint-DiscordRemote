@@ -96,6 +96,8 @@ The JSON format is:
 
 To get a list of available commands and arguments, type ``/help`` into the discord channel. The bot will return all available commands.
 Commands can also be sent via the web interface, by clicking the button in the top panel that looks like a game controller.
+Files can be uploaded to the discord channel directly, and they will be downloaded into OctoPrint automatically. You can use the `/unzip`
+command to manage zip files.
 
 ## Configuration
 
