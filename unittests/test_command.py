@@ -458,7 +458,7 @@ class TestCommand(DiscordRemoteTestCase):
 
         # Upload, no user
         snapshot, embeds = self.command.download_file("filename", "http://mock.url", None)
-        self.assertIsNone(snapshot)
+        self.assertTrue(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="File Received")
@@ -478,7 +478,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.command.check_perms.return_value = True
 
         snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
-        self.assertIsNone(snapshot)
+        self.assertTrue(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_SUCCESS,
                                     title="File Received")
@@ -495,7 +495,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.command.check_perms.return_value = False
 
         snapshot, embeds = self.command.download_file("filename", "http://mock.url", "1234")
-        self.assertIsNone(snapshot)
+        self.assertFalse(snapshot)
         self._validate_simple_embed(embeds,
                                     COLOR_ERROR,
                                     title="Permission Denied")
