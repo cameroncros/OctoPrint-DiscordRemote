@@ -286,7 +286,10 @@ class Discord:
                 filename = upload['filename']
                 url = upload['url']
 
-                self.command.download_file(filename, url, user)
+                has_permission, embeds = self.command.download_file(filename, url, user)
+                if not has_permission:
+                    self.send(embeds=embeds)
+                    return
                 #check if file is eligible for unzipping
                 ready_to_unpack, embeds = self.command.judge_is_unzippable(filename)
                 self.send(embeds=embeds)

@@ -392,7 +392,7 @@ class Command:
 
     def download_file(self, filename, url, user):
         if user and not self.check_perms('upload', user):
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return False, error_embed(author=self.plugin.get_printer_name(),
                                      title="Permission Denied")
         upload_file_path = self.plugin.get_file_manager().path_on_disk('local', filename)
 
@@ -401,7 +401,7 @@ class Command:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return True, success_embed(author=self.plugin.get_printer_name(),
                                    title='File Received',
                                    description=filename)
 
