@@ -195,7 +195,8 @@ class Discord:
                     self.heartbeat_sent += 1
                     self.logger.info("Heartbeat: %s" % js)
                 except Exception as exc:
-                    self.logger.error("Exception caught: %s", exc)
+                    self.logger.error("Exception caught: %s\n%s", exc, exc.__traceback__)
+                    self.restart_event.set()
 
             for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
@@ -205,10 +206,10 @@ class Discord:
         if self.web_socket:
             if not disable:
                 out = {
-                    'op': PRESENCE, 
+                    'op': PRESENCE,
                     'd': {
                         "activities": [{
-                            "type": 0, 
+                            "type": 0,
                             "name": str(msg)
                         }],
                         "status": "online",
@@ -218,7 +219,7 @@ class Discord:
                 }
             else:
                 out = {
-                    'op': PRESENCE, 
+                    'op': PRESENCE,
                     'd': {
                         "activities": [],
                         "status": "online",
@@ -231,7 +232,8 @@ class Discord:
                 self.web_socket.send(js)
                 self.logger.info("Presence: {}".format(js))
             except Exception as exc:
-                self.logger.error("Exception caught: %s", exc)
+                self.logger.error("Presence exception caught: %s\n%s", exc, exc.__traceback__)
+                self.restart_event.set()
 
     def on_message(self, message):
         js = json.loads(message)
@@ -280,7 +282,7 @@ class Discord:
         if self.me != None and user == self.me:
             # Don't respond to ourself.
             return
-        
+
         if data['author'].get("bot", False):
             # Don't respond to bots.
             return
