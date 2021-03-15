@@ -195,16 +195,17 @@ class Discord:
                     self.heartbeat_sent += 1
                     self.logger.info("Heartbeat: %s" % js)
                 except Exception as exc:
-                    self.logger.error("Exception caught: %s\n%s", exc, exc.__traceback__)
+                    self.logger.error("Heartbeat Exception caught: %s\n%s", exc, exc.__traceback__)
+
                     self.restart_event.set()
 
             for i in range(int(round(self.heartbeat_interval / 1000))):
                 if not self.shutdown_event.is_set():
                     time.sleep(1)
 
-    def update_presence(self, msg, disable=False):
+    def update_presence(self, msg):
         if self.web_socket:
-            if not disable:
+            if not msg:
                 out = {
                     'op': PRESENCE,
                     'd': {
@@ -233,7 +234,6 @@ class Discord:
                 self.logger.info("Presence: {}".format(js))
             except Exception as exc:
                 self.logger.error("Presence exception caught: %s\n%s", exc, exc.__traceback__)
-                self.restart_event.set()
 
     def on_message(self, message):
         js = json.loads(message)
