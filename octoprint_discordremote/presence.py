@@ -39,7 +39,10 @@ class Presence:
             0: "{}help".format(self.plugin.get_settings().get(["prefix"])),
             1: self.generate_status()
         }
-        while not self.discord.shutdown_event.is_set():                
+        while not self.discord.shutdown_event.is_set():
+            if self.discord.restart_event.is_set():
+                time.sleep(1)
+                continue
 
             if self.plugin.get_settings().get(['presence']):
                 presence_cycle[1] = "{}".format(self.generate_status())
@@ -49,7 +52,7 @@ class Presence:
                 if self.presence_cycle_id == len(presence_cycle):
                     self.presence_cycle_id = 0
             else:
-                self.discord.update_presence("", disable=True)
+                self.discord.update_presence(None)
 
             for i in range(int(self.plugin.get_settings().get(['presence_cycle_time']))):
                 if not self.discord.shutdown_event.is_set():

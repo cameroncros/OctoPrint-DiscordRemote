@@ -164,13 +164,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                        self._logger,
                                        self.command,
                                        self.update_discord_status)
-        if send_test:
-            self.notify_event("test")
-
-    def configure_presence(self):
         if self.presence is None:
             self.presence = Presence()
         self.presence.configure_presence(self, self.discord)
+
+        if send_test:
+            self.notify_event("test")
 
     def on_after_startup(self):
         # Use a different log file for DiscordRemote, as it is very noisy.
@@ -186,8 +185,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Initialise DiscordRemote
         self._logger.info("DiscordRemote is started !")
         self.configure_discord(False)
-
-        self.configure_presence()
 
         # Transition settings
         allowed_users = self._settings.get(['allowedusers'], merged=True)
