@@ -56,7 +56,7 @@ See the following link for instructions on how to setup a Discord bot:
 
 - The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
 - When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
-- OAuth2 permissions are not necessary.  
+- OAuth2 permissions are not necessary.
 - If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
 ## API
@@ -121,7 +121,7 @@ The access settings allow specific commands to be limited to specific users.
 * In the users section, put a comma-separated list of user IDs.
   * The user ID needs to be the numerical form, which is a number like: 165259232034275409
   * In a text channel, find a message sent by you (or send one) and then right-click your name over that message and click "Copy ID"
-  * Or, join a voice channel, and then right-click your name in the sidebar, and click "Copy ID" 
+  * Or, join a voice channel, and then right-click your name in the sidebar, and click "Copy ID"
   * The text user ID (like "MyUser" or "MyUser#1234") will result in "Permission Denied" responses to commands.
 * A '*' in either section can be used to match all commands/users.
 
@@ -154,6 +154,7 @@ Some events also support variables, here is a basic list :
 - `{externaddr}` : the external IP address of the OctoPrint server
 - `{timeremaining}` : the time remaining for the print ('Unknown' if the print is not running)
 - `{timespent}` : the time spent so far on the print
+- `{eta}` : the date+time which is `{timeremaining}` into the future
 
 **Printing process : started event** :
 - `{name}` : file's name that's being printed
