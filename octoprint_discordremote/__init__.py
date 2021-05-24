@@ -396,6 +396,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['externaddr'] = self.get_external_ip_address()
         data['timeremaining'] = self.get_print_time_remaining()
         data['timespent'] = self.get_print_time_spent()
+        data['eta'] = self.get_print_eta()
 
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
@@ -617,6 +618,17 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         try:
             remaining_time_val = current_data['progress']['printTimeLeft']
             return humanfriendly.format_timespan(remaining_time_val, max_units=2)
+        except (KeyError, ValueError):
+            return 'Unknown'
+
+    def get_print_eta(self):
+        current_data = self._printer.get_current_data()
+        try:
+            remaining_time_val = current_data['progress']['printTimeLeft']
+            return (
+                (datetime.now() + timedelta(seconds=remaining_time_val))
+                .isoformat(' ', 'minutes')
+            )
         except (KeyError, ValueError):
             return 'Unknown'
 

@@ -56,7 +56,7 @@ See the following link for instructions on how to setup a Discord bot:
 
 - The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
 - When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
-- OAuth2 permissions are not necessary.  
+- OAuth2 permissions are not necessary.
 - If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
 ## API
@@ -115,9 +115,15 @@ If you don't receive it, something is most likely wrong!
 ### Access Settings
 
 The access settings allow specific commands to be limited to specific users.
-- In the commands section, put a comma-separated list of commands.
-- In the users section, put a comma-separated list of user IDs.
-- A '*' in either section can be used to match all commands/users.
+* In the commands section, put a comma-separated list of commands.
+  * Check out [this wiki page](https://github.com/cameroncros/OctoPrint-DiscordRemote/wiki/Default-Commands,-Parameters-and-Description) for the list of commands
+  * The command list should look like "help, status, snapshot, mute, unmute" and is useful for tailoring access to any other users you might invite to avoid them issuing a command like /abort!
+* In the users section, put a comma-separated list of user IDs.
+  * The user ID needs to be the numerical form, which is a number like: 165259232034275409
+  * In a text channel, find a message sent by you (or send one) and then right-click your name over that message and click "Copy ID"
+  * Or, join a voice channel, and then right-click your name in the sidebar, and click "Copy ID"
+  * The text user ID (like "MyUser" or "MyUser#1234") will result in "Permission Denied" responses to commands.
+* A '*' in either section can be used to match all commands/users.
 
 If the current command and user combination matches any of the rules, it will be executed.
 If additional rules are required, manually editing the config will be required.
@@ -148,6 +154,7 @@ Some events also support variables, here is a basic list :
 - `{externaddr}` : the external IP address of the OctoPrint server
 - `{timeremaining}` : the time remaining for the print ('Unknown' if the print is not running)
 - `{timespent}` : the time spent so far on the print
+- `{eta}` : the date+time which is `{timeremaining}` into the future
 
 **Printing process : started event** :
 - `{name}` : file's name that's being printed

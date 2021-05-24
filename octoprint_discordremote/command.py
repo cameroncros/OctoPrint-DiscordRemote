@@ -330,13 +330,14 @@ class Command:
             printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
             if printing:
-                builder.add_field(title='File', text=current_data['job']['file']['name'], inline=True)
+                builder.add_field(title='File', text=f"`{current_data['job']['file']['name']}`", inline=True)
                 completion = current_data['progress']['completion']
                 if completion:
                     builder.add_field(title='Progress', text='%d%%' % completion, inline=True)
 
                 builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
                 builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
+                builder.add_field(title='ETA', text=self.plugin.get_print_eta(), inline=True)
 
         try:
             cmd_response = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE).communicate()
