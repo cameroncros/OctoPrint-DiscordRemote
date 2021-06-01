@@ -629,7 +629,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 (datetime.now() + timedelta(seconds=remaining_time_val))
                 .isoformat(' ', 'minutes')
             )
-        except (KeyError, ValueError):
+        except:
             return 'Unknown'
 
     def start_periodic_reporting(self):
