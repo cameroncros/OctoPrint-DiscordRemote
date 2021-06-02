@@ -1,7 +1,7 @@
 import yaml
 
 config_file = "config.yaml"
-octoprint_config = "testenv3/testconfig/config.yaml"
+octoprint_config = "testenv/testconfig/config.yaml"
 bot_details = {}
 try:
     with open(config_file, "r") as config:
