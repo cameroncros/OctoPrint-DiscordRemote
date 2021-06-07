@@ -330,7 +330,7 @@ class Command:
             printing = self.plugin.get_printer().is_printing()
             builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
             if printing:
-                builder.add_field(title='File', text=f"`{current_data['job']['file']['name']}`", inline=True)
+                builder.add_field(title='File', text=str(current_data['job']['file']['name']), inline=True)
                 completion = current_data['progress']['completion']
                 if completion:
                     builder.add_field(title='Progress', text='%d%%' % completion, inline=True)
