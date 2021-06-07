@@ -12,17 +12,20 @@ import subprocess
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
+from typing import TYPE_CHECKING, Tuple, List
+from discord import Embed, File
+
+if TYPE_CHECKING:
+    from octoprint_discordremote import DiscordRemotePlugin
+
 from octoprint_discordremote.command_plugins import plugin_list
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
 
 
-
-
-
 class Command:
-    def __init__(self, plugin):
+    def __init__(self, plugin: 'DiscordRemotePlugin'):
         assert plugin
-        self.plugin = plugin
+        self.plugin: 'DiscordRemotePlugin' = plugin
         self.command_dict = collections.OrderedDict()
         self.command_dict['connect'] = {'cmd': self.connect, 'params': "[port] [baudrate]",
                                         'description': "Connect to a printer."}
@@ -55,21 +58,21 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string, user=None):
+    def parse_command(self, string, user=None) -> Tuple[List[Embed], List[File]]:
         prefix_str = self.plugin.get_settings().get(["prefix"])
         prefix_len = len(prefix_str)
 
         parts = re.split(r'\s+', string)
 
         if len(parts[0]) < prefix_len or prefix_str != parts[0][:prefix_len]:
-            return None, None
+            return None
 
         command_string = parts[0][prefix_len:]
 
         command = self.command_dict.get(command_string, {'cmd': self.help})
 
         if user and not self.check_perms(command_string, user):
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title="Permission Denied")
 
         if command.get('params'):
@@ -101,14 +104,14 @@ class Command:
                     description = ''
                     description += 'Size: %s\n' % os.path.getsize(file_path)
                     description += 'Date of Creation: %s\n' % time.ctime(os.path.getctime(file_path))
-                    description += 'Download Path: %s\n' %\
+                    description += 'Download Path: %s\n' % \
                                    ("http://" + baseurl + "/downloads/timelapse/" + urllib.quote(title))
 
                     builder.add_field(title=title, text=description)
                 except Exception as e:
                     pass
 
-        return None, builder.get_embeds()
+        return builder.get_embeds()
 
     def help(self):
         builder = EmbedBuilder()
@@ -120,26 +123,26 @@ class Command:
                 title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
                 text=details.get('description'))
 
-        return None, builder.get_embeds()
+        return builder.get_embeds()
 
     def cancel_print(self):
         self.plugin.get_printer().cancel_print()
-        return None, error_embed(author=self.plugin.get_printer_name(),
+        return error_embed(author=self.plugin.get_printer_name(),
                                  title='Print aborted')
 
     def start_print(self, params):
         if len(params) != 2:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Wrong number of arguments',
                                      description='try "%sprint [filename]"' % self.plugin.get_settings().get(
                                          ["prefix"]))
         if not self.plugin.get_printer().is_ready():
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Printer is not ready')
 
         file = self.find_file(params[1])
         if file is None:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Failed to find the file')
 
         is_sdcard = (file['location'] == 'sdcard')
@@ -147,12 +150,12 @@ class Command:
             file_path = self.plugin.get_file_manager().path_on_disk(file['location'], file['path'])
             self.plugin.get_printer().select_file(file_path, is_sdcard, printAfterSelect=True)
         except InvalidFileType:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Invalid file type selected')
         except InvalidFileLocation:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Invalid file location?')
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Successfully started print',
                                    description=file['path'])
 
@@ -201,21 +204,22 @@ class Command:
                 pass
 
             try:
-                url = "http://" + baseurl + "/downloads/files/" + details['location'] + "/" + details['path'].lstrip('/')
+                url = "http://" + baseurl + "/downloads/files/" + details['location'] + "/" + details['path'].lstrip(
+                    '/')
                 description += 'Download Path: %s\n' % url
             except:
                 pass
 
             builder.add_field(title=title, text=description)
 
-        return None, builder.get_embeds()
+        return builder.get_embeds()
 
     def snapshot(self):
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
-            return None, info_embed(author=self.plugin.get_printer_name(),
+            return info_embed(author=self.plugin.get_printer_name(),
                                     snapshot=snapshots[0])
-        return None, None
+        return None
 
     def find_file(self, file_name):
         flat_filelist = self.get_flat_file_list()
@@ -246,12 +250,12 @@ class Command:
 
     def connect(self, params):
         if len(params) > 3:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Too many parameters',
                                      description='Should be: %sconnect [port] [baudrate]' % self.plugin.get_settings().get(
                                          ["prefix"]))
         if self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Printer already connected',
                                      description='Disconnect first')
 
@@ -263,7 +267,7 @@ class Command:
             try:
                 baudrate = int(params[2])
             except ValueError:
-                return None, error_embed(author=self.plugin.get_printer_name(),
+                return error_embed(author=self.plugin.get_printer_name(),
                                          title='Wrong format for baudrate',
                                          description='should be a number')
 
@@ -273,25 +277,25 @@ class Command:
         for i in range(30):
             time.sleep(1)
             if self.plugin.get_printer().is_operational():
-                return None, success_embed('Connected to printer')
+                return success_embed('Connected to printer')
 
-        return None, error_embed(author=self.plugin.get_printer_name(),
+        return error_embed(author=self.plugin.get_printer_name(),
                                  title='Failed to connect',
                                  description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
                                      ["prefix"]))
 
     def disconnect(self):
         if not self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Printer is not connected')
         self.plugin.get_printer().disconnect()
         # Sleep a while before checking if disconnected
         time.sleep(10)
         if self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Failed to disconnect')
 
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Disconnected from printer')
 
     def status(self):
@@ -365,7 +369,7 @@ class Command:
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
             builder.set_image(snapshots[0])
-        return None, builder.get_embeds()
+        return builder.get_embeds()
 
     def pause(self):
         self.plugin.get_printer().pause_print()
@@ -373,7 +377,7 @@ class Command:
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
             snapshot = snapshots[0]
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Print paused', snapshot=snapshot)
 
     def resume(self):
@@ -382,12 +386,12 @@ class Command:
         snapshots = self.plugin.get_snapshot()
         if snapshots and len(snapshots) == 1:
             snapshot = snapshots[0]
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Print resumed', snapshot=snapshot)
 
     def download_file(self, filename, url, user):
         if user and not self.check_perms('upload', user):
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title="Permission Denied")
         upload_file_path = self.plugin.get_file_manager().path_on_disk('local', filename)
 
@@ -396,14 +400,13 @@ class Command:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='File Received',
                                    description=filename)
 
-
     def unzip(self, params):
         if len(params) != 2:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Wrong number of arguments',
                                      description='try "%sunzip [filename]"' % self.plugin.get_settings().get(
                                          ["prefix"]))
@@ -444,17 +447,17 @@ class Command:
                         combined.write(temp.read())
                     self.plugin.get_file_manager().remove_file('local', f.rpartition('/')[2])
 
-
             unzippable = upload_file_path
 
         else:
-            return None, error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.", description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (self.plugin.get_settings().get(
-                                         ["prefix"]), self.plugin.get_settings().get(
-                                         ["prefix"])))
+            return error_embed(author=self.plugin.get_printer_name(), title="Not a valid Zip file.",
+                                     description='try "%sunzip [filename].zip or %sunzip [filename].zip.001 for multi-volume files."' % (
+                                         self.plugin.get_settings().get(
+                                             ["prefix"]), self.plugin.get_settings().get(
+                                             ["prefix"])))
 
         if unzippable == None:
-            return None, error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
-
+            return error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
 
         try:
             with zipfile.ZipFile(unzippable) as zip:
@@ -462,7 +465,8 @@ class Command:
                 fileOK = zip.testzip()
 
                 if fileOK is not None:
-                    return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.", description='In case of multi-volume files, one could be missing.')
+                    return error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
+                                             description='In case of multi-volume files, one could be missing.')
 
                 availablefiles = zip.namelist()
                 filestounpack = []
@@ -480,21 +484,20 @@ class Command:
                 self.plugin.get_file_manager().remove_file('local', unzippable.rpartition('/')[2])
 
         except:
-            return None, error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
-                                 description='In case of multi-volume files, one could be missing.')
+            return error_embed(author=self.plugin.get_printer_name(), title="Bad zip file.",
+                                     description='In case of multi-volume files, one could be missing.')
 
-        return None, success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ', description=str(filestounpack))
-
-
+        return success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ',
+                                   description=str(filestounpack))
 
     def mute(self):
         self.plugin.mute()
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Notifications Muted')
 
     def unmute(self):
         self.plugin.unmute()
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title='Notifications Unmuted')
 
     @staticmethod
@@ -515,13 +518,13 @@ class Command:
             if users is None or commands is None:
                 continue
             if ('*' in users or user in users) and \
-               ('*' in commands or command in commands):
+                    ('*' in commands or command in commands):
                 return True
         return False
 
     def gcode(self, params):
         if not self.plugin.get_printer().is_operational():
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title="Printer not connected",
                                      description="Connect to printer first.")
 
@@ -535,24 +538,24 @@ class Command:
             if first is None or \
                     len(first) == 0 or \
                     first[0] not in allowed_gcodes:
-                return None, error_embed(author=self.plugin.get_printer_name(),
+                return error_embed(author=self.plugin.get_printer_name(),
                                          title="Invalid GCODE",
                                          description="If you want to use \"%s\", add it to the allowed GCODEs" % line)
         try:
             self.plugin.get_printer().commands(lines)
         except Exception as e:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to execute gcode",
                                      description="Error: %s" % e)
 
-        return None, success_embed(author=self.plugin.get_printer_name(),
+        return success_embed(author=self.plugin.get_printer_name(),
                                    title="Sent script")
 
     def getfile(self, params):
         filename = " ".join(params[1:])
         foundfile = self.find_file(filename)
         if foundfile is None:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title="Failed to find file matching the name given")
         file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
 
@@ -569,5 +572,5 @@ class Command:
                 if filename in file_path.upper():
                     return upload_file(file_path)
 
-        return None, error_embed(author=self.plugin.get_printer_name(),
+        return error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to find file matching the name given")

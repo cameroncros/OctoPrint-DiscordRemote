@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import asyncio
 import threading
 import time
 from base64 import b64decode
@@ -37,7 +38,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
 
-    #extend Octoprint's allowed file types by .zip, .zip.001, .zip.002, ...)
+    # extend Octoprint's allowed file types by .zip, .zip.001, .zip.002, ...)
     def get_extension_tree(self, *args, **kwargs):
         allowed_list = ['zip']
         for i in range(0, 100):
@@ -351,7 +352,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             args = data['args']
 
         snapshots, embeds = self.command.parse_command(args)
-        if not self.discord.send(snapshots=snapshots, embeds=embeds):
+        if not asyncio.run(self.discord.send(snapshots=snapshots, embeds=embeds)):
             return make_response("Failed to send message", 404)
 
     def unpack_message(self, data):
@@ -371,7 +372,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             image = BytesIO(bytes)
             builder.set_image((imagename, image))
 
-        if not self.discord.send(embeds=builder.get_embeds()):
+        if not asyncio.run(self.discord.send(embeds=builder.get_embeds())):
             return make_response("Failed to send message", 404)
 
     def notify_event(self, event_id, data=None):
@@ -509,9 +510,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                  title=message,
-                                                  snapshot=snapshot))
+        embeds, files = info_embed(author=self.get_printer_name(),
+                   title=message,
+                   snapshot=snapshot)
+        out = asyncio.run(self.discord.send(embeds=embeds, snapshots=files))
         if not out:
             self._logger.error("Failed to send message")
             return out
@@ -627,7 +629,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             remaining_time_val = current_data['progress']['printTimeLeft']
             return (
                 (datetime.now() + timedelta(seconds=remaining_time_val))
-                .isoformat(' ', 'minutes')
+                    .isoformat(' ', 'minutes')
             )
         except:
             return 'Unknown'
@@ -672,11 +674,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
 
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
-__plugin_pythoncompat__ = ">=2.7,<4"
+__plugin_pythoncompat__ = ">=3.6,<4"
 
 
 def __plugin_load__():

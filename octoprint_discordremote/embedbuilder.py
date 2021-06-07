@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 
-import datetime
+from datetime import datetime
+from typing import Tuple, List
+
+from discord import Embed, File
 import io
 import math
 import zipfile
 import os
-
 
 DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -20,7 +22,7 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(author, title=None, description=None, color=None, snapshot=None):
+def embed_simple(author, title=None, description=None, color=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -35,29 +37,29 @@ def embed_simple(author, title=None, description=None, color=None, snapshot=None
     return builder.get_embeds()
 
 
-def success_embed(author, title=None, description=None, snapshot=None):
+def success_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
     return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(author, title=None, description=None, snapshot=None):
+def error_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
     return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(author, title=None, description=None, snapshot=None):
+def info_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
-def upload_file(path, author=None):
+
+def upload_file(path, author=None) -> Tuple[List[Embed], List[File]]:
     file_name = os.path.basename(path)
     file_stat = os.stat(path)
     file_size = file_stat.st_size
 
     if file_size < DISCORD_MAX_FILE_SIZE:
-        fl = (file_name, open(path, 'rb'))
         embeds = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
             .get_embeds()
-        return [fl], embeds
+        return embeds[0], [File(open(path, 'rb'), file_name)]
 
     else:
         with zipfile.ZipFile("temp.zip", 'w') as zip_file:
@@ -83,19 +85,20 @@ def upload_file(path, author=None):
                     break
                 part_file.write(data)
                 part_file.seek(0)
-                files.append((part_name, part_file))
+                files.append(File(part_file, filename=file_name))
                 i += 1
 
         os.remove("temp.zip")
-        return files, embedbuilder.get_embeds()
+        return embedbuilder.get_embeds()[0], files
 
 
 class EmbedBuilder:
     def __init__(self):
         self.color = COLOR_INFO
-        self.embeds = [Embed()]
+        self.embeds = [EmbedWrapper()]
         self.timestamp = True
         self.author = None
+        self.files: List[File] = []
 
     def set_color(self, color):
         self.color = color
@@ -108,7 +111,7 @@ class EmbedBuilder:
             title = title[0:MAX_TITLE - 3] + "..."
 
         while not self.embeds[-1].set_title(title):
-            self.embeds.append(Embed())
+            self.embeds.append(EmbedWrapper())
 
         return self
 
@@ -119,7 +122,7 @@ class EmbedBuilder:
             description = description[0:MAX_DESCRIPTION - 3] + "..."
 
         while not self.embeds[-1].set_description(description):
-            self.embeds.append(Embed())
+            self.embeds.append(EmbedWrapper())
 
         return self
 
@@ -128,7 +131,7 @@ class EmbedBuilder:
             self.author = None
             return self
         if len(name) > MAX_TITLE:
-                name = name[0:MAX_TITLE - 3] + "..."
+            name = name[0:MAX_TITLE - 3] + "..."
         self.author = {'name': name}
         if url:
             self.author['url'] = url
@@ -150,7 +153,7 @@ class EmbedBuilder:
         while not self.embeds[-1].add_field({'name': title,
                                              'value': text,
                                              'inline': inline}):
-            self.embeds.append(Embed())
+            self.embeds.append(EmbedWrapper())
 
         return self
 
@@ -158,21 +161,24 @@ class EmbedBuilder:
         self.timestamp = enable
         return self
 
-    def set_image(self, snapshot):
+    def set_image(self, snapshot: Tuple[str, io.IOBase]):
         if snapshot and len(snapshot) == 2:
-            self.embeds[-1].set_image(snapshot)
+            self.embeds[-1].set_image(snapshot[0])
+            self.files.append(File(snapshot[1], filename=snapshot[0]))
         return self
 
-    def get_embeds(self):
+    def get_embeds(self) -> Tuple[List[Embed], List[File]]:
         # Finalise changes to embeds
         self.embeds[-1].timestamp = self.timestamp
 
+        embeds: List[Embed] = []
         for embed in self.embeds:
             embed.color = self.color
             if self.author:
                 embed.set_author(self.author)
+            embeds.append(embed.get_embed())
 
-        return self.embeds
+        return embeds, self.files
 
     def __str__(self):
         string = ""
@@ -180,7 +186,7 @@ class EmbedBuilder:
             string += embed
 
 
-class Embed:
+class EmbedWrapper:
     def __init__(self):
         self.embed_length = 0
         self.color = COLOR_INFO
@@ -188,9 +194,9 @@ class Embed:
         self.description = None
         self.timestamp = True
         self.fields = []
-        self.image = None
         self.files = []
         self.author = None
+        self.image: str = None
 
     def set_author(self, author):
         current_length = 0
@@ -243,58 +249,52 @@ class Embed:
         return True
 
     def set_image(self, snapshot):
-        self.image = {'url': "attachment://%s" % snapshot[0]}
-        self.files.append(snapshot)
-        pass
+        self.image = "attachment://%s" % snapshot[0]
 
-    def get_embed(self):
-        embed = {'fields': self.fields}
+    def get_embed(self) -> Embed:
+        embed = Embed(title=self.title,
+                      description=self.description,
+                      colour=self.color,
+                      timestamp=datetime.utcnow())
+        for field in self.fields:
+            embed.add_field(name=field['name'], value=field['value'])
         if self.author:
-            embed['author'] = self.author
-        if self.title:
-            embed['title'] = self.title
-        if self.description:
-            embed['description'] = self.description
-        if self.timestamp:
-            embed['timestamp'] = datetime.datetime.utcnow().isoformat()
-        if self.color:
-            embed['color'] = self.color
+            embed.set_author(name=self.author)
         if self.image:
-            embed['image'] = self.image
+            embed.set_image(self.image)
         return embed
 
     def get_files(self):
         return self.files
 
-    def __str__(self):
-        embed = self.get_embed()
-        string = "\n---------------------------------\n"
-        if 'author' in embed:
-            string += "~~Author~~~~~~~~~~~~~~~~~~\n"
-            if 'name' in embed['author']:
-                string += "\tAuthor Name: %s\n" % embed['author']['name']
-            if 'url' in embed['author']:
-                string += "\tAuthor Url: %s\n" % embed['author']['url']
-            if 'icon_url' in embed['author']:
-                string += "\tAuthor Icon: %s\n" % embed['author']['icon_url']
-            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-        if 'color' in embed:
-            string += "Color: %x\n" % embed['color']
-        if 'title' in embed:
-            string += "Title: %s\n" % embed['title']
-        if 'description' in embed:
-            string += "Description: %s\n" % embed['description']
-        for field in embed['fields']:
-            string += "~~~Field~~~~~~~~~~~~~~~~~~\n"
-            if 'name' in field:
-                string += "\tField Name: %s\n" % field['name']
-            if 'value' in field:
-                string += "\tField Value: %s\n" % field['value']
-            string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-        if 'image' in embed:
-            string += "Attached image: %s\n" % embed['image']['url']
-        if 'timestamp' in embed:
-            string += "Timestamp: %s\n" % embed['timestamp']
-        string += "---------------------------------\n"
-        return string
-
+    # def __str__(self):
+    #     embed = self.get_embed()
+    #     string = "\n---------------------------------\n"
+    #     if 'author' in embed:
+    #         string += "~~Author~~~~~~~~~~~~~~~~~~\n"
+    #         if 'name' in embed['author']:
+    #             string += "\tAuthor Name: %s\n" % embed['author']['name']
+    #         if 'url' in embed['author']:
+    #             string += "\tAuthor Url: %s\n" % embed['author']['url']
+    #         if 'icon_url' in embed['author']:
+    #             string += "\tAuthor Icon: %s\n" % embed['author']['icon_url']
+    #         string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+    #     if 'color' in embed:
+    #         string += "Color: %x\n" % embed['color']
+    #     if 'title' in embed:
+    #         string += "Title: %s\n" % embed['title']
+    #     if 'description' in embed:
+    #         string += "Description: %s\n" % embed['description']
+    #     for field in embed['fields']:
+    #         string += "~~~Field~~~~~~~~~~~~~~~~~~\n"
+    #         if 'name' in field:
+    #             string += "\tField Name: %s\n" % field['name']
+    #         if 'value' in field:
+    #             string += "\tField Value: %s\n" % field['value']
+    #         string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+    #     if 'image' in embed:
+    #         string += "Attached image: %s\n" % embed['image']['url']
+    #     if 'timestamp' in embed:
+    #         string += "Timestamp: %s\n" % embed['timestamp']
+    #     string += "---------------------------------\n"
+    #     return string
