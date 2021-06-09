@@ -113,8 +113,8 @@ class Discord:
             return
 
         for upload in message.attachments:
-            filename = upload['filename']
-            url = upload['url']
+            filename = upload.filename
+            url = upload.url
 
             if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
                 embeds, snapshots = self.command.download_file(filename, url, user)
