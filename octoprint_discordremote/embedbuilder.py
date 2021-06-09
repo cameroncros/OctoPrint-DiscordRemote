@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 from discord import Embed, File
+from discord.embeds import EmptyEmbed
 import io
 import math
 import zipfile
@@ -22,7 +23,7 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(author, title=None, description=None, color=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
+def embed_simple(author, title=None, description=None, color=None, snapshot=None) -> List[Tuple[Embed, File]]:
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -37,19 +38,19 @@ def embed_simple(author, title=None, description=None, color=None, snapshot=None
     return builder.get_embeds()
 
 
-def success_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
+def success_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
+def error_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(author, title=None, description=None, snapshot=None) -> Tuple[List[Embed], List[File]]:
+def info_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
 
-def upload_file(path, author=None) -> Tuple[List[Embed], List[File]]:
+def upload_file(path, author=None) -> List[Tuple[Embed, File]]:
     file_name = os.path.basename(path)
     file_stat = os.stat(path)
     file_size = file_stat.st_size
@@ -59,7 +60,7 @@ def upload_file(path, author=None) -> Tuple[List[Embed], List[File]]:
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
             .get_embeds()
-        return embeds[0], [File(open(path, 'rb'), file_name)]
+        return [embeds[0], File(open(path, 'rb'), file_name)]
 
     else:
         with zipfile.ZipFile("temp.zip", 'w') as zip_file:
@@ -73,8 +74,8 @@ def upload_file(path, author=None) -> Tuple[List[Embed], List[File]]:
         embedbuilder = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s in %i parts" % (file_name, num_parts))
+        messages = [embedbuilder.get_embeds()[0]]
 
-        files = []
         with open("temp.zip", 'rb') as zip_file:
             i = 1
             while True:
@@ -85,11 +86,11 @@ def upload_file(path, author=None) -> Tuple[List[Embed], List[File]]:
                     break
                 part_file.write(data)
                 part_file.seek(0)
-                files.append(File(part_file, filename=file_name))
+                messages.append((None, File(part_file, filename=part_name)))
                 i += 1
 
         os.remove("temp.zip")
-        return embedbuilder.get_embeds()[0], files
+        return messages
 
 
 class EmbedBuilder:
@@ -163,22 +164,21 @@ class EmbedBuilder:
 
     def set_image(self, snapshot: Tuple[str, io.IOBase]):
         if snapshot and len(snapshot) == 2:
-            self.embeds[-1].set_image(snapshot[0])
-            self.files.append(File(snapshot[1], filename=snapshot[0]))
+            self.embeds[-1].set_image(file=snapshot[1], filename=snapshot[0])
         return self
 
-    def get_embeds(self) -> Tuple[List[Embed], List[File]]:
+    def get_embeds(self) -> List[Tuple[Embed, File]]:
         # Finalise changes to embeds
         self.embeds[-1].timestamp = self.timestamp
 
-        embeds: List[Embed] = []
+        embeds: List[Tuple[Embed, File]] = []
         for embed in self.embeds:
             embed.color = self.color
             if self.author:
                 embed.set_author(self.author)
             embeds.append(embed.get_embed())
 
-        return embeds, self.files
+        return embeds
 
     def __str__(self):
         string = ""
@@ -196,7 +196,8 @@ class EmbedWrapper:
         self.fields = []
         self.files = []
         self.author = None
-        self.image: str = None
+        self.image_url: Optional[str] = None
+        self.file: Optional[File] = None
 
     def set_author(self, author):
         current_length = 0
@@ -248,10 +249,11 @@ class EmbedWrapper:
         self.embed_length += field_length
         return True
 
-    def set_image(self, snapshot):
-        self.image = "attachment://%s" % snapshot[0]
+    def set_image(self, file: io.IOBase, filename: str):
+        self.image_url = "attachment://%s" % filename
+        self.file = File(file, filename=filename)
 
-    def get_embed(self) -> Embed:
+    def get_embed(self) -> Tuple[Embed, File]:
         embed = Embed(title=self.title,
                       description=self.description,
                       colour=self.color,
@@ -259,10 +261,12 @@ class EmbedWrapper:
         for field in self.fields:
             embed.add_field(name=field['name'], value=field['value'])
         if self.author:
-            embed.set_author(name=self.author)
-        if self.image:
-            embed.set_image(self.image)
-        return embed
+            embed.set_author(name=self.author['name'],
+                             url=self.author.get('url', EmptyEmbed),
+                             icon_url=self.author.get('icon_url', EmptyEmbed))
+        if self.image_url:
+            embed.set_image(url=self.image_url)
+        return embed, self.file
 
     def get_files(self):
         return self.files

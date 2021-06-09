@@ -352,7 +352,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             args = data['args']
 
         snapshots, embeds = self.command.parse_command(args)
-        if not asyncio.run(self.discord.send(snapshots=snapshots, embeds=embeds)):
+        if not self.discord.send(snapshots=snapshots, embeds=embeds):
             return make_response("Failed to send message", 404)
 
     def unpack_message(self, data):
@@ -510,10 +510,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord is None:
             self.discord = Discord()
 
-        embeds, files = info_embed(author=self.get_printer_name(),
+        messages = info_embed(author=self.get_printer_name(),
                    title=message,
                    snapshot=snapshot)
-        out = asyncio.run(self.discord.send(embeds=embeds, snapshots=files))
+        out = asyncio.run(self.discord.send(messages))
         if not out:
             self._logger.error("Failed to send message")
             return out
@@ -582,7 +582,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
-        if printer_name is None:
+        if printer_name is None or len(printer_name) == 0:
             printer_name = "OctoPrint"
         return printer_name
 

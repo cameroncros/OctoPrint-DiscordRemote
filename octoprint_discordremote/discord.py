@@ -8,7 +8,7 @@ import re
 from threading import Thread, Event
 from typing import Optional, Tuple, List
 from unittest.mock import Mock
-from discord import Embed, Attachment
+from discord import Embed, File
 import discord
 
 from octoprint_discordremote import Command
@@ -27,7 +27,7 @@ class Discord:
         self.running_thread: Optional[Thread] = None
         self.command: Optional[Command] = None
         self.shutdown_event: Event = Event()
-        self.message_queue: List[Tuple[List[Attachment], List[Embed]]] = []
+        self.message_queue: List[List[Tuple[Embed, File]]] = []
 
     def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
         self.bot_token = bot_token
@@ -71,14 +71,12 @@ class Discord:
     async def send_messages(self):
         try:
             while len(self.message_queue):
-                snapshots, embeds = self.message_queue[0]
+                message_pairs = self.message_queue[0]
                 channel = self.client.get_channel(int(self.channel_id))
-                for snapshot in snapshots:
-                    await channel.send(file=snapshot)
-                for embed in embeds:
-                    await channel.send(embed=embed)
+                for embed, snapshot in message_pairs:
+                    await channel.send(embed=embed, file=snapshot)
                 del self.message_queue[0]
-        except:
+        except Exception as e:
             pass
 
     async def process_message_queue(self):
@@ -86,12 +84,10 @@ class Discord:
             await self.send_messages()
             await asyncio.sleep(30)
 
-    async def send(self, snapshots=None, embeds=None):
-        if embeds is None:
-            embeds = []
-        if snapshots is None:
-            snapshots = []
-        self.message_queue.append((snapshots, embeds))
+    async def send(self, messages: List[Tuple[Embed, File]]):
+        if messages is None:
+            messages = []
+        self.message_queue.append(messages)
         await self.send_messages()
 
     def log_safe(self, message):
@@ -117,10 +113,9 @@ class Discord:
             url = upload.url
 
             if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
-                embeds, snapshots = self.command.download_file(filename, url, user)
-                await self.send(embeds=embeds)
+                messages = self.command.download_file(filename, url, user)
+                await self.send(messages)
 
         if len(message.content) > 0:
-            embeds, snapshots = self.command.parse_command(message.content, user)
-            await self.send(snapshots=snapshots,
-                            embeds=embeds)
+            messages = self.command.parse_command(message.content, user)
+            await self.send(messages)
