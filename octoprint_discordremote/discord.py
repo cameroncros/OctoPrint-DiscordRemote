@@ -6,9 +6,9 @@
 import asyncio
 import re
 from threading import Thread, Event
-from typing import Optional
+from typing import Optional, Tuple, List
 from unittest.mock import Mock
-
+from discord import Embed, Attachment
 import discord
 
 from octoprint_discordremote import Command
@@ -27,6 +27,7 @@ class Discord:
         self.running_thread: Optional[Thread] = None
         self.command: Optional[Command] = None
         self.shutdown_event: Event = Event()
+        self.message_queue: List[Tuple[List[Attachment], List[Embed]]] = []
 
     def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
         self.bot_token = bot_token
@@ -54,8 +55,12 @@ class Discord:
 
         @self.client.event
         async def on_message(message):
-            self.logger.error("Received msg: [%s]" % message)
             await self.handle_message(message)
+
+        @self.client.event
+        async def on_ready():
+            self.logger.info("Sending msgs")
+            await self.process_message_queue()
 
         asyncio.run(self.client.run(self.bot_token))
 
@@ -63,18 +68,31 @@ class Discord:
         if self.client is not None and self.client.is_ready():
             asyncio.run(self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
 
+    async def send_messages(self):
+        try:
+            while len(self.message_queue):
+                snapshots, embeds = self.message_queue[0]
+                channel = self.client.get_channel(int(self.channel_id))
+                for snapshot in snapshots:
+                    await channel.send(file=snapshot)
+                for embed in embeds:
+                    await channel.send(embed=embed)
+                del self.message_queue[0]
+        except:
+            pass
+
+    async def process_message_queue(self):
+        while True:
+            await self.send_messages()
+            await asyncio.sleep(30)
+
     async def send(self, snapshots=None, embeds=None):
         if embeds is None:
             embeds = []
         if snapshots is None:
             snapshots = []
-        if self.client is None:
-            return  # todo: queue messages and resend later
-        channel = self.client.get_channel(int(self.channel_id))
-        for snapshot in snapshots:
-            await channel.send(file=snapshot)
-        for embed in embeds:
-            await channel.send(embed=embed)
+        self.message_queue.append((snapshots, embeds))
+        await self.send_messages()
 
     def log_safe(self, message):
         return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
