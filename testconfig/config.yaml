@@ -15,7 +15,7 @@ plugins:
       _octopi:
         read_until: 1611568800
       _plugins:
-        read_until: 1622523600
+        read_until: 1622782800
       _releases:
         read_until: 1620652800
   discovery:

@@ -15,7 +15,6 @@ fi
 ${PYTHON} -m pip install -r requirements-dev.txt
 ${PYTHON} -m pip install --upgrade --no-cache-dir git+https://github.com/foosel/OctoPrint.git@devel
 ${PYTHON} setup.py develop
-cp testconfig testenv/ -rfv
 ${PYTHON} configtest.py
 ${PYTHON} -m webbrowser -t http://127.0.0.1:5000
-FAKE_SNAPSHOT=unittests/test_pattern.png octoprint serve -b testenv/testconfig
+FAKE_SNAPSHOT=unittests/test_pattern.png octoprint serve -b testconfig
