@@ -12,9 +12,9 @@ import unittest
 import six
 import yaml
 from mock import mock
-from discord import Embed
+from discord import Embed, File
 
-from octoprint_discordremote.discord import Discord
+from octoprint_discordremote.discord import Discord, asyncio_run
 from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
@@ -83,21 +83,21 @@ class TestSend(DiscordRemoteTestCase):
         builder.set_title("Test title")
         builder.set_description("No snapshot")
 
-        self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+        self.assertTrue(self.discord.send(messages=builder.get_embeds()))
 
         with open(self._get_path("test_pattern.png"), "rb") as f:
             builder.set_description("With snapshot")
             builder.set_image(("snapshot.png", f))
-            self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+            self.assertTrue(self.discord.send(messages=builder.get_embeds()))
 
             f.seek(0)
-            self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
+            self.assertTrue(self.discord.send(messages=[(None, File("snapshot.png", f))]))
 
     def test_send(self):
         self.discord.send_messages = mock.AsyncMock()
         mock_snapshot = mock.Mock(spec=io.IOBase)
         mock_embed = mock.Mock(spec=Embed)
-        asyncio.run(self.discord.send(messages=[(mock_embed, mock_snapshot)]))
+        asyncio_run(self.discord.send(messages=[(mock_embed, mock_snapshot)]))
         self.assertTrue([(mock_embed, mock_snapshot)], self.discord.message_queue)
 
         self.discord.send_messages.assert_awaited()

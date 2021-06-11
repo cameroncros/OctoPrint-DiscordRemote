@@ -18,6 +18,11 @@ CHANNEL_ID_LENGTH = 18
 BOT_TOKEN_LENGTH = 59
 
 
+def asyncio_run(futures):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.wait(futures))
+
+
 class Discord:
     def __init__(self):
         self.logger = None
@@ -63,11 +68,11 @@ class Discord:
             self.logger.info("Sending msgs")
             await self.process_message_queue()
 
-        asyncio.run(self.client.run(self.bot_token))
+        asyncio_run(self.client.run(self.bot_token))
 
     def update_presence(self, msg):
         if self.client is not None and self.client.is_ready():
-            asyncio.run(self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
+            asyncio_run(self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
 
     async def send_messages(self):
         try:
@@ -85,7 +90,7 @@ class Discord:
             await self.send_messages()
             await asyncio.sleep(30)
 
-    async def send(self, messages: List[Tuple[Embed, File]]):
+    async def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         if messages is None:
             messages = []
         self.message_queue.append(messages)

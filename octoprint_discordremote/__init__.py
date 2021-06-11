@@ -28,7 +28,7 @@ from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from octoprint_discordremote.presence import Presence
-from .discord import Discord
+from .discord import Discord, asyncio_run
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -374,7 +374,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             image = BytesIO(bytes)
             builder.set_image((imagename, image))
 
-        if not asyncio.run(self.discord.send(embeds=builder.get_embeds())):
+        if not asyncio_run(self.discord.send(embeds=builder.get_embeds())):
             return make_response("Failed to send message", 404)
 
     def notify_event(self, event_id, data=None):
@@ -513,7 +513,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         messages = info_embed(author=self.get_printer_name(),
                               title=message,
                               snapshot=snapshot)
-        out = asyncio.run(self.discord.send(messages))
+        out = asyncio_run(self.discord.send(messages))
         if not out:
             self._logger.error("Failed to send message")
             return out
