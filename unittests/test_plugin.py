@@ -56,14 +56,10 @@ class TestCommand(DiscordRemoteTestCase):
             mock_requests_get.return_value = mock.Mock()
             mock_requests_get.return_value.content = file_data
 
-            snapshots = self.plugin.get_snapshot()
+            filename, file = self.plugin.get_snapshot()
 
-            self.assertIsNotNone(snapshots)
-            self.assertEqual(1, len(snapshots))
-            snapshot = snapshots[0]
-            self.assertEqual(2, len(snapshot))
-            self.assertEqual("snapshot.png", snapshot[0])
-            snapshot_data = snapshot[1].read()
+            self.assertEqual("snapshot.png", filename)
+            snapshot_data = file.read()
             self.assertEqual(len(file_data), len(snapshot_data))
             self.assertEqual([file_data], [snapshot_data])
 
@@ -75,14 +71,10 @@ class TestCommand(DiscordRemoteTestCase):
         with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()
 
-        snapshots = self.plugin.get_snapshot()
+        filename, file = self.plugin.get_snapshot()
 
-        self.assertIsNotNone(snapshots)
-        self.assertEqual(1, len(snapshots))
-        snapshot = snapshots[0]
-        self.assertEqual(2, len(snapshot))
-        self.assertEqual("snapshot.png", snapshot[0])
-        snapshot_data = snapshot[1].read()
+        self.assertEqual("snapshot.png", filename)
+        snapshot_data = file.read()
         self.assertEqual(len(file_data), len(snapshot_data))
         self.assertEqual([file_data], [snapshot_data])
 
@@ -143,9 +135,9 @@ class TestCommand(DiscordRemoteTestCase):
         if 'NET_TEST' in os.environ:
             self.plugin.unpack_message(data)
 
-        self.plugin.discord.send = mock.Mock()
+        self.plugin.discord.send = mock.AsyncMock()
         self.plugin.unpack_message(data)
-        self.plugin.discord.send.assert_called_once()
+        self.plugin.discord.send.assert_awaited()
 
 
 

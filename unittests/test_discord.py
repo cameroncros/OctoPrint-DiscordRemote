@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import asyncio
+import io
 import time
 
 import logging
@@ -10,6 +12,7 @@ import unittest
 import six
 import yaml
 from mock import mock
+from discord import Embed
 
 from octoprint_discordremote.discord import Discord
 from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
@@ -91,23 +94,14 @@ class TestSend(DiscordRemoteTestCase):
             self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
 
     def test_send(self):
-        self.discord._dispatch_message = mock.Mock()
-        mock_snapshot = mock.Mock()
-        mock_embed = mock.Mock()
-        self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
+        self.discord.send_messages = mock.AsyncMock()
+        mock_snapshot = mock.Mock(spec=io.IOBase)
+        mock_embed = mock.Mock(spec=Embed)
+        asyncio.run(self.discord.send(messages=[(mock_embed, mock_snapshot)]))
+        self.assertTrue([(mock_embed, mock_snapshot)], self.discord.message_queue)
 
-        self.assertEqual(2, self.discord._dispatch_message.call_count)
-        calls = [mock.call(snapshot=mock_snapshot),
-                 mock.call(embed=mock_embed)]
-        self.discord._dispatch_message.assert_has_calls(calls=calls)
-
-        large_file_path = self._get_path("large_file_temp")
-        with open(large_file_path, 'w') as f:
-            for i in range(0, DISCORD_MAX_FILE_SIZE):
-                f.write(str(i))
-
-        embeds = upload_file(large_file_path)
-        self.discord.send(embeds=embeds)
+        self.discord.send_messages.assert_awaited()
+        self.discord.message_queue.clear()
 
     @unittest.skipIf("LONG_TEST" not in os.environ,
                      "'LONG_TEST' not in os.environ - Not running long test")

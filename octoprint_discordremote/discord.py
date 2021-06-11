@@ -28,6 +28,7 @@ class Discord:
         self.command: Optional[Command] = None
         self.shutdown_event: Event = Event()
         self.message_queue: List[List[Tuple[Embed, File]]] = []
+        self.thread: Optional[Thread] = None
 
     def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
         self.bot_token = bot_token
@@ -42,8 +43,8 @@ class Discord:
         if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
             self.logger.error("Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             return
-        thread = Thread(target=self.run_thread)
-        thread.start()
+        self.thread = Thread(target=self.run_thread)
+        self.thread.start()
 
     def run_thread(self):
         asyncio.set_event_loop(asyncio.new_event_loop())
@@ -119,3 +120,7 @@ class Discord:
         if len(message.content) > 0:
             messages = self.command.parse_command(message.content, user)
             await self.send(messages)
+
+    def shutdown_discord(self):
+        if self.client:
+            self.client.close()

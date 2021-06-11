@@ -23,7 +23,11 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(author, title=None, description=None, color=None, snapshot=None) -> List[Tuple[Embed, File]]:
+def embed_simple(author: str,
+                 title: Optional[str] = None,
+                 description: Optional[str] = None,
+                 color: Optional[str] = None,
+                 snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
     builder = EmbedBuilder()
     if color:
         builder.set_color(color)
@@ -38,15 +42,24 @@ def embed_simple(author, title=None, description=None, color=None, snapshot=None
     return builder.get_embeds()
 
 
-def success_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
+def success_embed(author: str,
+                  title: Optional[str] = None,
+                  description: Optional[str] = None,
+                  snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
-def error_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
+def error_embed(author: str,
+                title: Optional[str] = None,
+                description: Optional[str] = None,
+                snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
-def info_embed(author, title=None, description=None, snapshot=None) -> List[Tuple[Embed, File]]:
+def info_embed(author: str,
+               title: Optional[str] = None,
+               description: Optional[str] = None,
+               snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
     return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
 
@@ -60,7 +73,8 @@ def upload_file(path, author=None) -> List[Tuple[Embed, File]]:
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
             .get_embeds()
-        return [embeds[0], File(open(path, 'rb'), file_name)]
+        embeds.append((None, File(open(path, 'rb'), file_name)))
+        return embeds
 
     else:
         with zipfile.ZipFile("temp.zip", 'w') as zip_file:
@@ -74,7 +88,7 @@ def upload_file(path, author=None) -> List[Tuple[Embed, File]]:
         embedbuilder = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s in %i parts" % (file_name, num_parts))
-        messages = [embedbuilder.get_embeds()[0]]
+        messages = embedbuilder.get_embeds()
 
         with open("temp.zip", 'rb') as zip_file:
             i = 1

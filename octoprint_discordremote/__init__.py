@@ -2,10 +2,12 @@
 from __future__ import absolute_import
 
 import asyncio
+import io
 import threading
 import time
 from base64 import b64decode
 from datetime import timedelta, datetime
+from typing import Tuple, Optional
 
 import humanfriendly
 import octoprint.plugin
@@ -502,17 +504,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Get snapshot if asked for
         snapshot = None
         if with_snapshot:
-            snapshots = self.get_snapshot()
-            if snapshots and len(snapshots) == 1:
-                snapshot = snapshots[0]
+            snapshot = self.get_snapshot()
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
             self.discord = Discord()
 
         messages = info_embed(author=self.get_printer_name(),
-                   title=message,
-                   snapshot=snapshot)
+                              title=message,
+                              snapshot=snapshot)
         out = asyncio.run(self.discord.send(messages))
         if not out:
             self._logger.error("Failed to send message")
@@ -523,18 +523,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return out
 
-    def get_snapshot(self):
+    def get_snapshot(self) -> Optional[Tuple[str, io.IOBase]]:
         if 'FAKE_SNAPSHOT' in os.environ:
             return self.get_snapshot_fake()
         else:
             return self.get_snapshot_camera()
 
     @staticmethod
-    def get_snapshot_fake():
+    def get_snapshot_fake() -> Optional[Tuple[str, io.IOBase]]:
         fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
-        return [("snapshot.png", fl)]
+        return ("snapshot.png", fl)
 
-    def get_snapshot_camera(self):
+    def get_snapshot_camera(self) -> Optional[Tuple[str, io.IOBase]]:
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
@@ -576,9 +576,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             new_image = BytesIO()
             img.save(new_image, 'png')
-
-            return [("snapshot.png", new_image)]
-        return [("snapshot.png", snapshot)]
+        return ("snapshot.png", snapshot)
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
