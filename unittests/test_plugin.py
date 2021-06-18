@@ -2,11 +2,12 @@ import os
 import sys
 import time
 from base64 import b64encode
+from unittest.mock import Mock
 
 import mock
 import yaml
 
-from octoprint_discordremote import DiscordRemotePlugin, Discord
+from octoprint_discordremote import DiscordRemotePlugin, Discord, Command
 from octoprint_discordremote.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 from unittests.test_discord import TestLogger
@@ -36,7 +37,7 @@ class TestCommand(DiscordRemoteTestCase):
                 self.plugin.discord.configure_discord(bot_token=config['bottoken'],
                                                       channel_id=config['channelid'],
                                                       logger=TestLogger(),
-                                                      command=None)
+                                                      command=Mock(spec=Command))
                 time.sleep(5)
             except:
                 self.fail("To test discord bot posting, you need to create a file "
@@ -131,9 +132,6 @@ class TestCommand(DiscordRemoteTestCase):
             'image': base64_data,
             'imagename': "snapshot.jpg"
         }
-
-        if 'NET_TEST' in os.environ:
-            self.plugin.unpack_message(data)
 
         self.plugin.discord.send = mock.AsyncMock()
         self.plugin.unpack_message(data)

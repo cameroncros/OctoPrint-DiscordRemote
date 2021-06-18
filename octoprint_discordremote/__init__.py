@@ -28,7 +28,7 @@ from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from octoprint_discordremote.presence import Presence
-from .discord import Discord, asyncio_run
+from .discord import Discord
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -353,8 +353,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'args' in data:
             args = data['args']
 
-        snapshots, embeds = self.command.parse_command(args)
-        if not self.discord.send(snapshots=snapshots, embeds=embeds):
+        messages = self.command.parse_command(args)
+        if not self.discord.send(messages=messages):
             return make_response("Failed to send message", 404)
 
     def unpack_message(self, data):
@@ -374,8 +374,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             image = BytesIO(bytes)
             builder.set_image((imagename, image))
 
-        if not asyncio_run(self.discord.send(embeds=builder.get_embeds())):
-            return make_response("Failed to send message", 404)
+        self.discord.send(messages=builder.get_embeds())
 
     def notify_event(self, event_id, data=None):
         self._logger.info("Received event: %s" % event_id)
@@ -513,10 +512,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         messages = info_embed(author=self.get_printer_name(),
                               title=message,
                               snapshot=snapshot)
-        out = asyncio_run(self.discord.send(messages))
-        if not out:
-            self._logger.error("Failed to send message")
-            return out
+        self.discord.send(messages)
 
         # exec "after" script if any
         self.exec_script(event_id, "after")

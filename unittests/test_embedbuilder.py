@@ -27,7 +27,10 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                                                channel_id=config['channelid'],
                                                logger=logging.getLogger(),
                                                command=None)
-                time.sleep(5)
+                while True:
+                    if self.discord.client.is_ready():
+                        break
+
             except:
                 self.fail("To test discord bot posting, you need to create a file "
                           "called config.yaml in the root directory with your bot "
@@ -63,7 +66,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                 self.assertEqual("b" * MAX_VALUE, field.value)
 
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages=messages))
+            self.discord.send(messages=messages)
 
     def test_success_embed(self):
         messages = success_embed(author="OctoPrint", title="title", description="description")
@@ -76,7 +79,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                               color=COLOR_SUCCESS)
 
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages=(embed, snapshot)))
+            self.discord.send(messages=(embed, snapshot))
 
     def test_error_embed(self):
         messages = error_embed(author="OctoPrint", title="title", description="description")
@@ -89,7 +92,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                               color=COLOR_ERROR)
 
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages=(embed, snapshot)))
+            self.discord.send(messages=(embed, snapshot))
 
     def test_info_embed(self):
         messages = info_embed(author="OctoPrint", title="title", description="description")
@@ -102,7 +105,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                               color=COLOR_INFO)
 
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages=(embed, snapshot)))
+            self.discord.send(messages=(embed, snapshot))
 
     def test_unicode_embed(self):
         teststr = "٩(-̮̮̃-̃)۶ ٩(●̮̮̃•̃)۶ ٩(͡๏̯͡๏)۶ ٩(-̮̮̃•̃)."
@@ -120,7 +123,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         messages = upload_file(small_file_path, "Author")
         self.assertIsNotNone(messages)
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages=messages))
+            self.discord.send(messages=messages)
         self.assertEqual(2, len(messages))
         embed, snapshot = messages[0]
         self.assertBasicEmbed(embed,
