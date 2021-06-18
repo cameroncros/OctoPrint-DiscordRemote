@@ -40,8 +40,9 @@ class SystemCommands(AbstractPlugin):
         builder = EmbedBuilder()
         builder.set_title('List of system commands')
         builder.set_author(name=self.plugin.get_printer_name())
-        builder.set_description('To execute a system command, use /systemcommand {command}. '
-                                'Where command is similar to "core/restart"')
+        builder.set_description('To execute a system command, use %ssystemcommand {command}. '
+                                'Where command is similar to "core/restart"' %
+                                self.plugin.get_settings().get(["prefix"]))
         data = json.loads(response.content)
         for source in data:
             for comm in data[source]:
@@ -57,7 +58,8 @@ class SystemCommands(AbstractPlugin):
     def system_command(self, command):
         if len(command) != 2:
             return error_embed(author=self.plugin.get_printer_name(),
-                               title='Wrong number of args', description='/systemcommand {source/command}')
+                               title='Wrong number of args', description='%ssystemcommand {source/command}' %
+                                                                         self.plugin.get_settings().get(["prefix"]))
         api_key = self.plugin.get_settings().global_get(['api', 'key'])
         port = self.plugin.get_settings().global_get(['server', 'port'])
         header = {'X-Api-Key': api_key, 'Content-Type': 'application/json'}

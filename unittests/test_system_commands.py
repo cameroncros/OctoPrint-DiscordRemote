@@ -27,7 +27,7 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.system_commands.plugin = mock.Mock()
         self.system_commands.plugin.get_printer_name = mock.Mock()
         self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
-
+        self.system_commands.plugin.get_settings.return_value.get.return_value = '/'
         # Server Failed
         mock_result = mock.Mock()
         mock_result.status_code = 500
@@ -77,6 +77,7 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.system_commands.plugin = mock.Mock()
         self.system_commands.plugin.get_printer_name = mock.Mock()
         self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
+        self.system_commands.plugin.get_settings.return_value.get.return_value = '/'
 
         # Not enough args
         messages = self.system_commands.system_command(['/systemcommand'])
