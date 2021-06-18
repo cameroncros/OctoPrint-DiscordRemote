@@ -133,11 +133,6 @@ class TestCommand(DiscordRemoteTestCase):
             'imagename': "snapshot.jpg"
         }
 
-        self.plugin.discord.send = mock.AsyncMock()
+        self.plugin.discord.send = mock.Mock()
         self.plugin.unpack_message(data)
-        self.plugin.discord.send.assert_awaited()
-
-
-
-
-
+        self.plugin.discord.send.assert_called()

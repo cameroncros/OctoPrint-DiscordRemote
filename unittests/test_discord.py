@@ -96,5 +96,5 @@ class TestSend(DiscordRemoteTestCase):
         mock_snapshot = mock.Mock(spec=io.IOBase)
         mock_embed = mock.Mock(spec=Embed)
         self.discord.send(messages=[(mock_embed, mock_snapshot)])
-        self.assertIn((mock_embed, mock_snapshot), self.discord.message_queue)
+        self.assertIn([(mock_embed, mock_snapshot)], self.discord.message_queue)
         self.assertTrue(self.discord.process_queue.is_set())
