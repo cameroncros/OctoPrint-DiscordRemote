@@ -4,9 +4,10 @@
 # post a message to discord api via a bot
 # bot must be added to the server and have write access to the channel
 import asyncio
+from asyncio import Event
 import re
 import time
-from threading import Thread, Event
+from threading import Thread
 from typing import Optional, Tuple, List
 from unittest.mock import Mock
 
@@ -19,7 +20,42 @@ from octoprint_discordremote import Command
 CHANNEL_ID_LENGTH = 18
 BOT_TOKEN_LENGTH = 59
 
+
 class Discord:
+    class AsyncIOEventWrapper:
+        def __init__(self, event: Optional[Event] = None):
+            self.set_state = False
+            self.event = event
+
+        def set_event(self, event: Optional[Event]):
+            self.event = event
+            if self.set_state:
+                self.event.set()
+            else:
+                self.event.clear()
+
+        def is_set(self) -> bool:
+            if self.event is None:
+                return self.set_state
+            return self.event.is_set()
+
+        async def wait(self):
+            while self.event is None:
+                await asyncio.sleep(1)
+            await self.event.wait()
+
+        def set(self):
+            if self.event:
+                self.event.set()
+            else:
+                self.set_state = True
+
+        def clear(self):
+            if self.event:
+                self.event.clear()
+            else:
+                self.set_state = False
+
     def __init__(self):
         self.logger = None
         self.channel_id: int = 0  # enable dev mode on discord, right-click on the channel, copy ID
@@ -28,10 +64,10 @@ class Discord:
         self.client: Optional[discord.Client] = None
         self.running_thread: Optional[Thread] = None
         self.command: Optional[Command] = None
-        self.shutdown_event: Event = Event()
+        self.shutdown_event: Discord.AsyncIOEventWrapper = Discord.AsyncIOEventWrapper(None)
         self.message_queue: List[List[Tuple[Embed, File]]] = []
         self.thread: Optional[Thread] = None
-        self.process_queue: Event = Event()
+        self.process_queue: Discord.AsyncIOEventWrapper = Discord.AsyncIOEventWrapper(None)
 
     def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
         self.bot_token = bot_token
@@ -70,6 +106,11 @@ class Discord:
 
         try:
             self.loop = asyncio.get_event_loop()
+
+            # Create proper events now that we have an event loop.
+            self.shutdown_event.set_event(Event())
+            self.process_queue.set_event(Event())
+
             future = self.client.run(self.bot_token)
             self.loop.run_until_complete(asyncio.wait([future]))
         except RuntimeError as e:
@@ -78,8 +119,11 @@ class Discord:
             self.logger.error("Failed with: %s" % e)
 
     def update_presence(self, msg):
-        if self.client is not None and self.client.is_ready():
-            self.client.run(self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
+        try:
+            self.loop.create_task(
+                self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
+        except:
+            pass
 
     async def send_messages(self):
         try:
@@ -100,7 +144,7 @@ class Discord:
             if len(self.message_queue) != 0:
                 await asyncio.sleep(10)
                 continue
-            self.process_queue.wait(10)
+            await self.process_queue.wait()
 
     def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         self.message_queue.append(messages)
@@ -138,5 +182,6 @@ class Discord:
 
     def shutdown_discord(self):
         self.shutdown_event.set()
+        self.process_queue.set()
         if self.loop:
             self.loop.stop()

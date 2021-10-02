@@ -517,8 +517,6 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # exec "after" script if any
         self.exec_script(event_id, "after")
 
-        return out
-
     def get_snapshot(self) -> Optional[Tuple[str, io.IOBase]]:
         if 'FAKE_SNAPSHOT' in os.environ:
             return self.get_snapshot_fake()
