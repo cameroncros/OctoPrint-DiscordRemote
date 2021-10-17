@@ -1,32 +1,31 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-import asyncio
 import io
+import logging
+import os
+import socket
+import subprocess
 import threading
 import time
 from base64 import b64decode
 from datetime import timedelta, datetime
+from io import BytesIO
+from threading import Thread, Event
 from typing import Tuple, Optional
 
 import humanfriendly
 import octoprint.plugin
 import octoprint.settings
-import os
 import requests
-import socket
-import subprocess
-import logging
 from PIL import Image
 from flask import make_response
-from io import BytesIO
 from octoprint.server import user_permission
 from requests import ConnectionError
-from threading import Thread, Event
 
-from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
+from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.presence import Presence
 from .discordimpl import DiscordImpl
 
