@@ -1,29 +1,37 @@
 accessControl:
   enabled: false
+  salt: BxthFLHk9uNZFpyJBfg9xtOyFKuaGWm0
 api:
   key: B98B2340FAE64A6B96BDDFC9166E1AF3
+devel: {}
 plugins:
   announcements:
     _config_version: 1
     channels:
       _blog:
-        read_until: 1551867600
+        read_until: 1622212200
       _important:
         read_until: 1521111600
       _octopi:
-        read_until: 1549966200
+        read_until: 1611568800
       _plugins:
-        read_until: 1551657600
+        read_until: 1622782800
       _releases:
-        read_until: 1544449800
+        read_until: 1620652800
   discovery:
     upnpUuid: 8177d9dc-adfd-481d-b020-594c148a8c96
+  errortracking:
+    unique_id: 25977e20-1ca9-49fe-bb18-2f2fad8c8995
+  gcodeviewer:
+    _config_version: 1
   softwareupdate:
-    _config_version: 6
-    check_providers:
-      discordremote: discordremote
+    _config_version: 9
   tracking:
     enabled: false
+    unique_id: ab91d49f-031d-4778-9b7e-aaafe0739bae
+  virtual_printer:
+    _config_version: 1
+    enabled: true
 printerProfiles:
   default: _default
 server:
@@ -40,6 +48,13 @@ server:
     corewizard: 3
     cura: null
     tracking: null
-devel:
-  virtualPrinter:
-    enabled: true
+temperature:
+  profiles:
+  - bed: 100
+    chamber: null
+    extruder: 210
+    name: ABS
+  - bed: 60
+    chamber: null
+    extruder: 180
+    name: PLA

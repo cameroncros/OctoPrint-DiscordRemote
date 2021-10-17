@@ -3,16 +3,24 @@ from logging import disable
 
 from threading import Thread
 import time
+from typing import Optional
+
 import humanfriendly
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from octoprint_discordremote import DiscordRemotePlugin
+    from octoprint_discordremote import DiscordImpl
+
 
 class Presence:
     def __init__(self):
-        self.plugin = None
-        self.discord = None
-        self.presence_cycle_id = 0
-        self.presence_thread = None
+        self.plugin: Optional['DiscordRemotePlugin'] = None
+        self.discord: Optional['DiscordImpl'] = None
+        self.presence_cycle_id: int = 0
+        self.presence_thread: Optional[Thread] = None
 
-    def configure_presence(self, plugin, discord):
+    def configure_presence(self, plugin: 'DiscordRemotePlugin', discord: 'DiscordImpl'):
         self.plugin = plugin
         self.discord = discord
 
@@ -40,10 +48,6 @@ class Presence:
             1: self.generate_status()
         }
         while not self.discord.shutdown_event.is_set():
-            if self.discord.restart_event.is_set():
-                time.sleep(1)
-                continue
-
             if self.plugin.get_settings().get(['presence']):
                 presence_cycle[1] = "{}".format(self.generate_status())
                 self.discord.update_presence(presence_cycle[self.presence_cycle_id % len(presence_cycle)])

@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import io
 import time
 
 import logging
@@ -7,12 +8,12 @@ import os
 import socket
 import unittest
 
-import six
 import yaml
 from mock import mock
+from discord import Embed, File
 
-from octoprint_discordremote.discord import Discord
-from octoprint_discordremote.embedbuilder import EmbedBuilder, upload_file, DISCORD_MAX_FILE_SIZE
+from octoprint_discordremote.discordimpl import DiscordImpl
+from octoprint_discordremote.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 
@@ -44,7 +45,7 @@ class TestLogger(logging.Logger):
 
 class TestSend(DiscordRemoteTestCase):
     def setUp(self):
-        self.discord = Discord()
+        self.discord = DiscordImpl()
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")
             try:
@@ -66,7 +67,6 @@ class TestSend(DiscordRemoteTestCase):
     @unittest.skipIf("NET_TEST" not in os.environ,
                      "'NET_TEST' not in os.environ - Not running network test")
     def test_dispatch(self):
-
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(('10.255.255.255', 1))
@@ -79,76 +79,22 @@ class TestSend(DiscordRemoteTestCase):
         builder = EmbedBuilder()
         builder.set_title("Test title")
         builder.set_description("No snapshot")
-
-        self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+        self.discord.send(messages=builder.get_embeds())
 
         with open(self._get_path("test_pattern.png"), "rb") as f:
             builder.set_description("With snapshot")
             builder.set_image(("snapshot.png", f))
-            self.assertTrue(self.discord._dispatch_message(embed=builder.get_embeds()[0]))
+            self.discord.send(messages=builder.get_embeds())
 
             f.seek(0)
-            self.assertTrue(self.discord._dispatch_message(snapshot=("snapshot.png", f)))
+            self.discord.send(messages=[(None, File(fp=f, filename="snapshot.png"))])
 
+    @unittest.skipIf("NET_TEST" in os.environ,
+                     "'NET_TEST' in os.environ - Not running test")
     def test_send(self):
-        self.discord._dispatch_message = mock.Mock()
-        mock_snapshot = mock.Mock()
-        mock_embed = mock.Mock()
-        self.assertTrue(self.discord.send(snapshots=[mock_snapshot], embeds=[mock_embed]))
-
-        self.assertEqual(2, self.discord._dispatch_message.call_count)
-        calls = [mock.call(snapshot=mock_snapshot),
-                 mock.call(embed=mock_embed)]
-        self.discord._dispatch_message.assert_has_calls(calls=calls)
-
-        large_file_path = self._get_path("large_file_temp")
-        with open(large_file_path, 'w') as f:
-            for i in range(0, DISCORD_MAX_FILE_SIZE):
-                f.write(str(i))
-
-        embeds = upload_file(large_file_path)
-        self.discord.send(embeds=embeds)
-
-    @unittest.skipIf("LONG_TEST" not in os.environ,
-                     "'LONG_TEST' not in os.environ - Not running long test")
-    def test_reconnect(self):
-        # Wait til connected fully
-        while self.discord.session_id is None:
-            time.sleep(0.001)
-
-        print("Connected and authenticated: %s" % self.discord.session_id)
-
-        orig_send_resume = self.discord.send_resume
-        self.discord.send_resume = mock.Mock()
-        self.discord.send_resume.side_effect = orig_send_resume
-
-        orig_handle_invalid = self.discord.handle_invalid_session
-        self.discord.handle_invalid_session = mock.Mock()
-        self.discord.handle_invalid_session.side_effect = orig_handle_invalid
-
-        while self.discord.restart_event.is_set():
-            time.sleep(0.001)
-
-        self.discord.web_socket = None
-        self.discord.restart_event.set()
-
-        resume_succeeded = 0
-        for i in range(0, 1100):
-            self.discord.send_resume.reset_mock()
-            while self.discord.restart_event.is_set():
-                time.sleep(1)
-            self.discord.restart_event.set()
-            # Wait til resume is called
-            while not self.discord.send_resume.called:
-                time.sleep(1)
-            self.discord.send_resume.reset_mock()
-
-            # Check if invalid session occurred. Might not receive it til the next iteration.
-            if self.discord.handle_invalid_session.called:
-                resume_succeeded -= 1
-                self.discord.handle_invalid_session.reset_mock()
-
-            resume_succeeded += 1
-            print("Resumed: %i, Succeeded: %i" % (i, resume_succeeded))
-
-        print("Total Successful Resumes: %i" % resume_succeeded)
+        self.discord.send_messages = mock.AsyncMock()
+        mock_snapshot = mock.Mock(spec=io.IOBase)
+        mock_embed = mock.Mock(spec=Embed)
+        self.discord.send(messages=[(mock_embed, mock_snapshot)])
+        self.assertIn([(mock_embed, mock_snapshot)], self.discord.message_queue)
+        self.assertTrue(self.discord.process_queue.is_set())

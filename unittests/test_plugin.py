@@ -1,13 +1,12 @@
 import os
-import sys
 import time
 from base64 import b64encode
+from unittest.mock import Mock
 
 import mock
 import yaml
 
-from octoprint_discordremote import DiscordRemotePlugin, Discord
-from octoprint_discordremote.embedbuilder import EmbedBuilder
+from octoprint_discordremote import DiscordRemotePlugin, DiscordImpl, Command
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 from unittests.test_discord import TestLogger
 
@@ -26,7 +25,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin._settings = mock.Mock()
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
-        self.plugin.discord = Discord()
+        self.plugin.discord = DiscordImpl()
 
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")
@@ -36,7 +35,7 @@ class TestCommand(DiscordRemoteTestCase):
                 self.plugin.discord.configure_discord(bot_token=config['bottoken'],
                                                       channel_id=config['channelid'],
                                                       logger=TestLogger(),
-                                                      command=None)
+                                                      command=Mock(spec=Command))
                 time.sleep(5)
             except:
                 self.fail("To test discord bot posting, you need to create a file "
@@ -56,14 +55,10 @@ class TestCommand(DiscordRemoteTestCase):
             mock_requests_get.return_value = mock.Mock()
             mock_requests_get.return_value.content = file_data
 
-            snapshots = self.plugin.get_snapshot()
+            filename, file = self.plugin.get_snapshot()
 
-            self.assertIsNotNone(snapshots)
-            self.assertEqual(1, len(snapshots))
-            snapshot = snapshots[0]
-            self.assertEqual(2, len(snapshot))
-            self.assertEqual("snapshot.png", snapshot[0])
-            snapshot_data = snapshot[1].read()
+            self.assertEqual("snapshot.png", filename)
+            snapshot_data = file.read()
             self.assertEqual(len(file_data), len(snapshot_data))
             self.assertEqual([file_data], [snapshot_data])
 
@@ -75,14 +70,10 @@ class TestCommand(DiscordRemoteTestCase):
         with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()
 
-        snapshots = self.plugin.get_snapshot()
+        filename, file = self.plugin.get_snapshot()
 
-        self.assertIsNotNone(snapshots)
-        self.assertEqual(1, len(snapshots))
-        snapshot = snapshots[0]
-        self.assertEqual(2, len(snapshot))
-        self.assertEqual("snapshot.png", snapshot[0])
-        snapshot_data = snapshot[1].read()
+        self.assertEqual("snapshot.png", filename)
+        snapshot_data = file.read()
         self.assertEqual(len(file_data), len(snapshot_data))
         self.assertEqual([file_data], [snapshot_data])
 
@@ -140,14 +131,6 @@ class TestCommand(DiscordRemoteTestCase):
             'imagename': "snapshot.jpg"
         }
 
-        if 'NET_TEST' in os.environ:
-            self.plugin.unpack_message(data)
-
         self.plugin.discord.send = mock.Mock()
         self.plugin.unpack_message(data)
-        self.plugin.discord.send.assert_called_once()
-
-
-
-
-
+        self.plugin.discord.send.assert_called()

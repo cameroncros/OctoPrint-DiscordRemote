@@ -53,20 +53,20 @@ class EnclosureControl(AbstractPlugin):
         data = result.json()
 
         if data['success']:
-            return None, success_embed(author=self.plugin.get_printer_name(),
+            return success_embed(author=self.plugin.get_printer_name(),
                                        title="Turned ID %i on." % int(params[1]))
-        return None, error_embed(author=self.plugin.get_printer_name(),
+        return error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i on." % int(params[1]),
                                  description=result.content)
 
     def off(self, params):
         if len(params) > 2:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Too many parameters',
                                      description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(
                                          ["prefix"]))
         elif len(params) < 2:
-            return None, error_embed(author=self.plugin.get_printer_name(),
+            return error_embed(author=self.plugin.get_printer_name(),
                                      title='Missing parameters',
                                      description='Should be: %soutputoff {ID}' % self.plugin.get_settings().get(
                                          ["prefix"]))
@@ -75,9 +75,9 @@ class EnclosureControl(AbstractPlugin):
         data = result.json()
 
         if data['success']:
-            return None, success_embed(author=self.plugin.get_printer_name(),
+            return success_embed(author=self.plugin.get_printer_name(),
                                        title="Turned ID %i off." % int(params[1]))
-        return None, error_embed(author=self.plugin.get_printer_name(),
+        return error_embed(author=self.plugin.get_printer_name(),
                                  title="Failed to turn ID %i off." % int(params[1]),
                                  description=result.content)
 

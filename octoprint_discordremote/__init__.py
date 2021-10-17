@@ -1,31 +1,33 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import io
+import logging
+import os
+import socket
+import subprocess
 import threading
 import time
 from base64 import b64decode
 from datetime import timedelta, datetime
+from io import BytesIO
+from threading import Thread, Event
+from typing import Tuple, Optional
 
 import humanfriendly
 import octoprint.plugin
 import octoprint.settings
-import os
 import requests
-import socket
-import subprocess
-import logging
 from PIL import Image
 from flask import make_response
-from io import BytesIO
 from octoprint.server import user_permission
 from requests import ConnectionError
-from threading import Thread, Event
 
-from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
+from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.presence import Presence
-from .discord import Discord
+from .discordimpl import DiscordImpl
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -37,7 +39,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.ProgressPlugin,
                           octoprint.plugin.SimpleApiPlugin):
 
-    #extend Octoprint's allowed file types by .zip, .zip.001, .zip.002, ...)
+    # extend Octoprint's allowed file types by .zip, .zip.001, .zip.002, ...)
     def get_extension_tree(self, *args, **kwargs):
         allowed_list = ['zip']
         for i in range(0, 100):
@@ -157,7 +159,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.command = Command(self)
 
         if self.discord is None:
-            self.discord = Discord()
+            self.discord = DiscordImpl()
 
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
@@ -350,8 +352,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'args' in data:
             args = data['args']
 
-        snapshots, embeds = self.command.parse_command(args)
-        if not self.discord.send(snapshots=snapshots, embeds=embeds):
+        messages = self.command.parse_command(args)
+        if not self.discord.send(messages=messages):
             return make_response("Failed to send message", 404)
 
     def unpack_message(self, data):
@@ -371,8 +373,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             image = BytesIO(bytes)
             builder.set_image((imagename, image))
 
-        if not self.discord.send(embeds=builder.get_embeds()):
-            return make_response("Failed to send message", 404)
+        self.discord.send(messages=builder.get_embeds())
 
     def notify_event(self, event_id, data=None):
         self._logger.info("Received event: %s" % event_id)
@@ -501,38 +502,32 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Get snapshot if asked for
         snapshot = None
         if with_snapshot:
-            snapshots = self.get_snapshot()
-            if snapshots and len(snapshots) == 1:
-                snapshot = snapshots[0]
+            snapshot = self.get_snapshot()
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
-            self.discord = Discord()
+            self.discord = DiscordImpl()
 
-        out = self.discord.send(embeds=info_embed(author=self.get_printer_name(),
-                                                  title=message,
-                                                  snapshot=snapshot))
-        if not out:
-            self._logger.error("Failed to send message")
-            return out
+        messages = info_embed(author=self.get_printer_name(),
+                              title=message,
+                              snapshot=snapshot)
+        self.discord.send(messages)
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
 
-        return out
-
-    def get_snapshot(self):
+    def get_snapshot(self) -> Optional[Tuple[str, io.IOBase]]:
         if 'FAKE_SNAPSHOT' in os.environ:
             return self.get_snapshot_fake()
         else:
             return self.get_snapshot_camera()
 
     @staticmethod
-    def get_snapshot_fake():
+    def get_snapshot_fake() -> Optional[Tuple[str, io.IOBase]]:
         fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
-        return [("snapshot.png", fl)]
+        return ("snapshot.png", fl)
 
-    def get_snapshot_camera(self):
+    def get_snapshot_camera(self) -> Optional[Tuple[str, io.IOBase]]:
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
@@ -572,15 +567,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             if must_rotate:
                 img = img.transpose(Image.ROTATE_90)
 
-            new_image = BytesIO()
-            img.save(new_image, 'png')
-
-            return [("snapshot.png", new_image)]
-        return [("snapshot.png", snapshot)]
+            snapshot = BytesIO()
+            img.save(snapshot, 'png')
+            snapshot.seek(0)
+        return "snapshot.png", snapshot
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
-        if printer_name is None:
+        if printer_name is None or len(printer_name) == 0:
             printer_name = "OctoPrint"
         return printer_name
 
@@ -627,7 +621,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             remaining_time_val = current_data['progress']['printTimeLeft']
             return (
                 (datetime.now() + timedelta(seconds=remaining_time_val))
-                .isoformat(' ', 'minutes')
+                    .isoformat(' ', 'minutes')
             )
         except:
             return 'Unknown'
@@ -672,11 +666,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
 
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "DiscordRemote"
-__plugin_pythoncompat__ = ">=2.7,<4"
+__plugin_pythoncompat__ = ">=3.6,<4"
 
 
 def __plugin_load__():

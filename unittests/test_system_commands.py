@@ -27,7 +27,7 @@ class TestSystemCommand(DiscordRemoteTestCase):
         self.system_commands.plugin = mock.Mock()
         self.system_commands.plugin.get_printer_name = mock.Mock()
         self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
-
+        self.system_commands.plugin.get_settings.return_value.get.return_value = '/'
         # Server Failed
         mock_result = mock.Mock()
         mock_result.status_code = 500
@@ -35,9 +35,10 @@ class TestSystemCommand(DiscordRemoteTestCase):
 
         requests_mock.return_value = mock_result
 
-        snapshots, embeds = self.system_commands.list_system_commands()
-        requests_mock.assert_called_once()
-        self.assertBasicEmbed(embeds,
+        messages = self.system_commands.list_system_commands()
+        self.assertEqual(1, len(messages))
+        embed, snapshot = messages[0]
+        self.assertBasicEmbed(embed,
                               title="Error code: %i" % mock_result.status_code,
                               description=mock_result.content,
                               color=COLOR_ERROR,
@@ -56,31 +57,34 @@ class TestSystemCommand(DiscordRemoteTestCase):
         })
         mock_result.status_code = 200
 
-        snapshots, embeds = self.system_commands.list_system_commands()
+        messages = self.system_commands.list_system_commands()
+        self.assertEqual(1, len(messages))
+        embed, snapshot = messages[0]
         requests_mock.assert_called_once()
-        self.assertIsNone(snapshots)
-        self.assertEqual(1, len(embeds))
-        embed = embeds[0]
+        self.assertIsNone(snapshot)
         self.assertEqual('List of system commands', embed.title)
         self.assertEqual('To execute a system command, use /systemcommand {command}. '
                          'Where command is similar to "core/restart"',
                          embed.description)
         self.assertEqual(2, len(embed.fields))
-        self.assertEqual('core/restart - sudo restart', embed.fields[0]['value'])
-        self.assertEqual('Restart', embed.fields[0]['name'])
-        self.assertEqual('core/shutdown', embed.fields[1]['value'])
-        self.assertEqual('Shutdown', embed.fields[1]['name'])
+        self.assertEqual('core/restart - sudo restart', embed.fields[0].value)
+        self.assertEqual('Restart', embed.fields[0].name)
+        self.assertEqual('core/shutdown', embed.fields[1].value)
+        self.assertEqual('Shutdown', embed.fields[1].name)
 
     @mock.patch('requests.post')
     def test_system_command(self, requests_mock):
         self.system_commands.plugin = mock.Mock()
         self.system_commands.plugin.get_printer_name = mock.Mock()
         self.system_commands.plugin.get_printer_name.return_value = "OctoPrint"
+        self.system_commands.plugin.get_settings.return_value.get.return_value = '/'
 
         # Not enough args
-        snapshots, embeds = self.system_commands.system_command(['/systemcommand'])
-
-        self.assertBasicEmbed(embeds,
+        messages = self.system_commands.system_command(['/systemcommand'])
+        self.assertEqual(1, len(messages))
+        embed, snapshot = messages[0]
+        self.assertIsNone(snapshot)
+        self.assertBasicEmbed(embed,
                               title='Wrong number of args',
                               description='/systemcommand {source/command}',
                               color=COLOR_ERROR,
@@ -92,12 +96,12 @@ class TestSystemCommand(DiscordRemoteTestCase):
 
         requests_mock.return_value = mock_result
 
-        snapshots, embeds = self.system_commands.system_command(['/systemcommand', 'core/restart'])
-
+        messages = self.system_commands.system_command(['/systemcommand', 'core/restart'])
+        self.assertEqual(1, len(messages))
+        embed, snapshot = messages[0]
         requests_mock.assert_called_once()
-        self.assertIsNone(snapshots)
-
-        self.assertBasicEmbed(embeds,
+        self.assertIsNone(snapshot)
+        self.assertBasicEmbed(embed,
                               title='Successfully ran command',
                               description='core/restart',
                               color=COLOR_SUCCESS,
@@ -107,12 +111,12 @@ class TestSystemCommand(DiscordRemoteTestCase):
         requests_mock.reset_mock()
         requests_mock.return_value = False
 
-        snapshots, embeds = self.system_commands.system_command(['/systemcommand', 'core/doesntexist'])
-
+        messages = self.system_commands.system_command(['/systemcommand', 'core/doesntexist'])
+        self.assertEqual(1, len(messages))
+        embed, snapshot = messages[0]
         requests_mock.assert_called_once()
-        self.assertIsNone(snapshots)
-
-        self.assertBasicEmbed(embeds,
+        self.assertIsNone(snapshot)
+        self.assertBasicEmbed(embed,
                               title='Failed to run command',
                               description='core/doesntexist',
                               color=COLOR_ERROR,
