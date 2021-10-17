@@ -27,7 +27,7 @@ MAX_NUM_FIELDS = 25
 def embed_simple(author: str,
                  title: Optional[str] = None,
                  description: Optional[str] = None,
-                 color: Optional[str] = None,
+                 color: Optional[int] = None,
                  snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
     builder = EmbedBuilder()
     if color:
@@ -269,8 +269,8 @@ class EmbedWrapper:
         self.file = File(file, filename=filename)
 
     def get_embed(self) -> Tuple[Embed, File]:
-        embed = Embed(title=self.title,
-                      description=self.description,
+        embed = Embed(title=self.title if self.title else "",
+                      description=self.description if self.description else "",
                       colour=self.color,
                       timestamp=datetime.utcnow())
         for field in self.fields:
