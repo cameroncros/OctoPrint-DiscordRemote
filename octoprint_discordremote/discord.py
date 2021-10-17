@@ -120,8 +120,9 @@ class Discord:
 
     def update_presence(self, msg):
         try:
-            self.loop.create_task(
-                self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
+            if self.client.ws:
+                self.loop.create_task(
+                    self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
         except:
             pass
 

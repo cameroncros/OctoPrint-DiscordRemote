@@ -568,9 +568,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             if must_rotate:
                 img = img.transpose(Image.ROTATE_90)
 
-            new_image = BytesIO()
-            img.save(new_image, 'png')
-        return ("snapshot.png", snapshot)
+            snapshot = BytesIO()
+            img.save(snapshot, 'png')
+            snapshot.seek(0)
+        return "snapshot.png", snapshot
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
