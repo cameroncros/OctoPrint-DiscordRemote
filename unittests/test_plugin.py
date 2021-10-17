@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from base64 import b64encode
 from unittest.mock import Mock
@@ -7,8 +6,7 @@ from unittest.mock import Mock
 import mock
 import yaml
 
-from octoprint_discordremote import DiscordRemotePlugin, Discord, Command
-from octoprint_discordremote.embedbuilder import EmbedBuilder
+from octoprint_discordremote import DiscordRemotePlugin, DiscordImpl, Command
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 from unittests.test_discord import TestLogger
 
@@ -27,7 +25,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin._settings = mock.Mock()
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
-        self.plugin.discord = Discord()
+        self.plugin.discord = DiscordImpl()
 
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")

@@ -8,7 +8,7 @@ import zipfile
 
 import yaml
 
-from octoprint_discordremote import Discord
+from octoprint_discordremote import DiscordImpl
 from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
     info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
@@ -22,7 +22,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
             try:
                 with open(config_file, "r") as config:
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-                self.discord = Discord()
+                self.discord = DiscordImpl()
                 self.discord.configure_discord(bot_token=config['bottoken'],
                                                channel_id=config['channelid'],
                                                logger=logging.getLogger(),
@@ -151,7 +151,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         messages = upload_file(large_file_path, author="Author")
         self.assertIsNotNone(messages)
         if "NET_TEST" in os.environ:
-            self.assertTrue(self.discord.send(messages))
+            self.discord.send(messages)
         self.assertEqual(8, len(messages))
         embed, snapshot = messages[0]
         self.assertBasicEmbed(embed,

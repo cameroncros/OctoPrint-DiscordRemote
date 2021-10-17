@@ -10,17 +10,17 @@ import humanfriendly
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin
-    from octoprint_discordremote import Discord
+    from octoprint_discordremote import DiscordImpl
 
 
 class Presence:
     def __init__(self):
         self.plugin: Optional['DiscordRemotePlugin'] = None
-        self.discord: Optional['Discord'] = None
+        self.discord: Optional['DiscordImpl'] = None
         self.presence_cycle_id: int = 0
         self.presence_thread: Optional[Thread] = None
 
-    def configure_presence(self, plugin: 'DiscordRemotePlugin', discord: 'Discord'):
+    def configure_presence(self, plugin: 'DiscordRemotePlugin', discord: 'DiscordImpl'):
         self.plugin = plugin
         self.discord = discord
 

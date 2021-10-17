@@ -13,7 +13,8 @@ import subprocess
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from typing import TYPE_CHECKING, Tuple, List
-from discord import Embed, File
+from discord.embeds import Embed
+from discord.file import File
 
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin

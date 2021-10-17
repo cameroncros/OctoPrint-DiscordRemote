@@ -12,7 +12,7 @@ import yaml
 from mock import mock
 from discord import Embed, File
 
-from octoprint_discordremote.discord import Discord
+from octoprint_discordremote.discordimpl import DiscordImpl
 from octoprint_discordremote.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
@@ -45,7 +45,7 @@ class TestLogger(logging.Logger):
 
 class TestSend(DiscordRemoteTestCase):
     def setUp(self):
-        self.discord = Discord()
+        self.discord = DiscordImpl()
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")
             try:

@@ -12,7 +12,8 @@ from typing import Optional, Tuple, List
 from unittest.mock import Mock
 
 import discord
-from discord import Embed, File
+from discord.embeds import Embed
+from discord.file import File
 
 from octoprint_discordremote import Command
 
@@ -21,7 +22,7 @@ CHANNEL_ID_LENGTH = 18
 BOT_TOKEN_LENGTH = 59
 
 
-class Discord:
+class DiscordImpl:
     class AsyncIOEventWrapper:
         def __init__(self, event: Optional[Event] = None):
             self.set_state = False
@@ -64,10 +65,10 @@ class Discord:
         self.client: Optional[discord.Client] = None
         self.running_thread: Optional[Thread] = None
         self.command: Optional[Command] = None
-        self.shutdown_event: Discord.AsyncIOEventWrapper = Discord.AsyncIOEventWrapper(None)
+        self.shutdown_event: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
         self.message_queue: List[List[Tuple[Embed, File]]] = []
         self.thread: Optional[Thread] = None
-        self.process_queue: Discord.AsyncIOEventWrapper = Discord.AsyncIOEventWrapper(None)
+        self.process_queue: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
 
     def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
         self.bot_token = bot_token

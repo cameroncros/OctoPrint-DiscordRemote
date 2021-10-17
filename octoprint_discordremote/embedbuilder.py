@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 from datetime import datetime
 from typing import Tuple, List, Optional
 
-from discord import Embed, File
+from discord.embeds import Embed
+from discord.file import File
 from discord.embeds import EmptyEmbed
 import io
 import math

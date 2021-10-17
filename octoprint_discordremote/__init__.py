@@ -28,7 +28,7 @@ from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.command import Command
 from octoprint_discordremote.embedbuilder import info_embed
 from octoprint_discordremote.presence import Presence
-from .discord import Discord
+from .discordimpl import DiscordImpl
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -160,7 +160,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.command = Command(self)
 
         if self.discord is None:
-            self.discord = Discord()
+            self.discord = DiscordImpl()
 
         self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
                                        self._settings.get(['channelid'], merged=True),
@@ -507,7 +507,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
         if self.discord is None:
-            self.discord = Discord()
+            self.discord = DiscordImpl()
 
         messages = info_embed(author=self.get_printer_name(),
                               title=message,
