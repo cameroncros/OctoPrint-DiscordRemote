@@ -12,7 +12,7 @@ import subprocess
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
-from typing import TYPE_CHECKING, Tuple, List
+from typing import TYPE_CHECKING, Tuple, List, Optional
 from discord.embeds import Embed
 from discord.file import File
 
@@ -496,14 +496,14 @@ class Command:
                              title='Notifications Unmuted')
 
     @staticmethod
-    def _parse_array(string):
+    def _parse_array(string: str) -> Optional[List[str]]:
         # noinspection PyBroadException
         try:
             return re.split("[^a-zA-Z0-9*]+", string)
         except:
             return None
 
-    def check_perms(self, command, user):
+    def check_perms(self, command: str, user: int) -> bool:
         permissions = self.plugin.get_settings().get(['permissions'], merged=True)
 
         for rulename in permissions:
