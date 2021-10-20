@@ -8,7 +8,7 @@ from asyncio import Event
 import re
 import time
 from threading import Thread
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Callable
 from unittest.mock import Mock
 
 import discord
@@ -58,6 +58,7 @@ class DiscordImpl:
                 self.set_state = False
 
     def __init__(self):
+        self.status_callback = None
         self.logger = None
         self.channel_id: int = 0  # enable dev mode on discord, right-click on the channel, copy ID
         self.bot_token: str = ""  # get from the bot page. must be a bot, not a discord app
@@ -70,12 +71,19 @@ class DiscordImpl:
         self.thread: Optional[Thread] = None
         self.process_queue: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
 
-    def configure_discord(self, bot_token: str, channel_id: str, logger, command: Command, status_callback=None):
+    def configure_discord(self,
+                          bot_token: str,
+                          channel_id: str,
+                          logger,
+                          command: Command,
+                          status_callback: Optional[Callable[[str], None]] = None):
         self.bot_token = bot_token
         self.channel_id = int(channel_id)
         if logger:
             self.logger = logger
         self.command = command
+        self.status_callback = status_callback
+        self.status_callback(connected="connecting")
 
         if len(str(self.channel_id)) != CHANNEL_ID_LENGTH:
             self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
@@ -104,6 +112,7 @@ class DiscordImpl:
         async def on_ready():
             self.logger.info("Sending msgs")
             asyncio.create_task(self.process_message_queue())
+            self.status_callback(connected="connected")
 
         try:
             self.loop = asyncio.get_event_loop()
@@ -183,6 +192,7 @@ class DiscordImpl:
             self.send(messages)
 
     def shutdown_discord(self):
+        self.status_callback(connected="disconnected")
         self.shutdown_event.set()
         self.process_queue.set()
         if self.loop:

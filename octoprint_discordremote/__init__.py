@@ -578,7 +578,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             printer_name = "OctoPrint"
         return printer_name
 
-    def update_discord_status(self, connected):
+    def update_discord_status(self, connected: str) -> None:
         self._plugin_manager.send_plugin_message(self._identifier, dict(isConnected=connected))
 
     def mute(self):
