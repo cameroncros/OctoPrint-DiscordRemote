@@ -512,7 +512,7 @@ class Command:
             commands = self._parse_array(rule['commands'])
             if users is None or commands is None:
                 continue
-            if ('*' in users or user in users) and \
+            if ('*' in users or str(user) in users) and \
                     ('*' in commands or command in commands):
                 return True
         return False
