@@ -58,7 +58,7 @@ class DiscordImpl:
                 self.set_state = False
 
     def __init__(self):
-        self.status_callback = None
+        self.status_callback: Optional[Callable[[str], None]] = None
         self.logger = None
         self.channel_id: int = 0  # enable dev mode on discord, right-click on the channel, copy ID
         self.bot_token: str = ""  # get from the bot page. must be a bot, not a discord app
@@ -70,13 +70,14 @@ class DiscordImpl:
         self.message_queue: List[List[Tuple[Embed, File]]] = []
         self.thread: Optional[Thread] = None
         self.process_queue: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
+        self.processsing_messages = False
 
     def configure_discord(self,
                           bot_token: str,
                           channel_id: str,
                           logger,
                           command: Command,
-                          status_callback: Optional[Callable[[str], None]] = None):
+                          status_callback: Callable[[str], None]):
         self.bot_token = bot_token
         self.channel_id = int(channel_id)
         if logger:
@@ -111,7 +112,8 @@ class DiscordImpl:
         @self.client.event
         async def on_ready():
             self.logger.info("Sending msgs")
-            asyncio.create_task(self.process_message_queue())
+            if not self.processsing_messages:
+                asyncio.create_task(self.process_message_queue())
             self.status_callback(connected="connected")
 
         try:
@@ -150,6 +152,7 @@ class DiscordImpl:
             self.logger.error("Failed with: %s" % e)
 
     async def process_message_queue(self):
+        self.processsing_messages = True
         while not self.shutdown_event.is_set():
             await self.send_messages()
             if len(self.message_queue) != 0:
