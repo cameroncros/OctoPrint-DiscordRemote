@@ -106,7 +106,7 @@ class Command:
                     description += 'Size: %s\n' % os.path.getsize(file_path)
                     description += 'Date of Creation: %s\n' % time.ctime(os.path.getctime(file_path))
                     description += 'Download Path: %s\n' % \
-                                   ("http://" + baseurl + "/downloads/timelapse/" + urllib.quote(title))
+                                   ("http://" + baseurl + "/downloads/timelapse/" + urllib.parse.quote(title))
 
                     builder.add_field(title=title, text=description)
                 except Exception as e:
