@@ -34,4 +34,4 @@ class PrintSchedulerControl(AbstractPlugin):
             builder.add_field(title=title, text=description)
 
         # Use data in status to build an embed
-        return None, builder.get_embeds()
+        return builder.get_embeds()
