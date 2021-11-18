@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import requests
+import os
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
 from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
@@ -18,6 +19,18 @@ class PrintSchedulerControl(AbstractPlugin):
                 'cmd': self.printscheduler_status,
                 'description': "Get a list of all currently scheduled jobs.\n"
                                "Uses Print Scheduler plugin."
+            },
+            command.command_dict["addjob"] = {
+                'cmd': self.printscheduler_add,
+                'params': '{path/time}',
+                'description': "Add a file to the scheduled jobs.\n"
+                               "Uses Print Scheduler plugin."
+            },
+            command.command_dict["removejob"] = {
+                'cmd': self.printscheduler_remove,
+                'params': '{path}',
+                'description': "Remove a file from the scheduled jobs.\n"
+                               "Uses Print Scheduler plugin."
             }
 
     def printscheduler_status(self):
@@ -35,3 +48,19 @@ class PrintSchedulerControl(AbstractPlugin):
 
         # Use data in status to build an embed
         return builder.get_embeds()
+
+    def printscheduler_add(self, params):
+        if len(params) != 3:
+            return error_embed(author=self.plugin.get_printer_name(),
+                               title='Wrong number of args', description='%saddjob {path/time}' %
+                                                                         self.plugin.get_settings().get(["prefix"]))
+        files = self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"])
+        file_path = params[1]
+        file_name = os.path.basename(params[1])
+        file_start_at = params[2]
+        file_to_add = {"name": file_name, "path": file_path, "start_at": file_start_at}
+        files.append(file_to_add)
+        self.plugin.get_settings().global_set(["plugins", "printscheduler", "scheduled_jobs"], files)
+
+        return success_embed(author=self.plugin.get_printer_name(),
+                                       title="Scheduled job %s for %s." % (params[1], params[2]))
