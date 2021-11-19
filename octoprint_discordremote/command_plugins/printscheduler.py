@@ -60,6 +60,7 @@ class PrintSchedulerControl(AbstractPlugin):
         file_to_add = {"name": file_name, "path": file_path, "start_at": file_start_at}
         files.append(file_to_add)
         self.plugin.get_settings().global_set(["plugins", "printscheduler", "scheduled_jobs"], files)
+        self.plugin.get_settings().save(trigger_event=True)
 
         return success_embed(author=self.plugin.get_printer_name(),
                              title="Scheduled Job Added",
@@ -75,6 +76,7 @@ class PrintSchedulerControl(AbstractPlugin):
             if file["path"] == params[1] and file["start_at"] == params[2]:
                 files.remove(file)
         self.plugin.get_settings().global_set(["plugins", "printscheduler", "scheduled_jobs"], files)
+        self.plugin.get_settings().save(trigger_event=True)
 
         return success_embed(author=self.plugin.get_printer_name(),
                              title="Scheduled Job Removed",
