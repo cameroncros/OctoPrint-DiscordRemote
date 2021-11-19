@@ -21,13 +21,13 @@ class PrintSchedulerControl(AbstractPlugin):
             },
             command.command_dict["addjob"] = {
                 'cmd': self.addjob,
-                'params': '{path/timestamp}',
+                'params': '{path} {timestamp}',
                 'description': "Add a file to the scheduled jobs.\n"
                 "Uses Print Scheduler plugin."
             },
             command.command_dict["removejob"] = {
                 'cmd': self.removejob,
-                'params': '{path/timestamp}',
+                'params': '{path} {timestamp}',
                 'description': "Remove a file from the scheduled jobs.\n"
                                "Uses Print Scheduler plugin."
             }
@@ -52,7 +52,7 @@ class PrintSchedulerControl(AbstractPlugin):
         if len(params) != 3:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of args',
-                               description='%saddjob {path/time}' % self.plugin.get_settings().get(["prefix"]))
+                               description='%saddjob {path} {timestamp}' % self.plugin.get_settings().get(["prefix"]))
         files = list(self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"]))
         file_path = params[1]
         file_name = os.path.basename(params[1])
@@ -69,7 +69,7 @@ class PrintSchedulerControl(AbstractPlugin):
         if len(params) != 2:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of args',
-                               description='%sremovejob {path/time}' % self.plugin.get_settings().get(["prefix"]))
+                               description='%sremovejob {path} {timestamp}' % self.plugin.get_settings().get(["prefix"]))
         files = list(self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"]))
         for file in files:
             if file["path"] == params[1] and file["start_at"] == params[2]:
