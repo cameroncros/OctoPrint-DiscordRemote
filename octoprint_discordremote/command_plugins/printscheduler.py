@@ -18,13 +18,13 @@ class PrintSchedulerControl(AbstractPlugin):
                 'cmd': self.listjobs,
                 'description': "Get a list of all currently scheduled jobs.\n"
                                "Uses Print Scheduler plugin."
-            },
+            }
             command.command_dict["addjob"] = {
                 'cmd': self.addjob,
                 'params': '{path} {timestamp}',
                 'description': "Add a file to the scheduled jobs.\n"
-                "Uses Print Scheduler plugin."
-            },
+                               "Uses Print Scheduler plugin."
+            }
             command.command_dict["removejob"] = {
                 'cmd': self.removejob,
                 'params': '{path} {timestamp}',
