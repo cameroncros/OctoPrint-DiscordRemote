@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import requests
 import os
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
@@ -16,28 +15,28 @@ class PrintSchedulerControl(AbstractPlugin):
         self.plugin = plugin
         if self.plugin.get_plugin_manager().get_plugin("printscheduler"):
             command.command_dict["listjobs"] = {
-                'cmd': self.printscheduler_status,
+                'cmd': self.listjobs,
                 'description': "Get a list of all currently scheduled jobs.\n"
                                "Uses Print Scheduler plugin."
             },
             command.command_dict["addjob"] = {
-                'cmd': self.printscheduler_add,
-                'params': '{path/time}',
+                'cmd': self.addjob,
+                'params': '{path/timestamp}',
                 'description': "Add a file to the scheduled jobs.\n"
-                               "Uses Print Scheduler plugin."
+                "Uses Print Scheduler plugin."
             },
             command.command_dict["removejob"] = {
-                'cmd': self.printscheduler_remove,
-                'params': '{path}',
+                'cmd': self.removejob,
+                'params': '{path/timestamp}',
                 'description': "Remove a file from the scheduled jobs.\n"
                                "Uses Print Scheduler plugin."
             }
 
-    def printscheduler_status(self):
+    def listjobs(self):
         data = self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"])
 
         builder = EmbedBuilder()
-        builder.set_title('Print Scheduler Job List')
+        builder.set_title('Scheduled Jobs')
         builder.set_author(name=self.plugin.get_printer_name())
 
         for job in data:
@@ -49,12 +48,12 @@ class PrintSchedulerControl(AbstractPlugin):
         # Use data in status to build an embed
         return builder.get_embeds()
 
-    def printscheduler_add(self, params):
+    def addjob(self, params):
         if len(params) != 3:
             return error_embed(author=self.plugin.get_printer_name(),
-                               title='Wrong number of args', description='%saddjob {path/time}' %
-                                                                         self.plugin.get_settings().get(["prefix"]))
-        files = self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"])
+                               title='Wrong number of args',
+                               description='%saddjob {path/time}' % self.plugin.get_settings().get(["prefix"]))
+        files = list(self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"]))
         file_path = params[1]
         file_name = os.path.basename(params[1])
         file_start_at = params[2]
@@ -63,4 +62,20 @@ class PrintSchedulerControl(AbstractPlugin):
         self.plugin.get_settings().global_set(["plugins", "printscheduler", "scheduled_jobs"], files)
 
         return success_embed(author=self.plugin.get_printer_name(),
-                                       title="Scheduled job %s for %s." % (params[1], params[2]))
+                             title="Scheduled Job Added",
+                             description="%s: %s" % (params[2], params[1]))
+
+    def removejob(self, params):
+        if len(params) != 2:
+            return error_embed(author=self.plugin.get_printer_name(),
+                               title='Wrong number of args',
+                               description='%sremovejob {path/time}' % self.plugin.get_settings().get(["prefix"]))
+        files = list(self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"]))
+        for file in files:
+            if file["path"] == params[1] and file["start_at"] == params[2]:
+                files.remove(file)
+        self.plugin.get_settings().global_set(["plugins", "printscheduler", "scheduled_jobs"], files)
+
+        return success_embed(author=self.plugin.get_printer_name(),
+                             title="Scheduled Job Removed",
+                             description="%s: %s" % (params[2], params[1]))
