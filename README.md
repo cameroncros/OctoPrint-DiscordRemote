@@ -35,6 +35,8 @@ License : MIT
 
 [Milo Mirate](https://github.com/mmirate) for adding ETA to status.
 
+[jneilliii](https://github.com/jneilliii) for [Print Scheduler](https://plugins.octoprint.org/plugins/printscheduler/) support.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
