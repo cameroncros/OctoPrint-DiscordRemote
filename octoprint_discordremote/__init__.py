@@ -158,18 +158,19 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.command is None:
             self.command = Command(self)
 
-        if self.discord is None:
-            self.discord = DiscordImpl()
+        if self.discord:
+            self.discord.shutdown_discord()
 
-        self.discord.configure_discord(self._settings.get(['bottoken'], merged=True),
-                                       self._settings.get(['channelid'], merged=True),
-                                       self._logger,
-                                       self.command,
-                                       self.update_discord_status)
+        self.discord = DiscordImpl(self._settings.get(['bottoken'], merged=True),
+                                   self._settings.get(['channelid'], merged=True),
+                                   self._logger,
+                                   self.command,
+                                   self.update_discord_status)
         if self.presence is None:
             self.presence = Presence()
         self.presence.configure_presence(self, self.discord)
 
+        self.notify_event("startup")
         if send_test:
             self.notify_event("test")
 
@@ -499,14 +500,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # exec "before" script if any
         self.exec_script(event_id, "before")
 
+        if self.discord is None:
+            return
+
         # Get snapshot if asked for
         snapshot = None
         if with_snapshot:
             snapshot = self.get_snapshot()
-
-        # Send to Discord bot (Somehow events can happen before discord bot has been created and initialised)
-        if self.discord is None:
-            self.discord = DiscordImpl()
 
         messages = info_embed(author=self.get_printer_name(),
                               title=message,
