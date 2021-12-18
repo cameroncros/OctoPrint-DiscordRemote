@@ -367,9 +367,9 @@ class Command:
         except OSError as e:
             pass
 
-        snapshots = self.plugin.get_snapshot()
-        if snapshots and len(snapshots) == 1:
-            builder.set_image(snapshots[0])
+        snapshot = self.plugin.get_snapshot()
+        if snapshot:
+            builder.set_image(snapshot)
         return builder.get_embeds()
 
     def pause(self):
