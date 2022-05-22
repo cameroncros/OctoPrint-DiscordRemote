@@ -19,7 +19,6 @@ from octoprint_discordremote import Command
 
 # Constants
 CHANNEL_ID_LENGTH = 18
-BOT_TOKEN_LENGTH = 59
 
 
 class DiscordImpl:
@@ -81,9 +80,6 @@ class DiscordImpl:
 
         if len(str(self.channel_id)) != CHANNEL_ID_LENGTH:
             self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
-            return
-        if self.bot_token is None or len(self.bot_token) != BOT_TOKEN_LENGTH:
-            self.logger.error("Incorrectly configured: Bot Token must be %d chars long." % BOT_TOKEN_LENGTH)
             return
         self.thread = Thread(target=self.run_thread)
         self.thread.start()
