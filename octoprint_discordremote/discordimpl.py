@@ -17,9 +17,6 @@ from discord.file import File
 
 from octoprint_discordremote import Command
 
-# Constants
-CHANNEL_ID_LENGTH = 18
-
 
 class DiscordImpl:
     class AsyncIOEventWrapper:
@@ -78,9 +75,6 @@ class DiscordImpl:
         self.status_callback = status_callback
         self.status_callback(connected="connecting")
 
-        if len(str(self.channel_id)) != CHANNEL_ID_LENGTH:
-            self.logger.error("Incorrectly configured: Channel ID must be %d chars long." % CHANNEL_ID_LENGTH)
-            return
         self.thread = Thread(target=self.run_thread)
         self.thread.start()
         while self.loop is None:
