@@ -38,7 +38,7 @@ class Presence:
 
     def generate_status(self):
         if self.plugin.get_printer().is_operational():
-            if self.plugin.get_printer().is_printing() and not self.plugin.get_printer().is_ready():
+            if self.plugin.get_printer().is_printing():
                 job_name = self.plugin.get_printer().get_current_data()['job']['file']['name']
                 job_percent = self.plugin.get_printer().get_current_data()['progress']['completion']
                 return ["online", "{}% of {} complete".format(
