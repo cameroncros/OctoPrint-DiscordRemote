@@ -113,11 +113,11 @@ class DiscordImpl:
         except Exception as e:
             self.logger.error("Failed with: %s" % e)
 
-    def update_presence(self, msg):
+    def update_presence(self, status, msg):
         try:
             if self.client.ws:
                 self.loop.create_task(
-                    self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg)))
+                    self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=msg),status=discord.Status[status]))
         except:
             pass
 
