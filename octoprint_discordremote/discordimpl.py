@@ -86,7 +86,12 @@ class DiscordImpl:
 
         loop.add_signal_handler = Mock()
 
-        self.client = discord.Client()
+        intents = discord.Intents.default()
+        intents.presences = True
+        intents.messages = True
+        intents.message_content = True
+
+        self.client = discord.Client(intents=intents)
 
         @self.client.event
         async def on_message(message):

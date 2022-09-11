@@ -5,7 +5,6 @@ from typing import Tuple, List, Optional
 
 from discord.embeds import Embed
 from discord.file import File
-from discord.embeds import EmptyEmbed
 import io
 import math
 import zipfile
@@ -277,8 +276,8 @@ class EmbedWrapper:
             embed.add_field(name=field['name'], value=field['value'])
         if self.author:
             embed.set_author(name=self.author['name'],
-                             url=self.author.get('url', EmptyEmbed),
-                             icon_url=self.author.get('icon_url', EmptyEmbed))
+                             url=self.author.get('url', None),
+                             icon_url=self.author.get('icon_url', None))
         if self.image_url:
             embed.set_image(url=self.image_url)
         return embed, self.file
