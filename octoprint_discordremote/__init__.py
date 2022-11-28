@@ -384,7 +384,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'author' in data:
             builder.set_author(data['author'])
         if 'color' in data:
-            builder.set_color(data['color'])
+            if isinstance(data['color'], str):
+                builder.set_color(int(data['color'].replace('#', ''), 16))
+            else:
+                builder.set_color(data['color'])
         if 'description' in data:
             builder.set_description(data['description'])
         if 'image' in data:
