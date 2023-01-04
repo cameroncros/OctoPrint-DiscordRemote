@@ -151,8 +151,8 @@ class DiscordImpl:
         return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
 
     async def handle_message(self, message):
-        if message.channel.id != self.channel_id:
-            # Only care about messages from correct channel
+        if message.channel.id != self.channel_id and message.channel.type.name != "private":
+            # Only care about messages from correct channel, or DM messages
             return
         self.logger.debug("Message is: %s" % message)
 
