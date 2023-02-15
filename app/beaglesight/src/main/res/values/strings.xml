@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BeagleSight</string>
+    <string name="title_activity_entry">EntryActivity</string>
+    <string name="title_activity_sight_list">SightList</string>
+</resources>
