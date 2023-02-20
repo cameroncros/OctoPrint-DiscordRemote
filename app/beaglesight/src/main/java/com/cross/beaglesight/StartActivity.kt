@@ -69,7 +69,7 @@ fun ToolList() {
                         .fillMaxWidth()
                 ) {
                     Text(
-                        "Bows Configurations",
+                        "Bow Configurations",
                         style = Typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
