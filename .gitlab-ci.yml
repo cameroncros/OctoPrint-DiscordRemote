@@ -1,0 +1,78 @@
+image: ubuntu:22.04
+
+stages:
+  - buildContainer
+  - test
+
+Build Container:
+  stage: buildContainer
+  image: docker
+  parallel:
+    matrix:
+      - ANDROID_IMAGE: 'system-images;android-27;default;x86_64'
+        API: 27
+      - ANDROID_IMAGE: 'system-images;android-28;default;x86_64'
+        API: 28
+      - ANDROID_IMAGE: 'system-images;android-29;default;x86_64'
+        API: 29
+      - ANDROID_IMAGE: 'system-images;android-30;default;x86_64'
+        API: 30
+      - ANDROID_IMAGE: 'system-images;android-31;default;x86_64'
+        API: 31
+      - ANDROID_IMAGE: 'system-images;android-32;google_apis;x86_64'
+        API: 32
+      - ANDROID_IMAGE: 'system-images;android-33;google_apis;x86_64'
+        API: 33
+  script:
+    - cd .gitlab/ && docker build --build-arg ANDROID_IMAGE=${ANDROID_IMAGE} -t androidtest-${API} .
+
+Unit Tests:
+  stage: test
+  script:
+    - chmod +x ./gradlew
+    - ./gradlew testDebugUnitTest
+  image: androidtest-33
+  artifacts:
+    when: always
+    reports:
+      junit: [
+        ./**/TEST-*.xml,
+      ]
+
+Instrumented Tests:
+  stage: test
+  parallel:
+    matrix:
+      - ANDROID_IMAGE: 'system-images;android-27;default;x86_64'
+        API: 27
+      - ANDROID_IMAGE: 'system-images;android-28;default;x86_64'
+        API: 28
+      - ANDROID_IMAGE: 'system-images;android-29;default;x86_64'
+        API: 29
+      - ANDROID_IMAGE: 'system-images;android-30;default;x86_64'
+        API: 30
+      - ANDROID_IMAGE: 'system-images;android-31;default;x86_64'
+        API: 31
+      - ANDROID_IMAGE: 'system-images;android-32;google_apis;x86_64'
+        API: 32
+      - ANDROID_IMAGE: 'system-images;android-33;google_apis;x86_64'
+        API: 33
+  image: androidtest-${API}
+  script:
+    # create virtual device named "test"
+    - sdkmanager --list
+    - echo no | avdmanager -v create avd -n test -k "${ANDROID_IMAGE}"
+    # start adb server
+    - adb start-server
+
+    # run emulator and tests
+    - emulator -avd test -no-boot-anim -no-window -no-audio -no-snapshot &
+    - android-wait-for-emulator
+    - chmod +x ./gradlew
+    - ./gradlew connectedDebugAndroidTest
+  artifacts:
+    when: always
+    reports:
+      junit: [
+        ./**/TEST-*.xml,
+      ]
