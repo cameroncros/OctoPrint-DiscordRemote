@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.cross.beaglesight.composables.SightGraphComposable
 import com.cross.beaglesight.ui.theme.BeagleSightTheme
@@ -86,7 +87,7 @@ fun ViewSightContent(
             })
     }, content = { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            Row {
+            Row (Modifier.zIndex(1.0f)) {
                 TextField(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -109,10 +110,12 @@ fun ViewSightContent(
                     onValueChange = {}
                 )
             }
-            SightGraphComposable(bowConfig = config, selectedDistanceCallback = { d, p ->
-                dist = d
-                pos = p
-            })
+            Row (Modifier.zIndex(0.0f)) {
+                SightGraphComposable(bowConfig = config, selectedDistanceCallback = { d, p ->
+                    dist = d
+                    pos = p
+                })
+            }
         }
     })
 }

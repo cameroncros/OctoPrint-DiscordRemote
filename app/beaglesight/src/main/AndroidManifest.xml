@@ -15,7 +15,6 @@
         <activity
             android:name=".StartActivity"
             android:exported="true"
-            android:label="@string/title_activity_entry"
             android:theme="@style/Theme.BeagleSight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
