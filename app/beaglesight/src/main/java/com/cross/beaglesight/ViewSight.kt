@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +63,14 @@ fun ViewSightContent(
     var pos by remember { mutableStateOf(config.positionCalculator.calcPosition(dist)) }
     val context = LocalContext.current
 
+    var selectedPair: PositionPair? = null
+    for (pair in config.positionArray) {
+        if (kotlin.math.abs(pair.distance - dist) <= 0.3) {
+            selectedPair = pair
+            break
+        }
+    }
+
     Scaffold(topBar = {
         TopAppBar(
             title = {
@@ -76,6 +85,16 @@ fun ViewSightContent(
                 }
             },
             actions = {
+                if (selectedPair != null) {
+                    IconButton(onClick = {
+                        config.positionArray.remove(selectedPair)
+                        selectedPair = null
+                        dist += 0.001F  // Forces redraw, hack.
+                    }
+                    ) {
+                        Icon(Icons.Filled.Delete, "Delete")
+                    }
+                }
                 IconButton(onClick = {
                     val bowsIntent = Intent(context, AddPosition::class.java)
                     bowsIntent.putExtra("ID", config.id)
@@ -87,7 +106,7 @@ fun ViewSightContent(
             })
     }, content = { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            Row (Modifier.zIndex(1.0f)) {
+            Row(Modifier.zIndex(1.0f)) {
                 TextField(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,7 +129,7 @@ fun ViewSightContent(
                     onValueChange = {}
                 )
             }
-            Row (Modifier.zIndex(0.0f)) {
+            Row(Modifier.zIndex(0.0f)) {
                 SightGraphComposable(bowConfig = config, selectedDistanceCallback = { d, p ->
                     dist = d
                     pos = p
