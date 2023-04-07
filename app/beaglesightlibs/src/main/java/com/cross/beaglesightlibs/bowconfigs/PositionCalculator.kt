@@ -36,13 +36,15 @@ abstract class PositionCalculator {
     }
 
     companion object {
-        private val hn = DecimalFormat("#")
-        private val df = DecimalFormat("#.##")
+        private val zero = DecimalFormat("#")
+        private val one = DecimalFormat("#.#")
+        private val two = DecimalFormat("#.##")
         fun getDisplayValue(value: Float, numPlaces: Int): String {
             return when (numPlaces) {
-                0 -> hn.format(value)
-                2 -> df.format(value)
-                else -> hn.format(value)
+                0 -> zero.format(value)
+                1 -> one.format(value)
+                2 -> two.format(value)
+                else -> two.format(value)
             }
         }
     }

@@ -29,12 +29,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cross.beaglesight.ui.theme.BeagleSightTheme
 import com.cross.beaglesight.ui.theme.Typography
 import com.cross.beaglesightlibs.bowconfigs.BowConfig
 import com.cross.beaglesightlibs.bowconfigs.BowManager
+import com.cross.beaglesightlibs.bowconfigs.PositionCalculator.Companion.getDisplayValue
 import com.cross.beaglesightlibs.bowconfigs.PositionPair
 
 class AddPosition : ComponentActivity() {
@@ -84,17 +86,23 @@ fun AddPositionContent(
     fun updateEstimates() {
         try {
             // Guess first pin setting.
-            if (pos1.isNaN() && offset2.isNaN()) {
+            if (pos1.isNaN() && offset1.isNaN()) {
                 pos1 = config.positionCalculator.calcPosition(dist)
+                if (!pos1.isNaN()) {
+                    pos1_str = getDisplayValue(pos1, 1)
+                }
             }
             // Guess slightly offsetted pin setting.
             if (pos2.isNaN() && offset2.isNaN()) {
                 pos2 = config.positionCalculator.calcPosition(dist - 1)
+                if (!pos2.isNaN()) {
+                    pos2_str = getDisplayValue(pos2, 1)
+                }
             }
 
             if (!pos1.isNaN() && !offset1.isNaN() && !pos2.isNaN() && !offset2.isNaN()) {
                 // y(0) == Correct pin setting
-                //y(x) = (y1-y2)/(x1-x2) * x + c
+                // y(x) = (y1-y2)/(x1-x2) * x + c
                 // y(0) = c
                 // c = y1 - (y1-y2)/(x1-x2) * x1
                 val c: Float = pos1 - (pos1 - pos2) / (offset1 - offset2) * offset1
@@ -102,7 +110,7 @@ fun AddPositionContent(
                     return
                 }
                 pos = c
-                pos_str = c.toString()
+                pos_str = getDisplayValue(pos, 1)
             }
         } catch (nfe: NumberFormatException) {
             // Do nothing.
@@ -144,7 +152,9 @@ fun AddPositionContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Distance:")
                 TextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("distance"),
                     value = dist_str,
                     onValueChange = { value: String ->
                         try {
@@ -152,7 +162,9 @@ fun AddPositionContent(
                         } catch (_: NumberFormatException) {
                         }
                         dist_str = value
-                    })
+                        updateEstimates()
+                    },
+                    placeholder = { Text(text = "Distance") })
             }
             Row {
                 Card(
@@ -195,7 +207,8 @@ fun AddPositionContent(
                             TextField(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .weight(1f),
+                                    .weight(1f)
+                                    .testTag("estimate1"),
                                 value = pos1_str,
                                 onValueChange = { value ->
                                     try {
@@ -204,12 +217,14 @@ fun AddPositionContent(
                                     } catch (_: NumberFormatException) {
                                     }
                                     pos1_str = value
-                                }
+                                },
+                                placeholder = { Text(text = "Estimate 1") }
                             )
                             TextField(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .weight(1f),
+                                    .weight(1f)
+                                    .testTag("offset1"),
                                 value = offset1_str,
                                 onValueChange = { value ->
                                     try {
@@ -218,14 +233,16 @@ fun AddPositionContent(
                                     } catch (_: NumberFormatException) {
                                     }
                                     offset1_str = value
-                                }
+                                },
+                                placeholder = { Text(text = "Distance 1") }
                             )
                         }
                         Row {
                             TextField(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .weight(1f),
+                                    .weight(1f)
+                                    .testTag("estimate2"),
                                 value = pos2_str,
                                 onValueChange = { value ->
                                     try {
@@ -234,12 +251,14 @@ fun AddPositionContent(
                                     } catch (_: NumberFormatException) {
                                     }
                                     pos2_str = value
-                                }
+                                },
+                                placeholder = { Text(text = "Estimate 2") }
                             )
                             TextField(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .weight(1f),
+                                    .weight(1f)
+                                    .testTag("offset2"),
                                 value = offset2_str,
                                 onValueChange = { value ->
                                     try {
@@ -248,7 +267,8 @@ fun AddPositionContent(
                                     } catch (_: NumberFormatException) {
                                     }
                                     offset2_str = value
-                                }
+                                },
+                                placeholder = { Text(text = "Distance 2") }
                             )
                         }
                     }
@@ -257,15 +277,18 @@ fun AddPositionContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Position:")
                 TextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("position"),
                     value = pos_str,
                     onValueChange = { value: String ->
                         try {
                             pos = value.toFloat()
                         } catch (_: NumberFormatException) {
                         }
-                        pos = value.toFloat()
-                    })
+                        pos_str = value
+                    },
+                    placeholder = { Text(text = "Position") })
             }
         }
     })
