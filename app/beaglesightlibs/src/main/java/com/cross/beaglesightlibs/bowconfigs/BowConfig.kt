@@ -1,6 +1,10 @@
 package com.cross.beaglesightlibs.bowconfigs
 
+import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.Objects
 import java.util.UUID
 
@@ -30,5 +34,27 @@ data class BowConfig(
 
     override fun hashCode(): Int {
         return Objects.hash(id, name, description, positionArray)
+    }
+
+    fun export(outputStream: FileOutputStream) {
+        val moshi: Moshi = Moshi.Builder().build()
+        val jsonAdapter: JsonAdapter<BowConfig> = moshi.adapter(BowConfig::class.java)
+        outputStream.write(jsonAdapter.toJson(this).toByteArray())
+        outputStream.close()
+    }
+
+    companion object {
+        fun load(inputStream: InputStream): BowConfig? {
+            val moshi: Moshi = Moshi.Builder().build()
+            val jsonAdapter: JsonAdapter<BowConfig> = moshi.adapter(BowConfig::class.java)
+
+            try {
+                val jsonData = String(inputStream.readBytes())
+
+                return jsonAdapter.fromJson(jsonData)!!
+            } catch (_: Exception) {
+            }
+            return null
+        }
     }
 }

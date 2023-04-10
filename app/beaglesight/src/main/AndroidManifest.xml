@@ -41,6 +41,16 @@
             android:name=".TargetMap"
             android:exported="false"
             android:theme="@style/Theme.BeagleSight" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.cross.beaglesight"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 
 </manifest>

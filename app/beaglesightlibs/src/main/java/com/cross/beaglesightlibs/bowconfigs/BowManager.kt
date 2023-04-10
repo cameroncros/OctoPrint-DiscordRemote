@@ -38,7 +38,7 @@ class BowManager(context: Context) {
         )
     }
 
-    fun allBowConfigsWithPositions(): List<BowConfig> {
+    fun allBowConfigs(): List<BowConfig> {
         return configs.values.toMutableList()
     }
 
