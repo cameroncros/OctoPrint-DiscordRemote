@@ -93,7 +93,7 @@ fun SightGraphComposable(
     fun calculateYVal(xVal: Float): Float {
         val distance: Float = pixelToDistance(xVal)
         val position: Float =
-            bowConfig.positionCalculator.calcPosition(distance)
+            bowConfig.calcPosition(distance)
         return positionToPixel(position)
     }
 
@@ -243,7 +243,7 @@ fun SightGraphComposable(
                 strokeWidth = 2.dp.toPx()
             )
 
-            val position = bowConfig.positionCalculator.calcPosition(selectedDistance)
+            val position = bowConfig.calcPosition(selectedDistance)
             val yPos = positionToPixel(position = position.toFloat())
 
             drawLine(
@@ -260,7 +260,7 @@ fun SightGraphComposable(
             selectedDistance = distance
             selectedDistanceCallback(
                 selectedDistance,
-                bowConfig.positionCalculator.calcPosition(selectedDistance)
+                bowConfig.calcPosition(selectedDistance)
             )
         }
     )
@@ -270,10 +270,10 @@ fun SightGraphComposable(
 @Composable
 fun SightGraphContentPreview() {
     val config = BowConfig()
-    config.positionArray.add(0, PositionPair(10.0f, 10.0f))
-    config.positionArray.add(0, PositionPair(20.0f, 20.0f))
-    config.positionArray.add(0, PositionPair(25.0f, 30.0f))
-    config.positionArray.add(0, PositionPair(30.0f, 40.0f))
+    config.addPos(PositionPair(10.0f, 10.0f))
+    config.addPos(PositionPair(20.0f, 20.0f))
+    config.addPos(PositionPair(25.0f, 30.0f))
+    config.addPos(PositionPair(30.0f, 40.0f))
     BeagleSightTheme {
         SightGraphComposable(config, modifier = Modifier.testTag("sightgraph"))
     }

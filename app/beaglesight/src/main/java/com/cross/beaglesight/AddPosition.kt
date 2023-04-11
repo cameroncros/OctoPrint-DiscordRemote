@@ -36,7 +36,7 @@ import com.cross.beaglesight.ui.theme.BeagleSightTheme
 import com.cross.beaglesight.ui.theme.Typography
 import com.cross.beaglesightlibs.bowconfigs.BowConfig
 import com.cross.beaglesightlibs.bowconfigs.BowManager
-import com.cross.beaglesightlibs.bowconfigs.PositionCalculator.Companion.getDisplayValue
+import com.cross.beaglesightlibs.bowconfigs.BowNumberFormat.Companion.getDisplayValue
 import com.cross.beaglesightlibs.bowconfigs.PositionPair
 
 class AddPosition : ComponentActivity() {
@@ -87,14 +87,14 @@ fun AddPositionContent(
         try {
             // Guess first pin setting.
             if (pos1.isNaN() && offset1.isNaN()) {
-                pos1 = config.positionCalculator.calcPosition(dist)
+                pos1 = config.calcPosition(dist)
                 if (!pos1.isNaN()) {
                     pos1_str = getDisplayValue(pos1, 1)
                 }
             }
             // Guess slightly offsetted pin setting.
             if (pos2.isNaN() && offset2.isNaN()) {
-                pos2 = config.positionCalculator.calcPosition(dist - 1)
+                pos2 = config.calcPosition(dist - 1)
                 if (!pos2.isNaN()) {
                     pos2_str = getDisplayValue(pos2, 1)
                 }
@@ -135,7 +135,7 @@ fun AddPositionContent(
                 IconButton(
                     enabled = (!pos.isNaN() && !dist.isNaN()),
                     onClick = {
-                        config.positionArray.add(0, PositionPair(distance = dist, position = pos))
+                        config.addPos(PositionPair(distance = dist, position = pos))
                         val bowManager: BowManager = BowManager.getInstance(context)!!
                         bowManager.addBowConfig(config)
                         exitFn()
@@ -300,10 +300,10 @@ fun AddPositionContentPreview() {
     val config = BowConfig()
     config.name = "Test Bow"
     config.description = "This is a sample bow"
-    config.positionArray.add(0, PositionPair(10.0f, 10.0f))
-    config.positionArray.add(0, PositionPair(20.0f, 20.0f))
-    config.positionArray.add(0, PositionPair(25.0f, 30.0f))
-    config.positionArray.add(0, PositionPair(30.0f, 40.0f))
+    config.addPos(PositionPair(10.0f, 10.0f))
+    config.addPos(PositionPair(20.0f, 20.0f))
+    config.addPos(PositionPair(25.0f, 30.0f))
+    config.addPos(PositionPair(30.0f, 40.0f))
 
     BeagleSightTheme {
         AddPositionContent(exitFn = {}, config = config)

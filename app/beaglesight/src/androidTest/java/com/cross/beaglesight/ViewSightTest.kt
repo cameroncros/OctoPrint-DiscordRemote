@@ -25,10 +25,10 @@ class ViewSightTest {
         val config = BowConfig()
         config.name = "Test Bow"
         config.description = "This is a sample bow"
-        config.positionArray.add(0, PositionPair(10.0f, 10.0f))
-        config.positionArray.add(0, PositionPair(20.0f, 20.0f))
-        config.positionArray.add(0, PositionPair(35.0f, 30.0f))
-        config.positionArray.add(0, PositionPair(55.0f, 40.0f))
+        config.addPos(PositionPair(10.0f, 10.0f))
+        config.addPos(PositionPair(20.0f, 20.0f))
+        config.addPos(PositionPair(35.0f, 30.0f))
+        config.addPos(PositionPair(55.0f, 40.0f))
         composeTestRule.setContent {
             BeagleSightTheme {
                 ViewSightContent({}, config)

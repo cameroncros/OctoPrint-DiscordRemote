@@ -61,7 +61,7 @@ fun ViewSightContent(
     exitFn: () -> Unit, config: BowConfig
 ) {
     var dist by remember { mutableStateOf(0.0f) }
-    var pos by remember { mutableStateOf(config.positionCalculator.calcPosition(dist)) }
+    var pos by remember { mutableStateOf(config.calcPosition(dist)) }
     val context = LocalContext.current
 
     var selectedPair: PositionPair? = null
@@ -88,7 +88,7 @@ fun ViewSightContent(
             actions = {
                 if (selectedPair != null) {
                     IconButton(onClick = {
-                        config.positionArray.remove(selectedPair)
+                        config.removePos(selectedPair!!)
                         selectedPair = null
                         dist += 0.001F  // Forces redraw, hack.
                     }
@@ -116,7 +116,7 @@ fun ViewSightContent(
                     onValueChange = { value ->
                         try {
                             dist = value.toFloat()
-                            pos = config.positionCalculator.calcPosition(dist)
+                            pos = config.calcPosition(dist)
                         } catch (_: NumberFormatException) {
                         }
                     }
@@ -148,10 +148,10 @@ fun ViewSightContentPreview() {
     val config = BowConfig()
     config.name = "Test Bow"
     config.description = "This is a sample bow"
-    config.positionArray.add(0, PositionPair(10.0f, 10.0f))
-    config.positionArray.add(0, PositionPair(20.0f, 20.0f))
-    config.positionArray.add(0, PositionPair(25.0f, 30.0f))
-    config.positionArray.add(0, PositionPair(30.0f, 40.0f))
+    config.addPos(PositionPair(10.0f, 10.0f))
+    config.addPos(PositionPair(20.0f, 20.0f))
+    config.addPos(PositionPair(25.0f, 30.0f))
+    config.addPos(PositionPair(30.0f, 40.0f))
 
     BeagleSightTheme {
         ViewSightContent(exitFn = {}, config = config)

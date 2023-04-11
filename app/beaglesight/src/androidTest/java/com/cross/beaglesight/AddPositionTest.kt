@@ -1,6 +1,5 @@
 package com.cross.beaglesight
 
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -17,10 +16,7 @@ class AddPositionTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
-    // use createAndroidComposeRule<YourActivity>() if you need access to
-    // an activity
 
-    @OptIn(ExperimentalTestApi::class)
     @Test
     fun addPositionDirect() {
         val bowconfig = BowConfig()
@@ -34,10 +30,9 @@ class AddPositionTest {
         composeTestRule.onNodeWithTag("distance").performClick().performTextInput("20")
 
         composeTestRule.onNodeWithContentDescription("Save").performClick()
-        assert(bowconfig.positionArray.size != 0)
+        assert(bowconfig.positionArray.isNotEmpty())
     }
 
-    @OptIn(ExperimentalTestApi::class)
     @Test
     fun addPositionCalc() {
         val bowconfig = BowConfig()
@@ -61,16 +56,15 @@ class AddPositionTest {
         composeTestRule.onNodeWithTag("position").assertTextEquals("20.5")
 
         composeTestRule.onNodeWithContentDescription("Save").performClick()
-        assert(bowconfig.positionArray.size != 0)
+        assert(bowconfig.positionArray.isNotEmpty())
     }
 
-    @OptIn(ExperimentalTestApi::class)
     @Test
     fun addPositionCalcPreestimate() {
         val bowconfig = BowConfig()
-        bowconfig.positionArray.add(PositionPair(20f, 20f))
-        bowconfig.positionArray.add(PositionPair(30f, 30f))
-        bowconfig.positionArray.add(PositionPair(50f, 40f))
+        bowconfig.addPos(PositionPair(20f, 20f))
+        bowconfig.addPos(PositionPair(30f, 30f))
+        bowconfig.addPos(PositionPair(50f, 40f))
         composeTestRule.setContent {
             BeagleSightTheme {
                 AddPositionContent({}, bowconfig)
