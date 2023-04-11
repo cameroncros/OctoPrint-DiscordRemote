@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontStyle.Companion.Italic
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +21,13 @@ import com.cross.beaglesightlibs.bowconfigs.BowConfig
 import com.cross.beaglesightlibs.bowconfigs.PositionPair
 import kotlin.math.roundToInt
 
+data class AxisData(
+    val start: Offset,
+    val end: Offset,
+    val label: Offset,
+    val text: AnnotatedString
+)
+
 @OptIn(ExperimentalTextApi::class)
 @Composable
 fun SightGraphComposable(
@@ -29,7 +37,24 @@ fun SightGraphComposable(
     minPos: Float = 0f,
     maxPos: Float = 100f,
     selectedDistanceCallback: (dist: Float, position: Float) -> Unit = { _, _ -> run {} },
+    modifier: Modifier,
 ) {
+    var lastBowConfig by remember { mutableStateOf<BowConfig?>(null) }
+
+    val backgroundBrush by remember { mutableStateOf(SolidColor(Color.White)) }
+    val lineBrush by remember { mutableStateOf(SolidColor(Color.Red)) }
+    val axisBrush by remember { mutableStateOf(SolidColor(Color.Black)) }
+    val pointBrush by remember { mutableStateOf(SolidColor(Color.Blue)) }
+    val axisFontStyle by remember {
+        mutableStateOf(
+            SpanStyle(
+                color = Color.Black,
+                fontSize = 12.sp,
+                fontStyle = Italic,
+            )
+        )
+    }
+
     val textMeasurer = rememberTextMeasurer()
     var touchInteractionState by remember { mutableStateOf<TouchInteraction>(TouchInteraction.NoInteraction) }
     var selectedDistance by remember { mutableStateOf(Float.NaN) }
@@ -38,6 +63,10 @@ fun SightGraphComposable(
     var contentWidthEnd by remember { mutableStateOf(0.0f) }
     val contentHeightStart by remember { mutableStateOf(0.0f) }
     var contentHeightEnd by remember { mutableStateOf(0.0f) }
+
+    val points by remember { mutableStateOf(mutableListOf<Offset>()) }
+    val dots by remember { mutableStateOf(mutableListOf<Offset>()) }
+    val axis by remember { mutableStateOf(mutableListOf<AxisData>()) }
 
     fun pixelToDistance(pixel: Float): Float {
         // 20m == contentWidthStart
@@ -68,7 +97,6 @@ fun SightGraphComposable(
         return positionToPixel(position)
     }
 
-
     fun handleTouch(
         touchInteraction: TouchInteraction,
         updateSelectedDistance: (Float) -> Unit,
@@ -79,16 +107,13 @@ fun SightGraphComposable(
                 updateSelectedDistance(pixelToDistance(touchPositionX))
             }
 
-            is TouchInteraction.Up -> {
-            }
-
             else -> {
                 // nothing to do
             }
         }
     }
 
-    Canvas(modifier = Modifier
+    Canvas(modifier = modifier
         .fillMaxSize()
         .touchInteraction(remember { MutableInteractionSource() }) {
             touchInteractionState = it
@@ -96,10 +121,80 @@ fun SightGraphComposable(
         contentWidthEnd = size.width
         contentHeightEnd = size.height
 
-        val backgroundBrush = SolidColor(Color.White)
-        val lineBrush = SolidColor(Color.Red)
-        val axisBrush = SolidColor(Color.Black)
-        val pointBrush = SolidColor(Color.Blue)
+        if (axis.size == 0) {
+            // Calculate x-axis points
+            var i = minDist
+            while (i < maxDist) {
+                val xPixel: Float = distanceToPixel(i)
+                if (!xPixel.isNaN()) {
+                    axis.add(
+                        AxisData(
+                            start = Offset(xPixel, contentHeightStart),
+                            end = Offset(xPixel, contentHeightEnd),
+                            label = Offset(
+                                xPixel + 4.dp.toPx(),
+                                contentHeightEnd - 12.sp.toPx() - 8.dp.toPx()
+                            ),
+                            text = buildAnnotatedString {
+                                withStyle(style = axisFontStyle) {
+                                    append(
+                                        "$i"
+                                    )
+                                }
+                            })
+                    )
+                }
+                i += 10f
+            }
+            // Calculate y-axis points
+            i = ((minPos / 10).roundToInt() * 10).toFloat()
+            while (i < maxPos) {
+                val yPixel: Float = positionToPixel(i)
+                if (!yPixel.isNaN()) {
+                    axis.add(
+                        AxisData(
+                            start = Offset(contentWidthStart, yPixel),
+                            end = Offset(contentWidthEnd, yPixel),
+                            label = Offset(8.dp.toPx(), yPixel),
+                            text = buildAnnotatedString {
+                                withStyle(style = axisFontStyle) {
+                                    append(
+                                        "$i"
+                                    )
+                                }
+                            }
+                        ))
+                }
+                i += 10f
+            }
+        }
+
+        if (lastBowConfig == null || lastBowConfig?.positionArray == bowConfig.positionArray) {
+            points.clear()
+            dots.clear()
+
+            // Calculate line points
+            var xPos = contentWidthStart
+            while (xPos < contentWidthEnd) {
+                val yVal = calculateYVal(xPos)
+                if (!yVal.isNaN()) {
+                    points.add(Offset(xPos, yVal))
+                }
+                xPos += 1f
+            }
+
+            // Calculate dots
+            for (pair in bowConfig.positionArray) {
+                val position: Float = pair.position
+                val distance: Float = pair.distance
+
+                val positionPixel = positionToPixel(position)
+                val distancePixel = distanceToPixel(distance)
+
+                dots.add(Offset(distancePixel, positionPixel))
+            }
+            lastBowConfig = bowConfig
+        }
 
         // Draw Background
         drawRect(
@@ -109,53 +204,33 @@ fun SightGraphComposable(
         )
 
         // Draw Axis
-        val axisFontStyle = SpanStyle(
-            color = Color.Black,
-            fontSize = 12.sp,
-            fontStyle = Italic,
-        )
-        run {
-            var i = minDist
-            while (i < maxDist) {
-                val xPixel: Float = distanceToPixel(i)
-                drawLine(
-                    brush = axisBrush,
-                    start = Offset(xPixel, contentHeightStart),
-                    end = Offset(xPixel, contentHeightEnd),
-                    strokeWidth = 1.dp.toPx()
-                )
-                val text =
-                    buildAnnotatedString { withStyle(style = axisFontStyle) { append("$i") } }
-                drawText(
-                    textMeasurer = textMeasurer, text = text, topLeft = Offset(
-                        xPixel + 4.dp.toPx(), contentHeightEnd - 12.sp.toPx() - 8.dp.toPx()
-                    )
-                )
-                i += 10f
-            }
+        for (axisdata in axis) {
+            drawLine(
+                brush = axisBrush,
+                start = axisdata.start,
+                end = axisdata.end,
+                strokeWidth = 1.dp.toPx()
+            )
+            drawText(
+                textMeasurer = textMeasurer, text = axisdata.text, topLeft = axisdata.label
+            )
         }
 
-        run {
-            var i: Float = ((minPos / 10).roundToInt() * 10).toFloat()
-            while (i < maxPos) {
-                val yPixel: Float = positionToPixel(i)
-                if (!yPixel.isNaN()) {
-                    drawLine(
-                        brush = axisBrush,
-                        start = Offset(contentWidthStart, yPixel),
-                        end = Offset(contentWidthEnd, yPixel),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                    val text =
-                        buildAnnotatedString { withStyle(style = axisFontStyle) { append("$i") } }
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = text,
-                        topLeft = Offset(8.dp.toPx(), yPixel)
-                    )
-                }
-                i += 10f
-            }
+        // Plot the graph.
+        drawPoints(
+            points = points,
+            pointMode = PointMode.Polygon,
+            brush = lineBrush,
+            strokeWidth = 2.dp.toPx()
+        )
+
+        // Draw the dots.
+        for (dot in dots) {
+            drawCircle(
+                brush = pointBrush,
+                radius = 4.dp.toPx(),
+                center = dot
+            )
         }
 
         // Draw selected distance
@@ -176,38 +251,6 @@ fun SightGraphComposable(
                 start = Offset(contentWidthStart, yPos),
                 end = Offset(contentWidthEnd, yPos),
                 strokeWidth = 2.dp.toPx()
-            )
-        }
-
-        // Plot the graph.
-        var xPos = contentWidthStart
-        val arcPoints = ArrayList<Offset>()
-        while (xPos < contentWidthEnd) {
-            val yVal = calculateYVal(xPos)
-            if (!yVal.isNaN()) {
-                arcPoints.add(Offset(xPos, yVal))
-            }
-            xPos += 1f
-        }
-        drawPoints(
-            points = arcPoints,
-            pointMode = PointMode.Polygon,
-            brush = lineBrush,
-            strokeWidth = 2.dp.toPx()
-        )
-
-        // Draw the dots.
-        for (pair in bowConfig.positionArray) {
-            val position: Float = pair.position.toFloat()
-            val distance: Float = pair.distance.toFloat()
-
-            val positionPixel = positionToPixel(position)
-            val distancePixel = distanceToPixel(distance)
-
-            drawCircle(
-                brush = pointBrush,
-                radius = 4.dp.toPx(),
-                center = Offset(distancePixel, positionPixel)
             )
         }
     }
@@ -232,6 +275,6 @@ fun SightGraphContentPreview() {
     config.positionArray.add(0, PositionPair(25.0f, 30.0f))
     config.positionArray.add(0, PositionPair(30.0f, 40.0f))
     BeagleSightTheme {
-        SightGraphComposable(config)
+        SightGraphComposable(config, modifier = Modifier.testTag("sightgraph"))
     }
 }

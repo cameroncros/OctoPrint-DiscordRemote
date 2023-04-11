@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
@@ -130,10 +131,12 @@ fun ViewSightContent(
                 )
             }
             Row(Modifier.zIndex(0.0f)) {
-                SightGraphComposable(bowConfig = config, selectedDistanceCallback = { d, p ->
-                    dist = d
-                    pos = p
-                })
+                SightGraphComposable(modifier = Modifier.testTag("sightgraph"),
+                    bowConfig = config,
+                    selectedDistanceCallback = { d, p ->
+                        dist = d
+                        pos = p
+                    })
             }
         }
     })
