@@ -28,9 +28,9 @@ class AddBowConfigTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Bow Configurations").performClick()
-        composeTestRule.waitForIdle()
         composeTestRule.onNode(hasContentDescription("Add New Bow")).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("New").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Name").performClick().performTextInput("BowName")
         composeTestRule.onNodeWithText("Description").performClick()

@@ -8,9 +8,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BeagleSight">
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
 
         <activity
             android:name=".StartActivity"
@@ -35,10 +32,6 @@
             android:theme="@style/Theme.BeagleSight" />
         <activity
             android:name=".AddPosition"
-            android:exported="false"
-            android:theme="@style/Theme.BeagleSight" />
-        <activity
-            android:name=".TargetMap"
             android:exported="false"
             android:theme="@style/Theme.BeagleSight" />
 

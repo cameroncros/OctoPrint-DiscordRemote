@@ -1,6 +1,7 @@
 package com.cross.beaglesight
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,8 +84,10 @@ fun ToolList() {
                 .fillMaxWidth(),
                 shape = RoundedCornerShape(corner = CornerSize(16.dp)),
                 onClick = {
-                    val bowsIntent = Intent(context, TargetMap::class.java)
-                    startActivity(context, bowsIntent, null)
+                    val uri =
+                        Uri.parse("https://github.com/cameroncros/PrivatePeriodTracker/blob/main/privacy-policy.md")
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(context, intent, null)
                 }) {
                 Column(
                     modifier = Modifier
@@ -90,7 +95,7 @@ fun ToolList() {
                         .fillMaxWidth()
                 ) {
                     Text(
-                        "Maps",
+                        "Privacy Policy",
                         style = Typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
