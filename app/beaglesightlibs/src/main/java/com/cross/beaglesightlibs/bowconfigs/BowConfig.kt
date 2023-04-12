@@ -24,23 +24,25 @@ data class BowConfig(
 ) {
     @Transient
     private var size = 0
+
     @Transient
     private var order = 4
+
     @Transient
     private var polynomial: RealVector? = null
 
     fun calcPosition(distance: Float): Float {
-        if (polynomial == null) {
-            calcPolynomial()
-        }
         if (size < 2) {
             return Float.NaN
         }
-        val `val` = DoubleArray(order)
-        for (j in 0 until order) {
-            `val`[j] = Math.pow(distance.toDouble(), (order - 1 - j).toDouble())
+        if (polynomial == null) {
+            calcPolynomial()
         }
-        val a: RealVector = ArrayRealVector(`val`)
+        val v = DoubleArray(order)
+        for (j in 0 until order) {
+            v[j] = Math.pow(distance.toDouble(), (order - 1 - j).toDouble())
+        }
+        val a: RealVector = ArrayRealVector(v)
         return a.dotProduct(polynomial).toFloat()
     }
 
