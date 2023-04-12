@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -23,29 +23,27 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of("11"))
-        }
+    kotlinOptions {
+        jvmTarget = '17'
     }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
-    implementation 'androidx.room:room-common:2.5.0'
-    implementation 'androidx.room:room-ktx:2.5.0'
+    implementation 'androidx.room:room-common:2.5.1'
+    implementation 'androidx.room:room-ktx:2.5.1'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
-    implementation 'androidx.room:room-testing:2.5.0'
+    implementation 'androidx.room:room-testing:2.5.1'
     implementation 'androidx.test:monitor:1.6.1'
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.10.0'
     implementation 'com.squareup.moshi:moshi:1.14.0'
-    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.14.0'
+    ksp 'com.squareup.moshi:moshi-kotlin-codegen:1.14.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
