@@ -31,6 +31,10 @@ data class BowConfig(
     @Transient
     private var polynomial: RealVector? = null
 
+    init {
+        calcPolynomial()
+    }
+
     fun calcPosition(distance: Float): Float {
         if (size < 2) {
             return Float.NaN
