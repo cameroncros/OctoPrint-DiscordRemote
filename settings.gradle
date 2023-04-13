@@ -1,1 +1,17 @@
-include ':beaglesightlibs', ':beaglesight', ':beaglesightwear'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "BeagleSight"
+include ':app:beaglesightlibs'
+include ':app:beaglesight'
