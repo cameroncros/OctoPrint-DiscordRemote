@@ -19,10 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,7 +49,7 @@ class StartActivity : ComponentActivity() {
 @Composable
 fun ToolList() {
     val context = LocalContext.current
-    Scaffold(content = { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -85,7 +83,7 @@ fun ToolList() {
                 shape = RoundedCornerShape(corner = CornerSize(16.dp)),
                 onClick = {
                     val uri =
-                        Uri.parse("https://github.com/cameroncros/PrivatePeriodTracker/blob/main/privacy-policy.md")
+                        Uri.parse("https://github.com/cameroncros/BeagleSight/blob/master/privacy-policy.md")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(context, intent, null)
                 }) {
@@ -103,7 +101,7 @@ fun ToolList() {
                 }
             }
         }
-    })
+    }
 }
 
 @Preview(showBackground = true)
