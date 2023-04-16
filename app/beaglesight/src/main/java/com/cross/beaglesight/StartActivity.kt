@@ -83,7 +83,7 @@ fun ToolList() {
                 shape = RoundedCornerShape(corner = CornerSize(16.dp)),
                 onClick = {
                     val uri =
-                        Uri.parse("https://github.com/cameroncros/BeagleSight/blob/master/privacy-policy.md")
+                        Uri.parse("https://github.com/cameroncros/BeagleSight/blob/b5d116db03c1ea49cd689df2703c987918c01611/privacy-policy.md")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(context, intent, null)
                 }) {
