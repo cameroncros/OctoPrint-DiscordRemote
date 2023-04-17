@@ -7,8 +7,9 @@ import os
 import zipfile
 
 import yaml
+from mock.mock import Mock
 
-from octoprint_discordremote import DiscordImpl
+from octoprint_discordremote import DiscordImpl, Command
 from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
     info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
@@ -22,11 +23,11 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
             try:
                 with open(config_file, "r") as config:
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-                self.discord = DiscordImpl()
-                self.discord.configure_discord(bot_token=config['bottoken'],
-                                               channel_id=config['channelid'],
-                                               logger=logging.getLogger(),
-                                               command=None)
+                self.discord = DiscordImpl(bot_token=config['bottoken'],
+                                           channel_id=config['channelid'],
+                                           logger=logging.getLogger(),
+                                           command=Mock(spec=Command),
+                                           status_callback=Mock())
                 while True:
                     if self.discord.client.is_ready():
                         break
@@ -163,7 +164,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         with open("rebuilt.zip", 'wb') as f:
             i = 1
             for embed, snapshot in messages[1:]:
-                self.assertEquals("large_file_temp.zip.%.03i" % i, snapshot.filename)
+                self.assertEqual("large_file_temp.zip.%.03i" % i, snapshot.filename)
                 snapshot.fp.seek(0)
                 data = snapshot.fp.read()
                 self.assertGreater(len(data), 0)
@@ -173,7 +174,7 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
 
         with zipfile.ZipFile("rebuilt.zip", 'r') as zip_file:
             with open(large_file_path, 'rb') as f:
-                self.assertEquals(f.read(), zip_file.read("large_file_temp"))
+                self.assertEqual(f.read(), zip_file.read("large_file_temp"))
 
         os.remove("rebuilt.zip")
         os.remove(large_file_path)

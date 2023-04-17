@@ -265,7 +265,7 @@ class TestCommand(DiscordRemoteTestCase):
     def test_parse_command_help(self):
         # Success: Printed help
         messages = self.command.parse_command("/help")
-        self.assertEqual(1, len(messages))
+        self.assertEqual(2, len(messages))
         embed, snapshot = messages[0]
 
         # for command, details in self.command.command_dict.items():
@@ -422,7 +422,7 @@ class TestCommand(DiscordRemoteTestCase):
         self.plugin.get_snapshot = mock.Mock()
 
         with open(self._get_path('test_pattern.png')) as input_file:
-            self.plugin.get_snapshot.return_value = [('snapshot.png', input_file)]
+            self.plugin.get_snapshot.return_value = ('snapshot.png', input_file)
 
             messages = self.command.parse_command('/status')
             self.assertEqual(1, len(messages))

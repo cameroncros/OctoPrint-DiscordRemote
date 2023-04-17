@@ -47,8 +47,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return dict(machinecode=dict(discordremote=allowed_list))
 
     def __init__(self):
-        self.discord = None
-        self.command = None
+        self.discord: Optional[DiscordImpl] = None
+        self.command: Optional[Command] = None
         self.last_progress_message = None
         self.last_progress_percent = 0
         self.is_muted = False

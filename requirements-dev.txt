@@ -2,4 +2,3 @@ PyYAML
 mock
 coverage
 pytest
-tox

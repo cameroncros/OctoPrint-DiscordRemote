@@ -86,7 +86,7 @@ class DiscordImpl:
 
         loop.add_signal_handler = Mock()
 
-        self.client = discord.Client()
+        self.client = discord.Client(intents=discord.Intents.default())
 
         @self.client.event
         async def on_message(message):

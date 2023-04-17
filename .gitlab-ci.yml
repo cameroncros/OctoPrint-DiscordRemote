@@ -1,0 +1,20 @@
+stages:          # List of stages for jobs, and their order of execution
+  - test
+
+test-job:
+  parallel:
+    matrix:
+      - PYVER: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+  image: python:${PYVER}
+  stage: test
+  script:
+    - |
+      cat <<EOT >> config.yaml
+      channelid: '$CHANNEL_ID'
+      bottoken: '$BOT_TOKEN'
+      EOT
+
+    - pip install -r requirements.txt -r requirements-dev.txt octoprint
+    - python setup.py bdist_wheel
+    - pip install dist/*.whl
+    - NET_TEST=1 pytest

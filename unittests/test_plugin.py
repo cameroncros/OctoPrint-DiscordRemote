@@ -19,29 +19,33 @@ def mock_global_get_boolean(array):
     }[u"_".join(array)]
 
 
-class TestCommand(DiscordRemoteTestCase):
+class TestPlugin(DiscordRemoteTestCase):
     def setUp(self):
         self.plugin = DiscordRemotePlugin()
         self.plugin._settings = mock.Mock()
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
-        self.plugin.discord = DiscordImpl()
 
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-                self.plugin.discord.configure_discord(bot_token=config['bottoken'],
-                                                      channel_id=config['channelid'],
-                                                      logger=TestLogger(),
-                                                      command=Mock(spec=Command))
+                self.plugin.discord = DiscordImpl(bot_token=config['bottoken'],
+                                                  channel_id=config['channelid'],
+                                                  logger=TestLogger(),
+                                                  command=Mock(spec=Command),
+                                                  status_callback=Mock(spec=(str)))
                 time.sleep(5)
             except:
                 self.fail("To test discord bot posting, you need to create a file "
                           "called config.yaml in the root directory with your bot "
                           "details. NEVER COMMIT THIS FILE.")
+        else:
+            self.plugin.discord = Mock(spec=DiscordImpl)
 
+    def tearDown(self) -> None:
+        self.plugin.discord.shutdown_discord()
 
     def test_plugin_get_snapshot_http(self):
         self.plugin._settings.global_get = mock.Mock()

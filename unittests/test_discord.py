@@ -11,7 +11,9 @@ import unittest
 import yaml
 from mock import mock
 from discord import Embed, File
+from mock.mock import Mock
 
+from octoprint_discordremote import Command
 from octoprint_discordremote.discordimpl import DiscordImpl
 from octoprint_discordremote.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
@@ -45,16 +47,17 @@ class TestLogger(logging.Logger):
 
 class TestSend(DiscordRemoteTestCase):
     def setUp(self):
-        self.discord = DiscordImpl()
         if "NET_TEST" in os.environ:
             config_file = self._get_path("../config.yaml")
             try:
                 with open(config_file, "r") as config:
                     config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-                self.discord.configure_discord(bot_token=config['bottoken'],
-                                               channel_id=config['channelid'],
-                                               logger=TestLogger(),
-                                               command=None)
+
+                self.discord = DiscordImpl(bot_token=config['bottoken'],
+                                           channel_id=config['channelid'],
+                                           logger=TestLogger(),
+                                           command=mock.MagicMock,
+                                           status_callback=mock.MagicMock)
                 time.sleep(5)
             except:
                 self.fail("To test discord bot posting, you need to create a file "
@@ -89,8 +92,8 @@ class TestSend(DiscordRemoteTestCase):
             f.seek(0)
             self.discord.send(messages=[(None, File(fp=f, filename="snapshot.png"))])
 
-    @unittest.skipIf("NET_TEST" in os.environ,
-                     "'NET_TEST' in os.environ - Not running test")
+    @unittest.skipIf("NET_TEST" not in os.environ,
+                     "'NET_TEST' not in os.environ - Not running test")
     def test_send(self):
         self.discord.send_messages = mock.AsyncMock()
         mock_snapshot = mock.Mock(spec=io.IOBase)

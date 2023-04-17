@@ -14,12 +14,14 @@ axes:
 color: default
 extruder:
   count: 1
+  defaultExtrusionLength: 5
   nozzleDiameter: 0.4
   offsets:
   - - 0.0
     - 0.0
   sharedNozzle: false
 heatedBed: true
+heatedChamber: false
 id: _default
 model: Generic RepRap Printer
 name: Default
