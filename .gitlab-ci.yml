@@ -1,12 +1,7 @@
 stages:          # List of stages for jobs, and their order of execution
   - test
 
-test-job:
-  parallel:
-    matrix:
-      - PYVER: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
-        OCTOVER: ['1.7.3', '1.8.7', '1.9.0rc1', '1.9.0rc3', '1.9.0rc3', '1.9.0rc4', '1.9.0rc5']
-  image: python:${PYVER}
+.test-job:
   stage: test
   script:
     - |
@@ -14,8 +9,42 @@ test-job:
       channelid: '$CHANNEL_ID'
       bottoken: '$BOT_TOKEN'
       EOT
-
     - pip install -r requirements.txt -r requirements-dev.txt OctoPrint==$OCTOVER
     - python setup.py bdist_wheel
     - pip install dist/*.whl
     - NET_TEST=1 pytest
+
+python36:
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3' ]
+  extends: .test-job
+  image: python:3.6
+
+python37:
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+  extends: .test-job
+  image: python:3.7
+
+python38:
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+  extends: .test-job
+  image: python:3.8
+
+python39:
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+  extends: .test-job
+  image: python:3.9
+
+python310:
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+  extends: .test-job
+  image: python:3.10
