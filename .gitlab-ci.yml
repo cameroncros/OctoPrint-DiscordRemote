@@ -5,6 +5,7 @@ test-job:
   parallel:
     matrix:
       - PYVER: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        OCTOVER: ['1.7.3', '1.8.7', '1.9.0rc1', '1.9.0rc3', '1.9.0rc3', '1.9.0rc4', '1.9.0rc5']
   image: python:${PYVER}
   stage: test
   script:
@@ -14,7 +15,7 @@ test-job:
       bottoken: '$BOT_TOKEN'
       EOT
 
-    - pip install -r requirements.txt -r requirements-dev.txt octoprint
+    - pip install -r requirements.txt -r requirements-dev.txt OctoPrint==$OCTOVER
     - python setup.py bdist_wheel
     - pip install dist/*.whl
     - NET_TEST=1 pytest
