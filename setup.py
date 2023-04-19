@@ -80,7 +80,8 @@ plugin_ignored_packages = []
 additional_setup_parameters = {
     'cmdclass': {
         'coverage': CoverageCommand
-    }
+    },
+    'python_requires': '>=3.8.0'
 }
 
 ########################################################################################################################
