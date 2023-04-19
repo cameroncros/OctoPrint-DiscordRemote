@@ -181,5 +181,6 @@ class DiscordImpl:
         self.status_callback(connected="disconnected")
         self.shutdown_event.set()
         self.process_queue.set()
+        self.client.loop.stop()
         if self.loop:
             self.loop.stop()

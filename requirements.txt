@@ -6,7 +6,7 @@
 # works as expected. Requirements can be found in setup.py.
 ###
 pillow
-discord.py==1.7.3
+discord.py==2.2.2
 requests
 humanfriendly
 #OctoPrint>=1.3.11
