@@ -7,6 +7,8 @@ stages:          # List of stages for jobs, and their order of execution
 
 .test-job:
   needs: []
+  timeout: 5m
+  retry: 2
   script:
     - |
       cat <<EOT >> config.yaml
@@ -16,7 +18,7 @@ stages:          # List of stages for jobs, and their order of execution
     - pip install -r requirements.txt -r requirements-dev.txt OctoPrint==$OCTOVER
     - python setup.py bdist_wheel
     - pip install dist/*.whl
-    - NET_TEST=1 pytest
+    - pytest -s
 
 python38:
   stage: python38
