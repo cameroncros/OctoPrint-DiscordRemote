@@ -2,3 +2,4 @@ PyYAML
 mock
 coverage
 pytest
+pytest_asyncio

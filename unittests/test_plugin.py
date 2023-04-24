@@ -7,8 +7,7 @@ import mock
 import yaml
 
 from octoprint_discordremote import DiscordRemotePlugin, DiscordImpl, Command
-from unittests.discordremotetestcase import DiscordRemoteTestCase
-from unittests.test_discord import TestLogger
+from unittests.discordremotetestcase import DiscordRemoteTestCase, TestLogger
 
 
 def mock_global_get_boolean(array):

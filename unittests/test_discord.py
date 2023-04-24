@@ -1,74 +1,43 @@
 from __future__ import unicode_literals
 
 import io
+import sys
 import time
 
 import logging
 import os
 import socket
 import unittest
+from asyncio import Event
 
 import yaml
 from mock import mock
 from discord import Embed, File
-from mock.mock import Mock
 
-from octoprint_discordremote import Command
 from octoprint_discordremote.discordimpl import DiscordImpl
 from octoprint_discordremote.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
+import asyncio
+import pytest
 
-class TestLogger(logging.Logger):
-    def __init__(self):
-        super(TestLogger, self).__init__(name=None)
+pytest_plugins = ('pytest_asyncio',)
 
-    def setLevel(self, level):
-        pass
+async def update_event(event: DiscordImpl.AsyncIOEventWrapper):
+    await asyncio.sleep(1)
+    event.set_event(Event())
+    await asyncio.sleep(3)
+    event.set()
 
-    def debug(self, msg, *args):
-        print("DEBUG: %s" % msg, args)
-
-    def info(self, msg, *args):
-        print("INFO: %s" % msg, args)
-
-    def warning(self, msg, *args):
-        print("WARNING: %s" % msg, args)
-
-    def error(self, msg, *args):
-        print("ERROR: %s" % msg, args)
-
-    def exception(self, msg, *args):
-        print("EXCEPTION: %s" % msg, args)
-
-    def critical(self, msg, *args):
-        print("CRITICAL: %s" % msg, args)
-
+@pytest.mark.asyncio
+async def testAsyncIOEventWrapper():
+    event = DiscordImpl.AsyncIOEventWrapper()
+    event.event = None
+    future = event.wait()
+    await update_event(event)
+    await future
 
 class TestSend(DiscordRemoteTestCase):
-    def setUp(self):
-        if "NET_TEST" in os.environ:
-            config_file = self._get_path("../config.yaml")
-            try:
-                with open(config_file, "r") as config:
-                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-
-                self.discord = DiscordImpl(bot_token=config['bottoken'],
-                                           channel_id=config['channelid'],
-                                           logger=TestLogger(),
-                                           command=mock.MagicMock,
-                                           status_callback=mock.MagicMock)
-                time.sleep(5)
-            except:
-                self.fail("To test discord bot posting, you need to create a file "
-                          "called config.yaml in the root directory with your bot "
-                          "details. NEVER COMMIT THIS FILE.")
-
-    def tearDown(self):
-        self.discord.shutdown_discord()
-
-    @unittest.skipIf("NET_TEST" not in os.environ,
-                     "'NET_TEST' not in os.environ - Not running network test")
     def test_dispatch(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -91,13 +60,23 @@ class TestSend(DiscordRemoteTestCase):
 
             f.seek(0)
             self.discord.send(messages=[(None, File(fp=f, filename="snapshot.png"))])
+        time.sleep(1)
+        self.assertTrue(self.discord.process_queue.is_set())
+        while self.discord.process_queue.is_set():
+            time.sleep(1)
 
-    @unittest.skipIf("NET_TEST" not in os.environ,
-                     "'NET_TEST' not in os.environ - Not running test")
+
     def test_send(self):
+        real_send_messages = self.discord.send_messages
         self.discord.send_messages = mock.AsyncMock()
+        real_process_message_queue = self.discord.process_message_queue
+        self.discord.process_message_queue = mock.AsyncMock()
+
         mock_snapshot = mock.Mock(spec=io.IOBase)
         mock_embed = mock.Mock(spec=Embed)
         self.discord.send(messages=[(mock_embed, mock_snapshot)])
         self.assertIn([(mock_embed, mock_snapshot)], self.discord.message_queue)
         self.assertTrue(self.discord.process_queue.is_set())
+
+        self.discord.send_messages = real_send_messages
+        self.discord.process_message_queue = real_process_message_queue

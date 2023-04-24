@@ -62,11 +62,12 @@ class DiscordImpl:
         self.loop = None
         self.client: Optional[discord.Client] = None
         self.running_thread: Optional[Thread] = None
-        self.shutdown_event: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
+        self.shutdown_event: Optional[Event] = None
         self.message_queue: List[List[Tuple[Embed, File]]] = []
         self.thread: Optional[Thread] = None
-        self.process_queue: DiscordImpl.AsyncIOEventWrapper = DiscordImpl.AsyncIOEventWrapper(None)
+        self.process_queue: Optional[Event] = None
         self.processsing_messages = False
+        self.is_running = True
 
         self.bot_token = bot_token
         self.channel_id = int(channel_id)
@@ -102,17 +103,21 @@ class DiscordImpl:
         try:
             self.loop = asyncio.get_event_loop()
 
-            # Create proper events now that we have an event loop.
-            self.shutdown_event.set_event(Event())
-            self.process_queue.set_event(Event())
+            async def setup_events():
+                # Create proper events now that we have an event loop.
+                self.shutdown_event = Event()
+                self.process_queue = Event()
+                self.process_queue.set()  # Initialise to set,
+            self.loop.create_task(setup_events())
 
-            future = self.client.run(self.bot_token)
-            self.loop.run_until_complete(asyncio.wait([future]))
+            client_task = self.client.start(self.bot_token)
+            self.loop.run_until_complete(asyncio.wait([client_task]))
         except RuntimeError as e:
             self.logger.info("Failed with: %s" % e)
         except Exception as e:
             self.logger.error("Failed with: %s" % e)
-
+        self.shutdown_event.set()
+        self.is_running = False
     def update_presence(self, msg):
         try:
             if self.client.ws:
@@ -141,11 +146,18 @@ class DiscordImpl:
             if len(self.message_queue) != 0:
                 await asyncio.sleep(10)
                 continue
-            await self.process_queue.wait()
+            try:
+                await self.process_queue.wait()
+            except Exception as e:
+                self.logger.error("Failed to await process queue :/ - %s", e)
+            except RuntimeError as e:
+                self.logger.error("Failed to await process queue :/ - %s", e)
+            self.process_queue.clear()
 
     def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         self.message_queue.append(messages)
-        self.process_queue.set()
+        if self.process_queue:
+            self.process_queue.set()
 
     def log_safe(self, message):
         return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
@@ -181,6 +193,9 @@ class DiscordImpl:
         self.status_callback(connected="disconnected")
         self.shutdown_event.set()
         self.process_queue.set()
-        self.client.loop.stop()
+        # if self.client.loop:
+        #     self.client.loop.stop()
         if self.loop:
             self.loop.stop()
+
+        self.is_running = False
