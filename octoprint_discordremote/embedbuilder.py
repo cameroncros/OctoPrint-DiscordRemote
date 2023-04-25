@@ -271,7 +271,7 @@ class EmbedWrapper:
         embed = Embed(title=self.title if self.title else "",
                       description=self.description if self.description else "",
                       colour=self.color,
-                      timestamp=datetime.utcnow())
+                      timestamp=datetime.now())
         for field in self.fields:
             embed.add_field(name=field['name'], value=field['value'])
         if self.author:
