@@ -60,6 +60,9 @@ class Command:
             command_plugin.setup(self, plugin)
 
     def parse_command(self, string, user=None) -> List[Tuple[Embed, File]]:
+        if not string:
+            return []
+
         prefix_str = self.plugin.get_settings().get(["prefix"])
         prefix_len = len(prefix_str)
 
