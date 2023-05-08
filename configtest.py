@@ -1,3 +1,5 @@
+import os
+
 import yaml
 
 config_file = "config.yaml"
@@ -25,3 +27,7 @@ octo_config['plugins']['discordremote'] = bot_details
 with open(octoprint_config, "w") as config:
     yaml.safe_dump(octo_config, stream=config, default_flow_style=False, indent=2, allow_unicode=True)
 
+try:
+    os.remove('testconfig/data/last_safe_mode')
+except:
+    pass

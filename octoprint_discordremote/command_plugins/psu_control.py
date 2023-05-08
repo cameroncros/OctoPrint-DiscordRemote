@@ -3,7 +3,7 @@ import json
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
-from octoprint_discordremote.embedbuilder import success_embed, error_embed, info_embed
+from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
 
 
 class PsuControl(AbstractPlugin):

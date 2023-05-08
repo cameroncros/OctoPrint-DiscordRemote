@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
-from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
+from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
 
 
 class EnclosureControl(AbstractPlugin):

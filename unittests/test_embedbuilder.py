@@ -2,15 +2,10 @@
 from __future__ import unicode_literals
 import time
 
-import logging
 import os
 import zipfile
 
-import yaml
-from mock.mock import Mock
-
-from octoprint_discordremote import DiscordImpl, Command
-from octoprint_discordremote.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
+from octoprint_discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
     info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 

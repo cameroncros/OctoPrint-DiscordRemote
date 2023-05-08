@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+message File {
+    bytes data = 1;
+    string filename = 2;
+}
+
+message Field {
+    string title = 1;
+    string text = 2;
+    bool inline = 3;
+}
+
+message EmbedContent {
+    string title = 1;
+    string description = 2;
+    string author = 3;
+    int32 color = 4;
+    File snapshot = 5;
+    repeated Field textfield = 6;
+}
+
+message Presence {
+    string presence = 1;
+}
+
+
+message Command {
+    optional string command = 1;
+    optional bool connected = 2;
+    optional File file = 3;
+}
+
+message Response {
+    optional EmbedContent embed = 1;
+    optional Presence presence = 2;
+}

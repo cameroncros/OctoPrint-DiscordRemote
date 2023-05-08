@@ -10,11 +10,10 @@ import math
 import zipfile
 import os
 
-DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
+from octoprint_discordremote.responsebuilder import COLOR_INFO
+from proto.messages_pb2 import Response, EmbedContent
 
-COLOR_SUCCESS = 0x00AE86
-COLOR_ERROR = 0xE84A4A
-COLOR_INFO = 0xF2E82B
+DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
 MAX_TITLE = 256
 MAX_VALUE = 1024
@@ -23,44 +22,22 @@ MAX_EMBED_LENGTH = 6000
 MAX_NUM_FIELDS = 25
 
 
-def embed_simple(author: str,
-                 title: Optional[str] = None,
-                 description: Optional[str] = None,
-                 color: Optional[int] = None,
-                 snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
+def embed_simple(data: EmbedContent) -> List[Tuple[Embed, File]]:
     builder = EmbedBuilder()
-    if color:
-        builder.set_color(color)
-    if title:
-        builder.set_title(title)
-    if description:
-        builder.set_description(description)
-    if snapshot:
-        builder.set_image(snapshot)
-    if author:
-        builder.set_author(author)
+    if data.color:
+        builder.set_color(data.color)
+    if data.title:
+        builder.set_title(data.title)
+    if data.description:
+        builder.set_description(data.description)
+    # if data.snapshot:
+    #     builder.set_image((data.snapshot.filename, io.BytesIO(data.snapshot.data)))
+    if data.author:
+        builder.set_author(data.author)
+    for field in data.textfield:
+        builder.add_field(field.title, field.text, field.inline)
+
     return builder.get_embeds()
-
-
-def success_embed(author: str,
-                  title: Optional[str] = None,
-                  description: Optional[str] = None,
-                  snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
-    return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
-
-
-def error_embed(author: str,
-                title: Optional[str] = None,
-                description: Optional[str] = None,
-                snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
-    return embed_simple(author, title, description, COLOR_ERROR, snapshot)
-
-
-def info_embed(author: str,
-               title: Optional[str] = None,
-               description: Optional[str] = None,
-               snapshot: Optional[Tuple[str, io.IOBase]] = None) -> List[Tuple[Embed, File]]:
-    return embed_simple(author, title, description, COLOR_INFO, snapshot)
 
 
 def upload_file(path, author=None) -> List[Tuple[Embed, File]]:

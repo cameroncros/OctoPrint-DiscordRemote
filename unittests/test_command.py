@@ -11,7 +11,7 @@ from zipfile import ZipFile
 from octoprint.printer import InvalidFileType, InvalidFileLocation
 
 from octoprint_discordremote import Command, DiscordRemotePlugin
-from octoprint_discordremote.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
+from octoprint_discordshim.embedbuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 file_list = {'local': {

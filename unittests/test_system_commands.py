@@ -3,7 +3,7 @@ from collections import OrderedDict
 from mock import mock
 
 from octoprint_discordremote.command_plugins.system_commands import SystemCommands
-from octoprint_discordremote.embedbuilder import COLOR_SUCCESS, COLOR_ERROR
+from octoprint_discordshim.embedbuilder import COLOR_SUCCESS, COLOR_ERROR
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 

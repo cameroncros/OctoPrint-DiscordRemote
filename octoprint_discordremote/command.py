@@ -16,11 +16,13 @@ from typing import TYPE_CHECKING, Tuple, List, Optional
 from discord.embeds import Embed
 from discord.file import File
 
+from proto.messages_pb2 import EmbedContent, Field
+
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin
 
 from octoprint_discordremote.command_plugins import plugin_list
-from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed, info_embed, upload_file
+from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
 
 
 class Command:
@@ -59,9 +61,9 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string, user=None) -> List[Tuple[Embed, File]]:
+    def parse_command(self, string, user=None) -> Optional[EmbedContent]:
         if not string:
-            return []
+            return None
 
         prefix_str = self.plugin.get_settings().get(["prefix"])
         prefix_len = len(prefix_str)
@@ -69,7 +71,7 @@ class Command:
         parts = re.split(r'\s+', string)
 
         if len(parts[0]) < prefix_len or prefix_str != parts[0][:prefix_len]:
-            return []
+            return None
 
         command_string = parts[0][prefix_len:]
 
@@ -88,10 +90,10 @@ class Command:
         path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
         path = os.path.abspath(path)
 
-        builder = EmbedBuilder()
-        builder.set_title('Files and Details')
-        builder.set_description('Download with /gettimelapse {filename}')
-        builder.set_author(name=self.plugin.get_printer_name())
+        builder = EmbedContent()
+        builder.title = 'Files and Details'
+        builder.description = 'Download with /gettimelapse {filename}'
+        builder.author = self.plugin.get_printer_name()
 
         baseurl = self.plugin.get_settings().get(["baseurl"])
         port = self.plugin.get_port()
@@ -111,23 +113,23 @@ class Command:
                     description += 'Download Path: %s\n' % \
                                    ("http://" + baseurl + "/downloads/timelapse/" + urllib.parse.quote(title))
 
-                    builder.add_field(title=title, text=description)
+                    builder.textfield.append(Field(title=title, text=description))
                 except Exception as e:
                     pass
 
-        return builder.get_embeds()
+        return builder
 
     def help(self):
-        builder = EmbedBuilder()
-        builder.set_title('Commands, Parameters and Description')
-        builder.set_author(self.plugin.get_printer_name())
+        builder = EmbedContent()
+        builder.title = 'Commands, Parameters and Description'
+        builder.author = self.plugin.get_printer_name()
 
         for command, details in self.command_dict.items():
-            builder.add_field(
+            builder.textfield.append(Field(
                 title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
-                text=details.get('description'))
+                text=details.get('description')))
 
-        return builder.get_embeds()
+        return builder
 
     def cancel_print(self):
         self.plugin.get_printer().cancel_print()
@@ -169,9 +171,9 @@ class Command:
         if baseurl is None or baseurl == "":
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
 
-        builder = EmbedBuilder()
-        builder.set_title('Files and Details')
-        builder.set_author(name=self.plugin.get_printer_name())
+        builder = EmbedContent()
+        builder.title = 'Files and Details'
+        builder.author = self.plugin.get_printer_name()
         file_list = self.get_flat_file_list()
         for details in file_list:
             description = ''
@@ -214,9 +216,9 @@ class Command:
             except:
                 pass
 
-            builder.add_field(title=title, text=description)
+            builder.textfield.append(Field(title=title, text=description))
 
-        return builder.get_embeds()
+        return builder
 
     def snapshot(self):
         snapshot = self.plugin.get_snapshot()

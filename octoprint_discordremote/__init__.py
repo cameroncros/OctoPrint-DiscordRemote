@@ -24,10 +24,9 @@ from octoprint.server import user_permission
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from octoprint_discordremote.embedbuilder import info_embed
-from octoprint_discordremote.libs import ipgetter
-from octoprint_discordremote.presence import Presence
-from .discordimpl import DiscordImpl
+from proto.messages_pb2 import EmbedContent, File
+from .discordlink import DiscordLink
+from .libs import ipgetter
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -47,7 +46,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         return dict(machinecode=dict(discordremote=allowed_list))
 
     def __init__(self):
-        self.discord: Optional[DiscordImpl] = None
+        self.discord: Optional[DiscordLink] = None
         self.command: Optional[Command] = None
         self.last_progress_message = None
         self.last_progress_percent = 0
@@ -161,14 +160,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord:
             self.discord.shutdown_discord()
 
-        self.discord = DiscordImpl(self._settings.get(['bottoken'], merged=True),
-                                   self._settings.get(['channelid'], merged=True),
-                                   self._logger,
-                                   self.command,
-                                   self.update_discord_status)
-        if self.presence is None:
-            self.presence = Presence()
-        self.presence.configure_presence(self, self.discord)
+        self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
+                                   self._settings.get(['channelid'], merged=True))
 
         self.notify_event("startup")
         if send_test:
@@ -358,23 +351,24 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return make_response("Failed to send message", 404)
 
     def unpack_message(self, data):
-        builder = embedbuilder.EmbedBuilder()
-        if 'title' in data:
-            builder.set_title(data['title'])
-        if 'author' in data:
-            builder.set_author(data['author'])
-        if 'color' in data:
-            builder.set_color(data['color'])
-        if 'description' in data:
-            builder.set_description(data['description'])
-        if 'image' in data:
-            b64image = data['image']
-            imagename = data.get('imagename', 'snapshot.png')
-            bytes = b64decode(b64image)
-            image = BytesIO(bytes)
-            builder.set_image((imagename, image))
-
-        self.discord.send(messages=builder.get_embeds())
+        # builder = embedbuilder.EmbedBuilder()
+        # if 'title' in data:
+        #     builder.set_title(data['title'])
+        # if 'author' in data:
+        #     builder.set_author(data['author'])
+        # if 'color' in data:
+        #     builder.set_color(data['color'])
+        # if 'description' in data:
+        #     builder.set_description(data['description'])
+        # if 'image' in data:
+        #     b64image = data['image']
+        #     imagename = data.get('imagename', 'snapshot.png')
+        #     bytes = b64decode(b64image)
+        #     image = BytesIO(bytes)
+        #     builder.set_image((imagename, image))
+        #
+        # self.discord.send(messages=builder.get_embeds())
+        pass
 
     def notify_event(self, event_id, data=None):
         self._logger.info("Received event: %s" % event_id)
@@ -508,26 +502,28 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if with_snapshot:
             snapshot = self.get_snapshot()
 
-        messages = info_embed(author=self.get_printer_name(),
-                              title=message,
-                              snapshot=snapshot)
-        self.discord.send(messages)
+        embed = EmbedContent()
+        embed.author = self.get_printer_name()
+        embed.title = message
+        if snapshot:
+            embed.snapshot = snapshot
+        self.discord.send(embed)
 
         # exec "after" script if any
         self.exec_script(event_id, "after")
 
-    def get_snapshot(self) -> Optional[Tuple[str, io.IOBase]]:
+    def get_snapshot(self) -> Optional[File]:
         if 'FAKE_SNAPSHOT' in os.environ:
             return self.get_snapshot_fake()
         else:
             return self.get_snapshot_camera()
 
     @staticmethod
-    def get_snapshot_fake() -> Optional[Tuple[str, io.IOBase]]:
+    def get_snapshot_fake() -> Optional[File]:
         fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
-        return ("snapshot.png", fl)
+        return File(filename="snapshot.png", data=fl.read())
 
-    def get_snapshot_camera(self) -> Optional[Tuple[str, io.IOBase]]:
+    def get_snapshot_camera(self) -> Optional[File]:
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
@@ -570,7 +566,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             snapshot = BytesIO()
             img.save(snapshot, 'png')
             snapshot.seek(0)
-        return "snapshot.png", snapshot
+        return File(filename="snapshot.png", data=snapshot.read())
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])

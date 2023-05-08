@@ -1,21 +1,16 @@
 from __future__ import unicode_literals
 
 import io
-import sys
 import time
 
-import logging
-import os
 import socket
-import unittest
 from asyncio import Event
 
-import yaml
 from mock import mock
 from discord import Embed, File
 
 from octoprint_discordremote.discordimpl import DiscordImpl
-from octoprint_discordremote.embedbuilder import EmbedBuilder
+from octoprint_discordshim.embedbuilder import EmbedBuilder
 from unittests.discordremotetestcase import DiscordRemoteTestCase
 
 import asyncio
