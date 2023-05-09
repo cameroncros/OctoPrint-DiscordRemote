@@ -24,16 +24,14 @@ MAX_NUM_FIELDS = 25
 
 def embed_simple(data: EmbedContent) -> List[Tuple[Embed, File]]:
     builder = EmbedBuilder()
+    builder.set_author(data.author)
+    builder.set_description(data.description)
     if data.color:
         builder.set_color(data.color)
     if data.title:
         builder.set_title(data.title)
-    if data.description:
-        builder.set_description(data.description)
     if data.snapshot:
         builder.set_image(filename=data.snapshot.filename, snapshot=data.snapshot.data)
-    if data.author:
-        builder.set_author(data.author)
     for field in data.textfield:
         builder.add_field(field.title, field.text, field.inline)
 
@@ -107,8 +105,8 @@ class EmbedBuilder:
         return self
 
     def set_description(self, description):
-        if description is None:
-            description = None
+        if description is None or description is "":
+            description = "description"
         elif len(description) > MAX_DESCRIPTION:
             description = description[0:MAX_DESCRIPTION - 3] + "..."
 
@@ -119,7 +117,7 @@ class EmbedBuilder:
 
     def set_author(self, name, url=None, icon_url=None):
         if name is None:
-            self.author = None
+            self.author = ""
             return self
         if len(name) > MAX_TITLE:
             name = name[0:MAX_TITLE - 3] + "..."
@@ -132,9 +130,9 @@ class EmbedBuilder:
 
     def add_field(self, title, text, inline=False):
         if title is None or len(title) == 0:
-            title = "DEVERROR: Passed an invalid title"
+            title = ""
         if text is None or len(text) == 0:
-            text = "DEVERROR: Passed an invalid text"
+            text = ""
 
         if len(title) > MAX_TITLE:
             title = title[0:MAX_TITLE - 3] + "..."

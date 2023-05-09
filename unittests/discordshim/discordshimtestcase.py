@@ -1,13 +1,11 @@
 import logging
 import os
-import random
-import threading
-
-import yaml
-from signal import SIGKILL
 import socket
+import threading
+import time
 from unittest import TestCase
 
+import yaml
 from _pytest.outcomes import fail
 
 from octoprint_discordshim.discordshim import DiscordShim
@@ -83,6 +81,7 @@ class DiscordShimTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        time.sleep(30)
         cls.client.close()
 
     @staticmethod
