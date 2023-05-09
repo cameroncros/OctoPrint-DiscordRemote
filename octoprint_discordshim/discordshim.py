@@ -30,6 +30,7 @@ def download_file(url) -> bytes:
 
 class DiscordShim:
     writer = None
+    running = True
 
     presence_enabled = True
     cycle_time = 5
@@ -72,9 +73,13 @@ class DiscordShim:
             self.logger.info("Sending msgs")
             asyncio.create_task(self.talk_to_octoprint())
             asyncio.create_task(self.update_presence())
+            asyncio.create_task(self.wait_for_shutdown())
 
     def run(self):
         self.client.run(self.bot_token)
+
+    def stop(self):
+        self.running = False
 
     async def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         channel = self.client.get_channel(int(self.channel_id))
@@ -157,3 +162,8 @@ class DiscordShim:
                 await self.send(upload_file(data.file))
             elif data.presence:
                 self.current_status = data.presence.presence
+
+    async def wait_for_shutdown(self):
+        while self.running:
+            await asyncio.sleep(1)
+        await self.client.close()
