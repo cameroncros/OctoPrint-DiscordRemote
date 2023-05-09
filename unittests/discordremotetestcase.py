@@ -1,14 +1,12 @@
 import logging
-import time
-from unittest import TestCase
 import os
+from typing import Optional
+from unittest import TestCase
 
-import mock
 import yaml
 from _pytest.outcomes import fail
-from discord import Embed
 
-from octoprint_discordremote import DiscordImpl
+from octoprint_discordremote import DiscordLink
 
 
 class TestLogger(logging.Logger):
@@ -38,7 +36,8 @@ class TestLogger(logging.Logger):
 
 
 class DiscordRemoteTestCase(TestCase):
-    discord = None
+    discord: Optional[DiscordLink] = None
+    snapshot_bytes: bytes = []
 
     @classmethod
     def setUpClass(cls):
@@ -47,33 +46,19 @@ class DiscordRemoteTestCase(TestCase):
             with open(config_file, "r") as config:
                 config = yaml.load(config.read(), Loader=yaml.SafeLoader)
 
-            cls.discord = DiscordImpl(bot_token=config['bottoken'],
-                                      channel_id=config['channelid'],
-                                      logger=TestLogger(),
-                                      command=mock.MagicMock,
-                                      status_callback=mock.MagicMock)
-            while not cls.discord.is_running:
-                time.sleep(1)
+            cls.discord = DiscordLink(bot_token=config['bottoken'],
+                                      channel_id=config['channelid'])
         except:
             fail("To test discord bot posting, you need to create a file "
                  "called config.yaml in the root directory with your bot "
                  "details. NEVER COMMIT THIS FILE.")
 
+        with open(cls._get_path("test_pattern.png"), "rb") as f:
+            cls.snapshot_bytes = f.read()
+
     @classmethod
     def tearDownClass(cls):
         cls.discord.shutdown_discord()
-
-    def assertBasicEmbed(self, embed: Embed, title, description, color, author):
-        if title is not None:
-            self.assertEqual(title, embed.title)
-        if description is not None:
-            self.assertEqual(description, embed.description)
-        if color is not None:
-            self.assertEqual(color, embed.color.value)
-        self.assertIsNotNone(embed.timestamp)
-        self.assertEqual(0, len(embed.fields))
-        if author is not None:
-            self.assertEqual(author, embed.author.name)
 
     @staticmethod
     def _get_path(filename):

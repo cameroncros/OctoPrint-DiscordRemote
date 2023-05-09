@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
 
+import io
+import math
+import os
+import zipfile
 from datetime import datetime
 from typing import Tuple, List, Optional
 
 from discord.embeds import Embed
 from discord.file import File
-import io
-import math
-import zipfile
-import os
 
 from octoprint_discordremote.responsebuilder import COLOR_INFO
-from proto.messages_pb2 import Response, EmbedContent
+from proto.messages_pb2 import EmbedContent, ProtoFile
 
 DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -30,8 +30,8 @@ def embed_simple(data: EmbedContent) -> List[Tuple[Embed, File]]:
         builder.set_title(data.title)
     if data.description:
         builder.set_description(data.description)
-    # if data.snapshot:
-    #     builder.set_image((data.snapshot.filename, io.BytesIO(data.snapshot.data)))
+    if data.snapshot:
+        builder.set_image(filename=data.snapshot.filename, snapshot=data.snapshot.data)
     if data.author:
         builder.set_author(data.author)
     for field in data.textfield:
@@ -40,22 +40,21 @@ def embed_simple(data: EmbedContent) -> List[Tuple[Embed, File]]:
     return builder.get_embeds()
 
 
-def upload_file(path, author=None) -> List[Tuple[Embed, File]]:
-    file_name = os.path.basename(path)
-    file_stat = os.stat(path)
-    file_size = file_stat.st_size
+def upload_file(file: ProtoFile, author=None) -> List[Tuple[Optional[Embed], Optional[File]]]:
+    file_name = file.filename
+    file_size = len(file.data)
 
     if file_size < DISCORD_MAX_FILE_SIZE:
         embeds = EmbedBuilder() \
             .set_author(author) \
             .set_title("Uploaded %s" % file_name) \
             .get_embeds()
-        embeds.append((None, File(open(path, 'rb'), file_name)))
+        embeds.append((None, File(io.BytesIO(file.data), file_name)))
         return embeds
 
     else:
         with zipfile.ZipFile("temp.zip", 'w') as zip_file:
-            zip_file.write(path, file_name)
+            zip_file.writestr(file_name, file.data)
 
         # Get the compressed file size
         file_stat = os.stat("temp.zip")
@@ -153,16 +152,16 @@ class EmbedBuilder:
         self.timestamp = enable
         return self
 
-    def set_image(self, snapshot: Tuple[str, io.IOBase]):
+    def set_image(self, snapshot: bytes, filename: str):
         if snapshot and len(snapshot) == 2:
-            self.embeds[-1].set_image(file=snapshot[1], filename=snapshot[0])
+            self.embeds[-1].set_image(file=snapshot, filename=filename)
         return self
 
-    def get_embeds(self) -> List[Tuple[Embed, File]]:
+    def get_embeds(self) -> List[Tuple[Optional[Embed], Optional[File]]]:
         # Finalise changes to embeds
         self.embeds[-1].timestamp = self.timestamp
 
-        embeds: List[Tuple[Embed, File]] = []
+        embeds: List[Tuple[Optional[Embed], Optional[File]]] = []
         for embed in self.embeds:
             embed.color = self.color
             if self.author:
@@ -240,11 +239,11 @@ class EmbedWrapper:
         self.embed_length += field_length
         return True
 
-    def set_image(self, file: io.IOBase, filename: str):
+    def set_image(self, file: bytes, filename: str):
         self.image_url = "attachment://%s" % filename
         self.file = File(file, filename=filename)
 
-    def get_embed(self) -> Tuple[Embed, File]:
+    def get_embed(self) -> Tuple[Optional[Embed], Optional[File]]:
         embed = Embed(title=self.title if self.title else "",
                       description=self.description if self.description else "",
                       colour=self.color,

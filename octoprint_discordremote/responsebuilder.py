@@ -1,6 +1,6 @@
-from typing import Optional, Tuple, io
+from typing import Optional
 
-from proto.messages_pb2 import EmbedContent, File
+from proto.messages_pb2 import EmbedContent, ProtoFile, Response
 
 COLOR_SUCCESS = 0x00AE86
 COLOR_ERROR = 0xE84A4A
@@ -11,33 +11,37 @@ def embed_simple(author: str,
                  title: Optional[str] = None,
                  description: Optional[str] = None,
                  color: Optional[int] = None,
-                 snapshot: Optional[File] = None) -> EmbedContent:
+                 snapshot: Optional[ProtoFile] = None) -> Response:
     content = EmbedContent()
     content.author = author
-    content.title = title
-    content.description = description
-    content.color = color
+    if title:
+        content.title = title
+    if description:
+        content.description = description
+    if color:
+        content.color = color
     if snapshot:
-        content.snapshot = snapshot
-    return content
+        content.snapshot.data = snapshot.data
+        content.snapshot.filename = snapshot.filename
+    return Response(embed=content)
 
 
 def success_embed(author: str,
                   title: Optional[str] = None,
                   description: Optional[str] = None,
-                  snapshot: Optional[File] = None) -> EmbedContent:
+                  snapshot: Optional[ProtoFile] = None) -> Response:
     return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
 
 
 def error_embed(author: str,
                 title: Optional[str] = None,
                 description: Optional[str] = None,
-                snapshot: Optional[File] = None) -> EmbedContent:
+                snapshot: Optional[ProtoFile] = None) -> Response:
     return embed_simple(author, title, description, COLOR_ERROR, snapshot)
 
 
 def info_embed(author: str,
                title: Optional[str] = None,
                description: Optional[str] = None,
-               snapshot: Optional[File] = None) -> EmbedContent:
+               snapshot: Optional[ProtoFile] = None) -> Response:
     return embed_simple(author, title, description, COLOR_INFO, snapshot)

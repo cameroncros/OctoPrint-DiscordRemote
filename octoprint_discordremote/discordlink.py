@@ -12,10 +12,11 @@ class DiscordLink:
     def __init__(self, bot_token, channel_id):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(10)
-        server.bind(('127.0.0.1', 23456))
+        server.bind(('127.0.0.1', 0))
+        sock_details = server.getsockname()
         server.listen()
 
-        self.start_discordshim(bot_token, channel_id)
+        self.start_discordshim(bot_token, channel_id, sock_details[1])
 
         try:
             self.client, _ = server.accept()
@@ -23,10 +24,11 @@ class DiscordLink:
         except socket.timeout:
             pass
 
-    def start_discordshim(self, bot_token, channel_id):
+    def start_discordshim(self, bot_token: str, channel_id: str, port: int):
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = bot_token
         my_env["CHANNEL_ID"] = channel_id
+        my_env["DISCORD_LINK_PORT"] = str(port)
         self.process = subprocess.Popen(["python", "-m", "octoprint_discordshim"], env=my_env)
 
     def shutdown_discord(self):

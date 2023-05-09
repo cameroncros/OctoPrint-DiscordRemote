@@ -12,11 +12,9 @@ import subprocess
 
 from octoprint.printer import InvalidFileLocation, InvalidFileType
 
-from typing import TYPE_CHECKING, Tuple, List, Optional
-from discord.embeds import Embed
-from discord.file import File
+from typing import TYPE_CHECKING, List, Optional
 
-from proto.messages_pb2 import EmbedContent, Field
+from proto.messages_pb2 import EmbedContent, TextField, ProtoFile, Response
 
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin
@@ -61,7 +59,7 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string, user=None) -> Optional[EmbedContent]:
+    def parse_command(self, string, user=None) -> Optional[Response]:
         if not string:
             return None
 
@@ -86,7 +84,7 @@ class Command:
         else:
             return command['cmd']()
 
-    def timelapse(self):
+    def timelapse(self) -> Optional[Response]:
         path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
         path = os.path.abspath(path)
 
@@ -113,30 +111,30 @@ class Command:
                     description += 'Download Path: %s\n' % \
                                    ("http://" + baseurl + "/downloads/timelapse/" + urllib.parse.quote(title))
 
-                    builder.textfield.append(Field(title=title, text=description))
+                    builder.textfield.append(TextField(title=title, text=description))
                 except Exception as e:
                     pass
 
-        return builder
+        return Response(embed=builder)
 
-    def help(self):
+    def help(self) -> Optional[Response]:
         builder = EmbedContent()
         builder.title = 'Commands, Parameters and Description'
         builder.author = self.plugin.get_printer_name()
 
         for command, details in self.command_dict.items():
-            builder.textfield.append(Field(
+            builder.textfield.append(TextField(
                 title='%s %s' % (self.plugin.get_settings().get(["prefix"]) + command, details.get('params') or ''),
                 text=details.get('description')))
 
-        return builder
+        return Response(embed=builder)
 
-    def cancel_print(self):
+    def cancel_print(self) -> Optional[Response]:
         self.plugin.get_printer().cancel_print()
         return error_embed(author=self.plugin.get_printer_name(),
                            title='Print aborted')
 
-    def start_print(self, params):
+    def start_print(self, params) -> Optional[Response]:
         if len(params) != 2:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of arguments',
@@ -165,7 +163,7 @@ class Command:
                              title='Successfully started print',
                              description=file['path'])
 
-    def list_files(self):
+    def list_files(self) -> Optional[Response]:
         port = self.plugin.get_port()
         baseurl = self.plugin.get_settings().get(["baseurl"])
         if baseurl is None or baseurl == "":
@@ -216,25 +214,25 @@ class Command:
             except:
                 pass
 
-            builder.textfield.append(Field(title=title, text=description))
+            builder.textfield.append(TextField(title=title, text=description))
 
-        return builder
+        return Response(embed=builder)
 
-    def snapshot(self):
+    def snapshot(self) -> Optional[Response]:
         snapshot = self.plugin.get_snapshot()
         if snapshot:
             return info_embed(author=self.plugin.get_printer_name(),
                               snapshot=snapshot)
         return None
 
-    def find_file(self, file_name):
+    def find_file(self, file_name) -> Optional[str]:
         flat_filelist = self.get_flat_file_list()
         for file in flat_filelist:
             if file_name.upper() in file.get('path').upper():
                 return file
         return None
 
-    def get_flat_file_list(self):
+    def get_flat_file_list(self) -> List[str]:
         file_list = self.plugin.get_file_manager().list_files(recursive=True)
         flat_filelist = []
         for (location, files) in file_list.items():
@@ -254,7 +252,7 @@ class Command:
                 details['location'] = location
                 file_array.append(details)
 
-    def connect(self, params):
+    def connect(self, params) -> Optional[Response]:
         if len(params) > 3:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Too many parameters',
@@ -290,7 +288,7 @@ class Command:
                            description='try: "%sconnect [port] [baudrate]"' % self.plugin.get_settings().get(
                                ["prefix"]))
 
-    def disconnect(self):
+    def disconnect(self) -> Optional[Response]:
         if not self.plugin.get_printer().is_operational():
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Printer is not connected')
@@ -304,25 +302,26 @@ class Command:
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Disconnected from printer')
 
-    def status(self):
-        builder = EmbedBuilder()
-        builder.set_title('Current Status')
-        builder.set_author(name=self.plugin.get_printer_name())
+    def status(self) -> Optional[Response]:
+        builder = EmbedContent()
+        builder.title = 'Current Status'
+        builder.author = self.plugin.get_printer_name()
 
         if self.plugin.get_settings().get(['show_local_ip'], merged=True) != 'off':
             ip_addr = self.plugin.get_ip_address()
             if ip_addr != '127.0.0.1':
-                builder.add_field(title='Local IP', text=ip_addr, inline=True)
+                builder.textfield.append(TextField(title='Local IP', text=ip_addr, inline=True))
 
         if self.plugin.get_settings().get(['show_external_ip'], merged=True) != 'off':
-            builder.add_field(title='External IP', text=self.plugin.get_external_ip_address(), inline=True)
+            builder.textfield.append(
+                TextField(title='External IP', text=self.plugin.get_external_ip_address(), inline=True))
 
         operational = self.plugin.get_printer().is_operational()
-        builder.add_field(title='Operational', text='Yes' if operational else 'No', inline=True)
+        builder.textfield.append(TextField(title='Operational', text='Yes' if operational else 'No', inline=True))
         current_data = self.plugin.get_printer().get_current_data()
 
         if current_data.get('currentZ'):
-            builder.add_field(title='Current Z', text=str(current_data['currentZ']), inline=True)
+            builder.textfield.append(TextField(title='Current Z', text=str(current_data['currentZ']), inline=True))
         if operational:
             temperatures = self.plugin.get_printer().get_current_temperatures()
             for heater in temperatures.keys():
@@ -330,66 +329,75 @@ class Command:
                     continue
                 if temperatures[heater]['actual'] is None or len(str(temperatures[heater]['actual'])) == 0:
                     continue
-                builder.add_field(title='Extruder Temp (%s)' % heater,
-                                  text=str(temperatures[heater]['actual']),
-                                  inline=True)
+                builder.textfield.append(TextField(title='Extruder Temp (%s)' % heater,
+                                                   text=str(temperatures[heater]['actual']),
+                                                   inline=True))
 
             if temperatures['bed']['actual']:
-                builder.add_field(title='Bed Temp', text=str(temperatures['bed']['actual']), inline=True)
+                builder.textfield.append(
+                    TextField(title='Bed Temp', text=str(temperatures['bed']['actual']), inline=True))
 
             printing = self.plugin.get_printer().is_printing()
-            builder.add_field(title='Printing', text='Yes' if printing else 'No', inline=True)
+            builder.textfield.append(TextField(title='Printing', text='Yes' if printing else 'No', inline=True))
             if printing:
-                builder.add_field(title='File', text=str(current_data['job']['file']['name']), inline=True)
+                builder.textfield.append(
+                    TextField(title='File', text=str(current_data['job']['file']['name']), inline=True))
                 completion = current_data['progress']['completion']
                 if completion:
-                    builder.add_field(title='Progress', text='%d%%' % completion, inline=True)
+                    builder.textfield.append(TextField(title='Progress', text='%d%%' % completion, inline=True))
 
-                builder.add_field(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True)
-                builder.add_field(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True)
-                builder.add_field(title='ETA', text=self.plugin.get_print_eta(), inline=True)
+                builder.textfield.append(
+                    TextField(title='Time Spent', text=self.plugin.get_print_time_spent(), inline=True))
+                builder.textfield.append(
+                    TextField(title='Time Remaining', text=self.plugin.get_print_time_remaining(), inline=True))
+                builder.textfield.append(TextField(title='ETA', text=self.plugin.get_print_eta(), inline=True))
 
         try:
             cmd_response = subprocess.Popen(['vcgencmd', 'get_throttled'], stdout=subprocess.PIPE).communicate()
             throttled_string = cmd_response[0].decode().split('=')[1].strip()
             throttled_value = int(throttled_string, 0)
             if throttled_value & (1 << 0):
-                builder.add_field(title='WARNING', text="PI is under-voltage", inline=True)
+                builder.textfield.append(TextField(title='WARNING', text="PI is under-voltage", inline=True))
             if throttled_value & (1 << 1):
-                builder.add_field(title='WARNING', text="PI has capped it's ARM frequency", inline=True)
+                builder.textfield.append(
+                    TextField(title='WARNING', text="PI has capped it's ARM frequency", inline=True))
             if throttled_value & (1 << 2):
-                builder.add_field(title='WARNING', text="PI is currently throttled", inline=True)
+                builder.textfield.append(TextField(title='WARNING', text="PI is currently throttled", inline=True))
             if throttled_value & (1 << 3):
-                builder.add_field(title='WARNING', text="PI has reached temperature limit", inline=True)
+                builder.textfield.append(
+                    TextField(title='WARNING', text="PI has reached temperature limit", inline=True))
             if throttled_value & (1 << 16):
-                builder.add_field(title='WARNING', text="PI Under-voltage has occurred", inline=True)
+                builder.textfield.append(TextField(title='WARNING', text="PI Under-voltage has occurred", inline=True))
             if throttled_value & (1 << 17):
-                builder.add_field(title='WARNING', text="PI ARM frequency capped has occurred", inline=True)
+                builder.textfield.append(
+                    TextField(title='WARNING', text="PI ARM frequency capped has occurred", inline=True))
             if throttled_value & (1 << 18):
-                builder.add_field(title='WARNING', text="PI Throttling has occurred", inline=True)
+                builder.textfield.append(TextField(title='WARNING', text="PI Throttling has occurred", inline=True))
             if throttled_value & (1 << 19):
-                builder.add_field(title='WARNING', text="PI temperature limit has occurred", inline=True)
+                builder.textfield.append(
+                    TextField(title='WARNING', text="PI temperature limit has occurred", inline=True))
         except OSError as e:
             pass
 
         snapshot = self.plugin.get_snapshot()
         if snapshot:
-            builder.set_image(snapshot)
-        return builder.get_embeds()
+            builder.snapshot.data = snapshot.data
+            builder.snapshot.filename = snapshot.filename
+        return Response(embed=builder)
 
-    def pause(self):
+    def pause(self) -> Optional[Response]:
         self.plugin.get_printer().pause_print()
         snapshot = self.plugin.get_snapshot()
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Print paused', snapshot=snapshot)
 
-    def resume(self):
+    def resume(self) -> Optional[Response]:
         self.plugin.get_printer().resume_print()
         snapshot = self.plugin.get_snapshot()
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Print resumed', snapshot=snapshot)
 
-    def download_file(self, filename, url, user):
+    def download_file(self, filename, url, user) -> Optional[Response]:
         if user and not self.check_perms('upload', user):
             return error_embed(author=self.plugin.get_printer_name(),
                                title="Permission Denied")
@@ -404,7 +412,7 @@ class Command:
                              title='File Received',
                              description=filename)
 
-    def unzip(self, params):
+    def unzip(self, params) -> Optional[Response]:
         if len(params) != 2:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of arguments',
@@ -456,7 +464,7 @@ class Command:
                                        ["prefix"]), self.plugin.get_settings().get(
                                        ["prefix"])))
 
-        if unzippable == None:
+        if unzippable is None:
             return error_embed(author=self.plugin.get_printer_name(), title="File %s not found." % file_name)
 
         try:
@@ -490,12 +498,12 @@ class Command:
         return success_embed(author=self.plugin.get_printer_name(), title='File(s) unzipped. ',
                              description=str(filestounpack))
 
-    def mute(self):
+    def mute(self) -> Optional[Response]:
         self.plugin.mute()
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Notifications Muted')
 
-    def unmute(self):
+    def unmute(self) -> Optional[Response]:
         self.plugin.unmute()
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Notifications Unmuted')
@@ -522,7 +530,7 @@ class Command:
                 return True
         return False
 
-    def gcode(self, params):
+    def gcode(self, params) -> Optional[Response]:
         if not self.plugin.get_printer().is_operational():
             return error_embed(author=self.plugin.get_printer_name(),
                                title="Printer not connected",
@@ -551,17 +559,18 @@ class Command:
         return success_embed(author=self.plugin.get_printer_name(),
                              title="Sent script")
 
-    def getfile(self, params):
+    def getfile(self, params) -> Optional[Response]:
         filename = " ".join(params[1:])
         foundfile = self.find_file(filename)
         if foundfile is None:
             return error_embed(author=self.plugin.get_printer_name(),
                                title="Failed to find file matching the name given")
         file_path = self.plugin.get_file_manager().path_on_disk(foundfile['location'], foundfile['path'])
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+        return Response(file=ProtoFile(data=file_data, filename=file_path))
 
-        return upload_file(file_path)
-
-    def gettimelapse(self, params):
+    def gettimelapse(self, params) -> Optional[Response]:
         filename = " ".join(params[1:]).upper()
         path = os.path.join(os.getcwd(), self.plugin._data_folder, '..', '..', 'timelapse')
         path = os.path.abspath(path)
@@ -570,7 +579,9 @@ class Command:
             for name in files:
                 file_path = os.path.join(root, name)
                 if filename in file_path.upper():
-                    return upload_file(file_path)
+                    with open(file_path, 'rb') as f:
+                        file_data = f.read()
+                    return Response(file=ProtoFile(data=file_data, filename=file_path))
 
         return error_embed(author=self.plugin.get_printer_name(),
                            title="Failed to find file matching the name given")

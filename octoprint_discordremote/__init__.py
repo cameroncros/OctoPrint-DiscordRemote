@@ -24,7 +24,7 @@ from octoprint.server import user_permission
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from proto.messages_pb2 import EmbedContent, File
+from proto.messages_pb2 import EmbedContent, ProtoFile
 from .discordlink import DiscordLink
 from .libs import ipgetter
 
@@ -512,18 +512,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # exec "after" script if any
         self.exec_script(event_id, "after")
 
-    def get_snapshot(self) -> Optional[File]:
+    def get_snapshot(self) -> Optional[ProtoFile]:
         if 'FAKE_SNAPSHOT' in os.environ:
             return self.get_snapshot_fake()
         else:
             return self.get_snapshot_camera()
 
     @staticmethod
-    def get_snapshot_fake() -> Optional[File]:
+    def get_snapshot_fake() -> Optional[ProtoFile]:
         fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
-        return File(filename="snapshot.png", data=fl.read())
+        return ProtoFile(filename="snapshot.png", data=fl.read())
 
-    def get_snapshot_camera(self) -> Optional[File]:
+    def get_snapshot_camera(self) -> Optional[ProtoFile]:
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
@@ -566,7 +566,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             snapshot = BytesIO()
             img.save(snapshot, 'png')
             snapshot.seek(0)
-        return File(filename="snapshot.png", data=snapshot.read())
+        return ProtoFile(filename="snapshot.png", data=snapshot.read())
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
