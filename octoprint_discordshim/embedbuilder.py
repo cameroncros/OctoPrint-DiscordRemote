@@ -151,7 +151,7 @@ class EmbedBuilder:
         return self
 
     def set_image(self, snapshot: bytes, filename: str):
-        if snapshot and len(snapshot) == 2:
+        if snapshot and filename:
             self.embeds[-1].set_image(file=snapshot, filename=filename)
         return self
 
@@ -239,7 +239,7 @@ class EmbedWrapper:
 
     def set_image(self, file: bytes, filename: str):
         self.image_url = "attachment://%s" % filename
-        self.file = File(file, filename=filename)
+        self.file = File(fp=io.BytesIO(file), filename=filename)
 
     def get_embed(self) -> Tuple[Optional[Embed], Optional[File]]:
         embed = Embed(title=self.title if self.title else "",
@@ -258,35 +258,3 @@ class EmbedWrapper:
 
     def get_files(self):
         return self.files
-
-    # def __str__(self):
-    #     embed = self.get_embed()
-    #     string = "\n---------------------------------\n"
-    #     if 'author' in embed:
-    #         string += "~~Author~~~~~~~~~~~~~~~~~~\n"
-    #         if 'name' in embed['author']:
-    #             string += "\tAuthor Name: %s\n" % embed['author']['name']
-    #         if 'url' in embed['author']:
-    #             string += "\tAuthor Url: %s\n" % embed['author']['url']
-    #         if 'icon_url' in embed['author']:
-    #             string += "\tAuthor Icon: %s\n" % embed['author']['icon_url']
-    #         string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    #     if 'color' in embed:
-    #         string += "Color: %x\n" % embed['color']
-    #     if 'title' in embed:
-    #         string += "Title: %s\n" % embed['title']
-    #     if 'description' in embed:
-    #         string += "Description: %s\n" % embed['description']
-    #     for field in embed['fields']:
-    #         string += "~~~Field~~~~~~~~~~~~~~~~~~\n"
-    #         if 'name' in field:
-    #             string += "\tField Name: %s\n" % field['name']
-    #         if 'value' in field:
-    #             string += "\tField Value: %s\n" % field['value']
-    #         string += "~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    #     if 'image' in embed:
-    #         string += "Attached image: %s\n" % embed['image']['url']
-    #     if 'timestamp' in embed:
-    #         string += "Timestamp: %s\n" % embed['timestamp']
-    #     string += "---------------------------------\n"
-    #     return string

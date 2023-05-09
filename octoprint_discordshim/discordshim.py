@@ -10,12 +10,22 @@ from logging import Logger
 from typing import Optional, Tuple, List
 
 import discord
+import requests as requests
 import yaml
 from discord.embeds import Embed
 from discord.file import File
 
-from octoprint_discordremote.proto.messages_pb2 import Request, Response
+from octoprint_discordremote.proto.messages_pb2 import Request, Response, ProtoFile
 from octoprint_discordshim.embedbuilder import embed_simple, upload_file
+
+
+def download_file(url) -> bytes:
+    data = b''
+    r = requests.get(url, stream=True)
+    for chunk in r.iter_content(chunk_size=1024):
+        if chunk:  # filter out keep-alive new chunks
+            data += chunk
+    return data
 
 
 class DiscordShim:
@@ -97,13 +107,15 @@ class DiscordShim:
             url = upload.url
 
             if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
-                messages = self.command.download_file(filename, url, user)
-                await self.send(messages)
+                data = download_file(url)
+                cmdproto = Request(file=ProtoFile(data=data, filename=filename), user=user).SerializeToString()
+                self.writer.write(len(cmdproto).to_bytes(length=4, byteorder='little'))
+                self.writer.write(cmdproto)
 
         if len(message.content) == 0:
             return
 
-        cmdproto = Request(command=message.content).SerializeToString()
+        cmdproto = Request(command=message.content, user=user).SerializeToString()
         self.writer.write(len(cmdproto).to_bytes(length=4, byteorder='little'))
         self.writer.write(cmdproto)
 
@@ -131,6 +143,9 @@ class DiscordShim:
 
         while True:
             length_bytes = await reader.read(4)
+            if len(length_bytes) == 0:
+                return
+
             length = int.from_bytes(length_bytes, byteorder='little')
 
             data_bytes = await reader.read(length)

@@ -59,7 +59,7 @@ class Command:
         for command_plugin in plugin_list:
             command_plugin.setup(self, plugin)
 
-    def parse_command(self, string, user=None) -> Optional[Response]:
+    def parse_command(self, string, user: int = 0) -> Optional[Response]:
         if not string:
             return None
 
@@ -397,20 +397,17 @@ class Command:
         return success_embed(author=self.plugin.get_printer_name(),
                              title='Print resumed', snapshot=snapshot)
 
-    def download_file(self, filename, url, user) -> Optional[Response]:
+    def download_file(self, file: ProtoFile, user: int) -> Optional[Response]:
         if user and not self.check_perms('upload', user):
             return error_embed(author=self.plugin.get_printer_name(),
                                title="Permission Denied")
-        upload_file_path = self.plugin.get_file_manager().path_on_disk('local', filename)
+        upload_file_path = self.plugin.get_file_manager().path_on_disk('local', file.filename)
 
-        r = requests.get(url, stream=True)
         with open(upload_file_path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
+            f.write(file.data)
         return success_embed(author=self.plugin.get_printer_name(),
                              title='File Received',
-                             description=filename)
+                             description=file.filename)
 
     def unzip(self, params) -> Optional[Response]:
         if len(params) != 2:

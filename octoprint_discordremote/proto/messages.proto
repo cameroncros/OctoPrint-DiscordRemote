@@ -25,12 +25,13 @@ message Presence {
 }
 
 message Request {
-    optional string command = 1;
-    optional ProtoFile file = 3;
+    string command = 1;
+    int64 user = 2;
+    ProtoFile file = 3;
 }
 
 message Response {
-    optional EmbedContent embed = 1;
-    optional Presence presence = 2;
-    optional ProtoFile file = 3;
+    EmbedContent embed = 1;
+    Presence presence = 2;
+    ProtoFile file = 3;
 }

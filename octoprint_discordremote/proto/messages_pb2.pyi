@@ -36,12 +36,14 @@ class ProtoFile(_message.Message):
     def __init__(self, data: _Optional[bytes] = ..., filename: _Optional[str] = ...) -> None: ...
 
 class Request(_message.Message):
-    __slots__ = ["command", "file"]
+    __slots__ = ["command", "file", "user"]
     COMMAND_FIELD_NUMBER: _ClassVar[int]
     FILE_FIELD_NUMBER: _ClassVar[int]
+    USER_FIELD_NUMBER: _ClassVar[int]
     command: str
     file: ProtoFile
-    def __init__(self, command: _Optional[str] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
+    user: int
+    def __init__(self, command: _Optional[str] = ..., user: _Optional[int] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["embed", "file", "presence"]

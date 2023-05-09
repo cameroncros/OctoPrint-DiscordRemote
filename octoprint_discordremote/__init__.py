@@ -163,6 +163,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
                                    self._settings.get(['channelid'], merged=True),
                                    self.command)
+        self.discord.start_discord()
 
         self.notify_event("startup")
         if send_test:
@@ -518,7 +519,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         embed.author = self.get_printer_name()
         embed.title = message
         if snapshot:
-            embed.snapshot = snapshot
+            embed.snapshot.filename = snapshot.filename
+            embed.snapshot.data = snapshot.data
 
         self.discord.send(Response(embed=embed))
 
@@ -533,8 +535,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     @staticmethod
     def get_snapshot_fake() -> Optional[ProtoFile]:
-        fl = open(os.environ['FAKE_SNAPSHOT'], "rb")
-        return ProtoFile(filename="snapshot.png", data=fl.read())
+        with open(os.environ['FAKE_SNAPSHOT'], "rb") as f:
+            file_data = f.read()
+        return ProtoFile(filename="snapshot.png", data=file_data)
 
     def get_snapshot_camera(self) -> Optional[ProtoFile]:
         snapshot = None

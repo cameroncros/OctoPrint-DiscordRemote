@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import signal
 import socket
 import threading
 import time
@@ -11,6 +12,13 @@ from _pytest.outcomes import fail
 
 from octoprint_discordshim.discordshim import DiscordShim
 
+
+"""
+When in fork mode, it is not really easy to debug, but the tests will terminate correctly.
+
+In non-fork mode, you can debug errors, but the tests will not terminate.
+"""
+FORK = False
 
 class TestLogger(logging.Logger):
     def __init__(self):
@@ -38,6 +46,7 @@ class TestLogger(logging.Logger):
         print("CRITICAL: %s" % msg, args)
 
 class DiscordShimTestCase(TestCase):
+    pid: int
     discord: DiscordShim
     client: socket
     thread: threading.Thread
@@ -66,8 +75,14 @@ class DiscordShimTestCase(TestCase):
             sock_details = server.getsockname()
             server.listen()
 
-            cls.thread = threading.Thread(target=cls.discordshim_function, args=(bot_token, channel_id, sock_details[1]))
-            cls.thread.start()
+            if FORK:
+                cls.pid = os.fork()
+                if cls.pid > 0:
+                    DiscordShim().run()
+                    exit(0)
+            else:
+                cls.thread = threading.Thread(target=cls.discordshim_function, args=(bot_token, channel_id, sock_details[1]))
+                cls.thread.start()
 
             try:
                 cls.client, _ = server.accept()
@@ -84,7 +99,10 @@ class DiscordShimTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        time.sleep(5)
+        time.sleep(100)
+        if FORK and cls.pid > 0:
+            os.kill(cls.pid, signal.SIGKILL)
+
         # TODO work out how to properly kill discord, or move it back to its own process.
 
     @staticmethod

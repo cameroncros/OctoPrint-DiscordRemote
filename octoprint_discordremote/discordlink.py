@@ -25,6 +25,13 @@ class DiscordLink:
 
         self.start_discord()
 
+    def spawn_discordshim(self, port: int):
+        my_env = os.environ.copy()
+        my_env["BOT_TOKEN"] = self.bot_token
+        my_env["CHANNEL_ID"] = self.channel_id
+        my_env["DISCORD_LINK_PORT"] = str(port)
+        self.process = subprocess.Popen(["python", "-m", "octoprint_discordshim"], env=my_env)
+
     def start_discord(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(10)
@@ -32,11 +39,7 @@ class DiscordLink:
         sock_details = server.getsockname()
         server.listen()
 
-        my_env = os.environ.copy()
-        my_env["BOT_TOKEN"] = self.bot_token
-        my_env["CHANNEL_ID"] = self.channel_id
-        my_env["DISCORD_LINK_PORT"] = str(sock_details[1])
-        self.process = subprocess.Popen(["python", "-m", "octoprint_discordshim"], env=my_env)
+        self.spawn_discordshim(sock_details[1])
 
         while self.client is None:
             try:
@@ -84,7 +87,10 @@ class DiscordLink:
                 data.ParseFromString(data_bytes)
 
                 if data.command:
-                    messages = self.command.parse_command(data.command)
+                    messages = self.command.parse_command(data.command, data.user)
+                    self.send(messages=messages)
+                elif data.file:
+                    messages = self.command.download_file(data.file, data.user)
                     self.send(messages=messages)
             except TimeoutError:
                 continue
