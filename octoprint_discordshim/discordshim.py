@@ -6,9 +6,7 @@
 import asyncio
 import os
 import re
-from asyncio import Event
 from logging import Logger
-from threading import Thread
 from typing import Optional, Tuple, List
 
 import discord
@@ -16,16 +14,27 @@ import yaml
 from discord.embeds import Embed
 from discord.file import File
 
-from octoprint_discordshim.embedbuilder import embed_simple, upload_file
 from octoprint_discordremote.proto.messages_pb2 import Request, Response
+from octoprint_discordshim.embedbuilder import embed_simple, upload_file
 
 
 class DiscordShim:
     writer = None
 
-    def __init__(self):
-        config = os.environ.get('CONFIG', None)
+    presence_enabled = True
+    cycle_time = 5
+    command_prefix = '/'
+    current_status = ""
+    presence_cycle = {
+        0: "{}help".format(command_prefix),
+        1: current_status
+    }
+    presence_cycle_id = 0
 
+    def __init__(self):
+        self.logger = Logger("discordshim")
+
+        config = os.environ.get('CONFIG', None)
         if __debug__ and config:
             with open(config) as f:
                 data = yaml.load(f)
@@ -42,16 +51,6 @@ class DiscordShim:
             self.port = int(os.environ['DISCORD_LINK_PORT'])
             os.environ['DISCORD_LINK_PORT'] = ''
 
-        self.loop = None
-        self.client: Optional[discord.Client] = None
-        self.running_thread: Optional[Thread] = None
-        self.message_queue: List[List[Tuple[Embed, File]]] = []
-        self.process_queue: Optional[Event] = None
-        self.processsing_messages = False
-        self.is_running = True
-
-        self.logger = Logger("discordshim")
-
         self.client = discord.Client(intents=discord.Intents.all())
 
         @self.client.event
@@ -62,7 +61,9 @@ class DiscordShim:
         async def on_ready():
             self.logger.info("Sending msgs")
             asyncio.create_task(self.talk_to_octoprint())
+            asyncio.create_task(self.update_presence())
 
+    def run(self):
         self.client.run(self.bot_token)
 
     async def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
@@ -96,7 +97,6 @@ class DiscordShim:
             url = upload.url
 
             if re.match(r"^[\w,\s-]+\.(?:g|gco|gcode|zip(?:\.[\d]*)?)$", filename):
-
                 messages = self.command.download_file(filename, url, user)
                 await self.send(messages)
 
@@ -107,8 +107,23 @@ class DiscordShim:
         self.writer.write(len(cmdproto).to_bytes(length=4, byteorder='little'))
         self.writer.write(cmdproto)
 
-    async def get_messages(self, client):
-        pass
+    async def update_presence(self):
+        await asyncio.sleep(5)
+        while True:
+            if self.presence_enabled:
+                self.presence_cycle_id += 1
+                if self.presence_cycle_id == len(self.presence_cycle):
+                    self.presence_cycle_id = 0
+
+                await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing,
+                                                                            name=self.presence_cycle[
+                                                                                self.presence_cycle_id]))
+            else:
+
+                await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing,
+                                                                            name=None))
+
+            await asyncio.sleep(self.cycle_time)
 
     async def talk_to_octoprint(self):
         reader, self.writer = await asyncio.open_connection(
@@ -126,4 +141,4 @@ class DiscordShim:
             elif data.file:
                 await self.send(upload_file(data.file))
             elif data.presence:
-                await self.update_presence(data.presence)
+                self.current_status = data.presence.presence

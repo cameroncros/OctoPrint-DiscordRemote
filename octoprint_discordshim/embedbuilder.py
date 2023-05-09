@@ -105,8 +105,8 @@ class EmbedBuilder:
         return self
 
     def set_description(self, description):
-        if description is None or description is "":
-            description = "description"
+        if description is None or description == "":
+            description = "\u200b"
         elif len(description) > MAX_DESCRIPTION:
             description = description[0:MAX_DESCRIPTION - 3] + "..."
 

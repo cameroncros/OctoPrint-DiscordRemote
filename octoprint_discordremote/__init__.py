@@ -289,24 +289,31 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         if event == "PrinterStateChanged":
             if payload["state_id"] == "OPERATIONAL":
+                self.discord.update_precence("Printer Operational")
                 return self.notify_event("printer_state_operational")
             elif payload["state_id"] == "ERROR":
+                self.discord.update_precence("Printer Errored")
                 return self.notify_event("printer_state_error")
             elif payload["state_id"] == "UNKNOWN":
                 return self.notify_event("printer_state_unknown")
 
         if event == "PrintStarted":
+            self.discord.update_precence("Print Started")
             self.start_periodic_reporting()
             return self.notify_event("printing_started", payload)
         if event == "PrintPaused":
+            self.discord.update_precence("Print Paused")
             return self.notify_event("printing_paused", payload)
         if event == "PrintResumed":
+            self.discord.update_precence("Print Resumed")
             return self.notify_event("printing_resumed", payload)
         if event == "PrintCancelled":
+            self.discord.update_precence("Complete")
             return self.notify_event("printing_cancelled", payload)
 
         if event == "PrintDone":
             self.stop_periodic_reporting()
+            self.discord.update_precence("Complete")
             payload['time_formatted'] = timedelta(seconds=int(payload["time"]))
             return self.notify_event("printing_done", payload)
 
@@ -316,6 +323,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # Avoid sending duplicate percentage progress messages
         if progress != self.last_progress_percent:
             self.last_progress_percent = progress
+
+            self.discord.update_precence(f"Print Progress: {progress}%")
             self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
@@ -354,23 +363,23 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.discord.send(messages=messages)
 
     def unpack_message(self, data):
-        # builder = embedbuilder.EmbedBuilder()
-        # if 'title' in data:
-        #     builder.set_title(data['title'])
-        # if 'author' in data:
-        #     builder.set_author(data['author'])
-        # if 'color' in data:
-        #     builder.set_color(data['color'])
-        # if 'description' in data:
-        #     builder.set_description(data['description'])
-        # if 'image' in data:
-        #     b64image = data['image']
-        #     imagename = data.get('imagename', 'snapshot.png')
-        #     bytes = b64decode(b64image)
-        #     image = BytesIO(bytes)
-        #     builder.set_image((imagename, image))
-        #
-        # self.discord.send(messages=builder.get_embeds())
+        builder = EmbedContent()
+        if 'title' in data:
+            builder.title = data['title']
+        if 'author' in data:
+            builder.author = data['author']
+        if 'color' in data:
+            builder.color = data['color']
+        if 'description' in data:
+            builder.description = data['description']
+        if 'image' in data:
+            b64image = data['image']
+            imagename = data.get('imagename', 'snapshot.png')
+            data = b64decode(b64image)
+            builder.snapshot.filename = imagename
+            builder.snapshot.data = data
+
+        self.discord.send(messages=Response(embed=builder))
         pass
 
     def notify_event(self, event_id, data=None):

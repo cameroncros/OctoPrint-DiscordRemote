@@ -8,13 +8,14 @@ COLOR_INFO = 0xF2E82B
 
 
 def embed_simple(author: str,
-                 description: str,
+                 description: Optional[str] = None,
                  title: Optional[str] = None,
                  color: Optional[int] = None,
                  snapshot: Optional[ProtoFile] = None) -> Response:
     content = EmbedContent()
     content.author = author
-    content.description = description
+    if description:
+        content.description = description
     if title:
         content.title = title
     if color:

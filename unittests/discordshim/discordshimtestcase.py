@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import socket
@@ -36,18 +37,20 @@ class TestLogger(logging.Logger):
     def critical(self, msg, *args):
         print("CRITICAL: %s" % msg, args)
 
-
-def discordshim_function(bot_token: str, channel_id: str, port: int):
-    os.environ['BOT_TOKEN'] = bot_token
-    os.environ['CHANNEL_ID'] = channel_id
-    os.environ['DISCORD_LINK_PORT'] = str(port)
-
-    DiscordShim()
-
 class DiscordShimTestCase(TestCase):
+    discord: DiscordShim
     client: socket
     thread: threading.Thread
     snapshot_bytes: bytes = []
+
+    @classmethod
+    def discordshim_function(cls, bot_token: str, channel_id: str, port: int):
+        os.environ['BOT_TOKEN'] = bot_token
+        os.environ['CHANNEL_ID'] = channel_id
+        os.environ['DISCORD_LINK_PORT'] = str(port)
+
+        cls.discord = DiscordShim()
+        cls.discord.run()
 
     @classmethod
     def setUpClass(cls):
@@ -63,7 +66,7 @@ class DiscordShimTestCase(TestCase):
             sock_details = server.getsockname()
             server.listen()
 
-            cls.thread = threading.Thread(target=discordshim_function, args=(bot_token, channel_id, sock_details[1]))
+            cls.thread = threading.Thread(target=cls.discordshim_function, args=(bot_token, channel_id, sock_details[1]))
             cls.thread.start()
 
             try:
@@ -81,8 +84,8 @@ class DiscordShimTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        time.sleep(30)
-        cls.client.close()
+        time.sleep(5)
+        # TODO work out how to properly kill discord, or move it back to its own process.
 
     @staticmethod
     def _get_path(filename):
