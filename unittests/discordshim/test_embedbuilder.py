@@ -5,12 +5,13 @@ import time
 import os
 import zipfile
 
-from octoprint_discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, success_embed, error_embed, \
-    info_embed, MAX_VALUE, MAX_NUM_FIELDS, COLOR_INFO, COLOR_SUCCESS, COLOR_ERROR, upload_file, DISCORD_MAX_FILE_SIZE
-from unittests.discordremotetestcase import DiscordRemoteTestCase
+from octoprint_discordremote.responsebuilder import COLOR_INFO
+from octoprint_discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, MAX_VALUE, MAX_NUM_FIELDS, upload_file, \
+    DISCORD_MAX_FILE_SIZE
+from discordshimtestcase import DiscordShimTestCase
 
 
-class TestEmbedBuilder(DiscordRemoteTestCase):
+class TestEmbedBuilder(DiscordShimTestCase):
 
     def test_embedbuilder(self):
         # Success
@@ -36,56 +37,6 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
                 self.assertEqual("b" * MAX_VALUE, field.value)
 
         self.discord.send(messages=messages)
-        while self.discord.process_queue == None:
-            time.sleep(1)
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
-
-    def test_success_embed(self):
-        messages = success_embed(author="OctoPrint", title="title", description="description")
-        self.assertEqual(1, len(messages))
-        embed, snapshot = messages[0]
-        self.assertBasicEmbed(embed,
-                              author="OctoPrint",
-                              title="title",
-                              description="description",
-                              color=COLOR_SUCCESS)
-
-        self.discord.send(messages=messages)
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
-
-    def test_error_embed(self):
-        messages = error_embed(author="OctoPrint", title="title", description="description")
-        self.assertEqual(1, len(messages))
-        embed, snapshot = messages[0]
-        self.assertBasicEmbed(embed,
-                              author="OctoPrint",
-                              title="title",
-                              description="description",
-                              color=COLOR_ERROR)
-
-        self.discord.send(messages=messages)
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
-
-    def test_info_embed(self):
-        messages = info_embed(author="OctoPrint", title="title", description="description")
-        self.assertEqual(1, len(messages))
-        embed, snapshot = messages[0]
-        self.assertBasicEmbed(embed,
-                              author="OctoPrint",
-                              title="title",
-                              description="description",
-                              color=COLOR_INFO)
-
-        self.discord.send(messages=[(embed, snapshot)])
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
 
     def test_unicode_embed(self):
         teststr = "٩(-̮̮̃-̃)۶ ٩(●̮̮̃•̃)۶ ٩(͡๏̯͡๏)۶ ٩(-̮̮̃•̃)."
@@ -104,9 +55,6 @@ class TestEmbedBuilder(DiscordRemoteTestCase):
         self.assertIsNotNone(messages)
 
         self.discord.send(messages=messages)
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
 
         self.assertEqual(2, len(messages))
         embed, snapshot = messages[0]

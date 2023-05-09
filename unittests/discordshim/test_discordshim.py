@@ -8,12 +8,20 @@ from unittests.discordshim.discordshimtestcase import DiscordShimTestCase
 class TestDiscordShim(DiscordShimTestCase):
 
     def test_send_minimal_embed(self):
+        self.start_scraper()
+
         response = embed_simple(author="")
         data = response.SerializeToString()
         self.client.send(len(data).to_bytes(4, byteorder='little'))
         self.client.send(data)
 
+        results = self.stop_scraper()
+        self.assertEqual(1, len(results))
+        self.assertNotIn("snapshot.png", results[0])
+
     def test_send_complete_embed(self):
+        self.start_scraper()
+
         response = embed_simple(author="Author",
                                 title="Title",
                                 description="description",
@@ -24,3 +32,7 @@ class TestDiscordShim(DiscordShimTestCase):
         data = response.SerializeToString()
         self.client.send(len(data).to_bytes(4, byteorder='little'))
         self.client.send(data)
+
+        results = self.stop_scraper()
+        self.assertEqual(1, len(results))
+        self.assertIn("snapshot.png", results[0])
