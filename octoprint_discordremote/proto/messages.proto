@@ -24,10 +24,8 @@ message Presence {
     string presence = 1;
 }
 
-
-message Command {
+message Request {
     optional string command = 1;
-    optional bool connected = 2;
     optional ProtoFile file = 3;
 }
 

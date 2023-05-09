@@ -11,7 +11,7 @@ from discord.embeds import Embed
 from discord.file import File
 
 from octoprint_discordremote.responsebuilder import COLOR_INFO
-from proto.messages_pb2 import EmbedContent, ProtoFile
+from octoprint_discordremote.proto.messages_pb2 import EmbedContent, ProtoFile
 
 DISCORD_MAX_FILE_SIZE = 5 * 1024 * 1024
 

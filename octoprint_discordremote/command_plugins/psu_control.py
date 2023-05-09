@@ -3,6 +3,7 @@ import json
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
+from octoprint_discordremote.proto.messages_pb2 import Response
 from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
 
 
@@ -28,34 +29,34 @@ class PsuControl(AbstractPlugin):
                 'description': "Get the status of the PSU.\nUses PSUControl plugin."
             }
 
-    def poweron(self):
+    def poweron(self) -> Response:
         result = self.api_command("turnPSUOn")
         if result:
             return success_embed(author=self.plugin.get_printer_name(),
-                                       title="Turned PSU on")
+                                 title="Turned PSU on")
         return error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to turn PSU on", description=result.content)
+                           title="Failed to turn PSU on", description=result.content)
 
-    def poweroff(self):
+    def poweroff(self) -> Response:
         result = self.api_command("turnPSUOff")
         if result:
             return success_embed(author=self.plugin.get_printer_name(),
-                                       title="Turned PSU off")
+                                 title="Turned PSU off")
         return error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to turn PSU off", description=result.content)
+                           title="Failed to turn PSU off", description=result.content)
 
-    def powerstatus(self):
+    def powerstatus(self) -> Response:
         result = self.api_command("getPSUState")
         if result:
             message = "PSU is OFF"
             if json.loads(result.content)['isPSUOn']:
                 message = "PSU is ON"
             return info_embed(author=self.plugin.get_printer_name(),
-                                    title=message)
+                              title=message)
         return error_embed(author=self.plugin.get_printer_name(),
-                                 title="Failed to get PSU status", description=result.content)
+                           title="Failed to get PSU status", description=result.content)
 
-    def api_command(self, command):
+    def api_command(self, command) -> Response:
         api_key = self.plugin.get_settings().global_get(["api", "key"])
         port = self.plugin.get_settings().global_get(["server", "port"])
         header = {'X-Api-Key': api_key, 'Content-Type': "application/json"}

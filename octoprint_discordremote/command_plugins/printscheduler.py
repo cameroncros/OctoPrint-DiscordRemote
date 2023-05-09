@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
 from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
+from octoprint_discordremote.proto.messages_pb2 import EmbedContent, TextField, Response
 
 
 class PrintSchedulerControl(AbstractPlugin):
@@ -31,23 +32,23 @@ class PrintSchedulerControl(AbstractPlugin):
                                "Uses Print Scheduler plugin."
             }
 
-    def listjobs(self):
+    def listjobs(self) -> Response:
         data = self.plugin.get_settings().global_get(["plugins", "printscheduler", "scheduled_jobs"])
 
-        builder = EmbedBuilder()
-        builder.set_title('Scheduled Jobs')
-        builder.set_author(name=self.plugin.get_printer_name())
+        builder = EmbedContent()
+        builder.title = 'Scheduled Jobs'
+        builder.author = self.plugin.get_printer_name()
 
         for job in data:
             title = "%s: %s" % (job['start_at'], job['name'])
             description = "remove: `/removejob %s %s`" % (job['start_at'], job['path'])
 
-            builder.add_field(title=title, text=description)
+            builder.textfield.append(TextField(title=title, text=description))
 
         # Use data in status to build an embed
-        return builder.get_embeds()
+        return Response(embed=builder)
 
-    def addjob(self, params):
+    def addjob(self, params) -> Response:
         if len(params) < 4:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of args',
@@ -70,7 +71,7 @@ class PrintSchedulerControl(AbstractPlugin):
                                title='Error',
                                description='%s' % e)
 
-    def removejob(self, params):
+    def removejob(self, params) -> Response:
         if len(params) < 4:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of args',

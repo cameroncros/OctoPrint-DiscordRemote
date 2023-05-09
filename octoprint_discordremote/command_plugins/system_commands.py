@@ -5,7 +5,8 @@ import json
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
-from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
+from octoprint_discordremote.proto.messages_pb2 import TextField, Response, EmbedContent
+from octoprint_discordremote.responsebuilder import success_embed, error_embed
 
 
 class SystemCommands(AbstractPlugin):
@@ -27,7 +28,7 @@ class SystemCommands(AbstractPlugin):
             'description': 'Execute a system command'
         }
 
-    def list_system_commands(self):
+    def list_system_commands(self) -> Response:
         api_key = self.plugin.get_settings().global_get(['api', 'key'])
         port = self.plugin.get_settings().global_get(['server', 'port'])
         header = {'X-Api-Key': api_key, 'Content-Type': 'application/json'}
@@ -37,12 +38,11 @@ class SystemCommands(AbstractPlugin):
             return error_embed(author=self.plugin.get_printer_name(),
                                title="Error code: %i" % response.status_code, description=response.content)
 
-        builder = EmbedBuilder()
-        builder.set_title('List of system commands')
-        builder.set_author(name=self.plugin.get_printer_name())
-        builder.set_description('To execute a system command, use %ssystemcommand {command}. '
-                                'Where command is similar to "core/restart"' %
-                                self.plugin.get_settings().get(["prefix"]))
+        builder = EmbedContent()
+        builder.title = 'List of system commands'
+        builder.author = self.plugin.get_printer_name()
+        builder.description = f'To execute a system command, use %ssystemcommand {self.plugin.get_settings().get(["prefix"])}.' \
+                              f' Where command is similar to "core/restart"'
         data = json.loads(response.content)
         for source in data:
             for comm in data[source]:
@@ -52,10 +52,11 @@ class SystemCommands(AbstractPlugin):
                 comm_description = "%s/%s" % (source, comm['action'])
                 if 'command' in comm:
                     comm_description = "%s - %s" % (comm_description, comm['command'])
-                builder.add_field(title=comm_name, text=comm_description)
-        return builder.get_embeds()
+                builder.textfield.append(TextField(title=comm_name, text=comm_description))
+        return Response(embed=builder)
 
-    def system_command(self, command):
+
+    def system_command(self, command) -> Response:
         if len(command) != 2:
             return error_embed(author=self.plugin.get_printer_name(),
                                title='Wrong number of args', description='%ssystemcommand {source/command}' %

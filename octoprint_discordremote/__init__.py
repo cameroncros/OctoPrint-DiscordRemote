@@ -24,7 +24,7 @@ from octoprint.server import user_permission
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from proto.messages_pb2 import EmbedContent, ProtoFile
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response
 from .discordlink import DiscordLink
 from .libs import ipgetter
 
@@ -161,7 +161,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord.shutdown_discord()
 
         self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
-                                   self._settings.get(['channelid'], merged=True))
+                                   self._settings.get(['channelid'], merged=True),
+                                   self.command)
 
         self.notify_event("startup")
         if send_test:
@@ -347,8 +348,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             args = data['args']
 
         messages = self.command.parse_command(args)
-        if not self.discord.send(messages=messages):
+        if messages is None:
             return make_response("Failed to send message", 404)
+
+        self.discord.send(messages=messages)
 
     def unpack_message(self, data):
         # builder = embedbuilder.EmbedBuilder()
@@ -507,7 +510,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         embed.title = message
         if snapshot:
             embed.snapshot = snapshot
-        self.discord.send(embed)
+
+        self.discord.send(Response(embed=embed))
 
         # exec "after" script if any
         self.exec_script(event_id, "after")

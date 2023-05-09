@@ -1,4 +1,6 @@
 accessControl:
+  autologinAs: admin
+  autologinLocal: true
   enabled: false
 api:
   key: B98B2340FAE64A6B96BDDFC9166E1AF3
@@ -40,6 +42,7 @@ server:
     serverRestartCommand: pig
     systemRestartCommand: ashgas
   firstRun: false
+  ignoreIncompleteStartup: true
   onlineCheck:
     enabled: false
   pluginBlacklist:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from proto.messages_pb2 import EmbedContent, ProtoFile, Response
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response
 
 COLOR_SUCCESS = 0x00AE86
 COLOR_ERROR = 0xE84A4A

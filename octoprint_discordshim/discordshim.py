@@ -7,7 +7,6 @@ import asyncio
 import os
 import re
 from asyncio import Event
-from http.client import HTTPException
 from logging import Logger
 from threading import Thread
 from typing import Optional, Tuple, List
@@ -18,7 +17,7 @@ from discord.embeds import Embed
 from discord.file import File
 
 from octoprint_discordshim.embedbuilder import embed_simple, upload_file
-from proto.messages_pb2 import Command, Response, Presence
+from octoprint_discordremote.proto.messages_pb2 import Request, Response
 
 
 class DiscordShim:
@@ -66,14 +65,6 @@ class DiscordShim:
 
         self.client.run(self.bot_token)
 
-    def update_presence(self, msg: Presence):
-        try:
-            if self.client.ws:
-                self.loop.create_task(
-                    self.client.change_presence(activity=discord.Activity(url='http://octoprint.url', name=msg.presence)))
-        except:
-            pass
-
     async def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         channel = self.client.get_channel(int(self.channel_id))
         for embed, snapshot in messages:
@@ -86,7 +77,7 @@ class DiscordShim:
         return message.replace(self.bot_token, "[bot_token]").replace(self.channel_id, "[channel_id]")
 
     async def handle_message(self, message):
-        if message.channel.id != self.channel_id and message.channel.type.name != "private":
+        if message.channel.id != int(self.channel_id) and message.channel.type.name != "private":
             # Only care about messages from correct channel, or DM messages
             return
         self.logger.debug("Message is: %s" % message)
@@ -112,7 +103,7 @@ class DiscordShim:
         if len(message.content) == 0:
             return
 
-        cmdproto = Command(command=message.content).SerializeToString()
+        cmdproto = Request(command=message.content).SerializeToString()
         self.writer.write(len(cmdproto).to_bytes(length=4, byteorder='little'))
         self.writer.write(cmdproto)
 
@@ -136,4 +127,3 @@ class DiscordShim:
                 await self.send(upload_file(data.file))
             elif data.presence:
                 await self.update_presence(data.presence)
-

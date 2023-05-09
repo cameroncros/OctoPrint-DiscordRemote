@@ -14,7 +14,7 @@ from octoprint.printer import InvalidFileLocation, InvalidFileType
 
 from typing import TYPE_CHECKING, List, Optional
 
-from proto.messages_pb2 import EmbedContent, TextField, ProtoFile, Response
+from .proto.messages_pb2 import EmbedContent, TextField, ProtoFile, Response
 
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin

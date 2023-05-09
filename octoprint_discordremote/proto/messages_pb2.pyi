@@ -5,16 +5,6 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class Command(_message.Message):
-    __slots__ = ["command", "connected", "file"]
-    COMMAND_FIELD_NUMBER: _ClassVar[int]
-    CONNECTED_FIELD_NUMBER: _ClassVar[int]
-    FILE_FIELD_NUMBER: _ClassVar[int]
-    command: str
-    connected: bool
-    file: ProtoFile
-    def __init__(self, command: _Optional[str] = ..., connected: bool = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
-
 class EmbedContent(_message.Message):
     __slots__ = ["author", "color", "description", "snapshot", "textfield", "title"]
     AUTHOR_FIELD_NUMBER: _ClassVar[int]
@@ -44,6 +34,14 @@ class ProtoFile(_message.Message):
     data: bytes
     filename: str
     def __init__(self, data: _Optional[bytes] = ..., filename: _Optional[str] = ...) -> None: ...
+
+class Request(_message.Message):
+    __slots__ = ["command", "file"]
+    COMMAND_FIELD_NUMBER: _ClassVar[int]
+    FILE_FIELD_NUMBER: _ClassVar[int]
+    command: str
+    file: ProtoFile
+    def __init__(self, command: _Optional[str] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["embed", "file", "presence"]
