@@ -3,3 +3,4 @@ mock
 coverage
 pytest
 pytest_asyncio
+pytest-cov
