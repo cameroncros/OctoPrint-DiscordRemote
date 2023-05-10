@@ -1,18 +1,17 @@
 import asyncio
-import logging
 import os
 import socket
 import threading
 import time
 import uuid
 from typing import IO, Optional
-from unittest import TestCase
 
 import discord
 import yaml
 from _pytest.outcomes import fail
 
 from octoprint_discordshim.discordshim import DiscordShim
+from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 
 class Scraper:
@@ -57,6 +56,7 @@ class Scraper:
     async def wait_for_shutdown(self):
         while self.running:
             await asyncio.sleep(1)
+        self.file.close()
         await self.client.close()
 
     def run(self):
@@ -66,33 +66,7 @@ class Scraper:
         self.running = False
 
 
-class TestLogger(logging.Logger):
-    def __init__(self):
-        super(TestLogger, self).__init__(name="")
-
-    def setLevel(self, level):
-        pass
-
-    def debug(self, msg, *args):
-        print("DEBUG: %s" % msg, args)
-
-    def info(self, msg, *args):
-        print("INFO: %s" % msg, args)
-
-    def warning(self, msg, *args):
-        print("WARNING: %s" % msg, args)
-
-    def error(self, msg, *args):
-        print("ERROR: %s" % msg, args)
-
-    def exception(self, msg, *args):
-        print("EXCEPTION: %s" % msg, args)
-
-    def critical(self, msg, *args):
-        print("CRITICAL: %s" % msg, args)
-
-
-class DiscordShimTestCase(TestCase):
+class LiveDiscordTestCase(MockDiscordTestCase):
     bot_token: str
     channel_id: str
     discord: DiscordShim
@@ -137,9 +111,9 @@ class DiscordShimTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config_file = cls._get_path("../../config.yaml")
+        config_file = cls._get_path("../config.yaml")
         with open(config_file) as f:
-            data = yaml.load(f)
+            data = yaml.load(f, Loader=yaml.FullLoader)
             cls.bot_token = data['bottoken']
             cls.channel_id = data['channelid']
 
@@ -164,14 +138,10 @@ class DiscordShimTestCase(TestCase):
                  "called config.yaml in the root directory with your bot "
                  "details. NEVER COMMIT THIS FILE.")
 
-        with open(cls._get_path("../test_pattern.png"), "rb") as f:
+        with open(cls._get_path("test_pattern.png"), "rb") as f:
             cls.snapshot_bytes = f.read()
 
     @classmethod
     def tearDownClass(cls):
         cls.discord.stop()
         cls.thread.join()
-
-    @staticmethod
-    def _get_path(filename):
-        return os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)

@@ -41,7 +41,7 @@ class SystemCommands(AbstractPlugin):
         builder = EmbedContent()
         builder.title = 'List of system commands'
         builder.author = self.plugin.get_printer_name()
-        builder.description = f'To execute a system command, use %ssystemcommand {self.plugin.get_settings().get(["prefix"])}.' \
+        builder.description = f'To execute a system command, use {self.plugin.get_settings().get(["prefix"])}systemcommand {{command}}.' \
                               f' Where command is similar to "core/restart"'
         data = json.loads(response.content)
         for source in data:

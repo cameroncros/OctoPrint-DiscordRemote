@@ -23,8 +23,6 @@ class DiscordLink:
         self.listener_thread = threading.Thread(target=self.listener)
         self.listener_thread.start()
 
-        self.start_discord()
-
     def spawn_discordshim(self, port: int):
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = self.bot_token

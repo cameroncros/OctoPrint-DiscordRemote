@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin
 
 from octoprint_discordremote.command_plugins import plugin_list
-from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
+from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed, COLOR_INFO
 
 
 class Command:
@@ -170,6 +170,7 @@ class Command:
             baseurl = "%s:%s" % (self.plugin.get_ip_address(), port)
 
         builder = EmbedContent()
+        builder.color = COLOR_INFO
         builder.title = 'Files and Details'
         builder.author = self.plugin.get_printer_name()
         file_list = self.get_flat_file_list()

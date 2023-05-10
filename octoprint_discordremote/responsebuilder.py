@@ -30,18 +30,30 @@ def success_embed(author: str,
                   title: Optional[str] = None,
                   description: Optional[str] = None,
                   snapshot: Optional[ProtoFile] = None) -> Response:
-    return embed_simple(author, title, description, COLOR_SUCCESS, snapshot)
+    return embed_simple(author=author,
+                        title=title,
+                        description=description,
+                        color=COLOR_SUCCESS,
+                        snapshot=snapshot)
 
 
 def error_embed(author: str,
                 title: Optional[str] = None,
                 description: Optional[str] = None,
                 snapshot: Optional[ProtoFile] = None) -> Response:
-    return embed_simple(author, title, description, COLOR_ERROR, snapshot)
+    return embed_simple(author=author,
+                        title=title,
+                        description=description,
+                        color=COLOR_ERROR,
+                        snapshot=snapshot)
 
 
 def info_embed(author: str,
                title: Optional[str] = None,
                description: Optional[str] = None,
                snapshot: Optional[ProtoFile] = None) -> Response:
-    return embed_simple(author, title, description, COLOR_INFO, snapshot)
+    return embed_simple(author=author,
+                        title=title,
+                        description=description,
+                        color=COLOR_INFO,
+                        snapshot=snapshot)

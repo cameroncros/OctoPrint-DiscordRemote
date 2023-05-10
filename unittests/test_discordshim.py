@@ -1,11 +1,9 @@
-import time
-
 from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
 from octoprint_discordremote.proto.messages_pb2 import ProtoFile, TextField
-from unittests.discordshim.discordshimtestcase import DiscordShimTestCase
+from unittests.livediscordtestcase import LiveDiscordTestCase
 
 
-class TestDiscordShim(DiscordShimTestCase):
+class TestDiscordShim(LiveDiscordTestCase):
 
     def test_send_minimal_embed(self):
         self.start_scraper()

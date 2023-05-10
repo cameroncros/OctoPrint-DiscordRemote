@@ -12,7 +12,7 @@ from octoprint.printer import InvalidFileType, InvalidFileLocation
 
 from octoprint_discordremote import Command, DiscordRemotePlugin, Response, ProtoFile
 from octoprint_discordremote.responsebuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
-from unittests.discordlinktestcase import DiscordLinkTestCase
+from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 file_list = {'local': {
     u'folder1': {'name': u'folder1', 'path': u'folder1', 'size': 6530, 'type': 'folder', 'typePath': ['folder'],
@@ -61,7 +61,7 @@ zip_flat_file_list = [
 ]
 
 
-class TestCommand(DiscordLinkTestCase):
+class TestCommand(MockDiscordTestCase):
 
     def _mock_settings_get(self, *args, **kwards):
         if args[0] == ["prefix"]:
@@ -96,30 +96,9 @@ class TestCommand(DiscordLinkTestCase):
 
         self.command = Command(self.plugin)
 
-    def _validate_embeds(self, embeds: List[Embed], color):
-        self.assertIsNotNone(embeds)
-        self.assertGreaterEqual(1, len(embeds))
-        for embed in embeds:
-            self.assertEqual(color, embed.color.value)
-            self.assertIsNotNone(embed.timestamp)
-
-    def _validate_simple_embed(self, response: Response, color, title=None, description=None, image: Optional[ProtoFile] = None):
+    def _validate_embeds(self, response: Response, color):
         self.assertIsNotNone(response)
-
-        embed = response.embed
-        self.assertIsNotNone(embed)
-
-        self.assertEqual(color, embed.color)
-
-        if title:
-            self.assertEqual(title, embed.title)
-
-        if description:
-            self.assertEqual(description, embed.description)
-
-        if image:
-            self.assertEqual(embed.snapshot.filename, image.filename)
-            self.assertEqual(embed.snapshot.data, image.data)
+        self.assertEqual(color, response.embed.color)
 
     def test_parse_command(self):
         self.command.check_perms = mock.Mock()
@@ -150,7 +129,7 @@ class TestCommand(DiscordLinkTestCase):
         self.command.check_perms.return_value = False
         response = self.command.parse_command("/print", user="Dummy")
 
-        self._validate_simple_embed(response, COLOR_ERROR, title="Permission Denied")
+        self.validateResponse(response, COLOR_ERROR, title="Permission Denied")
         self.command.check_perms.assert_called_once()
 
     def test_parse_command_list(self):
@@ -167,10 +146,10 @@ class TestCommand(DiscordLinkTestCase):
         # Invalid Arguments
         response = self.command.parse_command("/print")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title='Wrong number of arguments',
-                                    description='try "%sprint [filename]"' % self.plugin.get_settings().get(
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title='Wrong number of arguments',
+                              description='try "%sprint [filename]"' % self.plugin.get_settings().get(
                                         ["prefix"]))
 
         # Printer not ready
@@ -178,9 +157,9 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().is_ready.return_value = False
         response = self.command.parse_command("/print dummyfile.gcode")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title='Printer is not ready')
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title='Printer is not ready')
 
         # Printer is ready, file not found
         self.plugin.get_printer().is_ready.return_value = True
@@ -188,9 +167,9 @@ class TestCommand(DiscordLinkTestCase):
         self.command.find_file.return_value = None
         response = self.command.parse_command("/print dummyfile.gcode")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title='Failed to find the file')
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title='Failed to find the file')
 
         # Printer is ready, file is found, invalid file type
         self.command.find_file.return_value = {'location': 'sdcard', 'path': '/temp/path'}
@@ -198,26 +177,26 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().select_file.side_effect = InvalidFileType
         response = self.command.parse_command("/print dummyfile.gcode")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title='Invalid file type selected')
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title='Invalid file type selected')
 
         # Printer is ready, file is found, invalid file location
         self.plugin.get_printer().select_file.side_effect = InvalidFileLocation
         response = self.command.parse_command("/print dummyfile.gcode")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title='Invalid file location?')
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title='Invalid file location?')
 
         # Printer is ready, file is found, print started
         self.plugin.get_printer().select_file.side_effect = None
         response = self.command.parse_command("/print dummyfile.gcode")
 
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title='Successfully started print',
-                                    description='/temp/path')
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title='Successfully started print',
+                              description='/temp/path')
 
     def test_parse_command_snapshot(self):
         # Fail: Camera not working.
@@ -225,17 +204,19 @@ class TestCommand(DiscordLinkTestCase):
 
         # Success: Camera serving images
         self.plugin.get_snapshot = mock.Mock()
-        with open(self._get_path("test_pattern.png")) as input_file:
-            self.plugin.get_snapshot.return_value = ('snapshot.png', input_file)
+        snapshot_data = b'data'
+        self.plugin.get_snapshot.return_value = ProtoFile(filename='snapshot.png', data=snapshot_data)
 
-            response = self.command.parse_command("/snapshot")
-            self._validate_simple_embed(response, COLOR_INFO, image=self.plugin.get_snapshot.return_value)
+        response = self.command.parse_command("/snapshot")
+        self.validateResponse(response, COLOR_INFO, image=self.plugin.get_snapshot.return_value)
+        self.assertEqual(snapshot_data, response.embed.snapshot.data)
+        self.assertEqual('snapshot.png', response.embed.snapshot.filename)
 
     def test_parse_command_abort(self):
         # Success: Print aborted
         response = self.command.parse_command("/abort")
 
-        self._validate_simple_embed(response, COLOR_ERROR, title="Print aborted")
+        self.validateResponse(response, COLOR_ERROR, title="Print aborted")
 
     def test_parse_command_help(self):
         # Success: Printed help
@@ -271,20 +252,20 @@ class TestCommand(DiscordLinkTestCase):
         # Fail: Too many parameters
         response = self.command.parse_command("/connect asdf asdf  asdf")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Too many parameters",
-                                    description="Should be: /connect [port] [baudrate]")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Too many parameters",
+                              description="Should be: /connect [port] [baudrate]")
 
         # Fail: Printer already connected
         self.plugin.get_printer().is_operational = mock.Mock()
         self.plugin.get_printer().is_operational.return_value = True
         response = self.command.parse_command("/connect")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Printer already connected",
-                                    description="Disconnect first")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Printer already connected",
+                              description="Disconnect first")
         self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: wrong format for baudrate
@@ -292,10 +273,10 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().is_operational.return_value = False
         response = self.command.parse_command("/connect port baudrate")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Wrong format for baudrate",
-                                    description="should be a number")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Wrong format for baudrate",
+                              description="should be a number")
         self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: connect failed.
@@ -304,10 +285,10 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().connect = mock.Mock()
         response = self.command.parse_command("/connect port 1234")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Failed to connect",
-                                    description='try: "/connect [port] [baudrate]"')
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Failed to connect",
+                              description='try: "/connect [port] [baudrate]"')
         self.assertEqual(31, self.plugin.get_printer().is_operational.call_count)
         self.plugin.get_printer().connect.assert_called_once_with(port="port", baudrate=1234, profile=None)
 
@@ -318,9 +299,9 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().is_operational.return_value = False
         response = self.command.parse_command("/disconnect")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Printer is not connected")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Printer is not connected")
         self.plugin.get_printer().is_operational.assert_called_once()
 
         # Fail: disconnect failed.
@@ -329,9 +310,9 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().disconnect = mock.Mock()
         response = self.command.parse_command("/disconnect")
 
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Failed to disconnect")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Failed to disconnect")
         self.assertEqual(2, self.plugin.get_printer().is_operational.call_count)
         self.plugin.get_printer().disconnect.assert_called_once_with()
 
@@ -410,10 +391,10 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().pause_print = mock.Mock()
         response = self.command.parse_command("/pause")
 
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title="Print paused",
-                                    image=self.plugin.get_snapshot.return_value)
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title="Print paused",
+                              image=self.plugin.get_snapshot.return_value)
         self.plugin.get_snapshot.assert_called_once()
         self.plugin.get_printer().pause_print.assert_called_once()
 
@@ -423,39 +404,30 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().resume_print = mock.Mock()
         response = self.command.parse_command("/resume")
 
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title="Print resumed",
-                                    image=self.plugin.get_snapshot.return_value)
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title="Print resumed",
+                              image=self.plugin.get_snapshot.return_value)
         self.plugin.get_snapshot.assert_called_once()
         self.plugin.get_printer().resume_print.assert_called_once()
 
-    @mock.patch("requests.get")
-    def test_download_file(self, mock_get):
+    def test_download_file(self):
         self.plugin.get_file_manager().path_on_disk = mock.Mock()
         self.plugin.get_file_manager().path_on_disk.return_value = "./temp.file"
 
-        mock_request_val = mock.Mock()
-        mock_request_val.iter_content = mock.Mock()
-        mock_request_val.iter_content.return_value = [b'1234']
-        mock_get.return_value = mock_request_val
-
         # Upload, no user
-        response = self.command.download_file("filename", "http://mock.url", None)
-
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title="File Received")
+        response = self.command.download_file(ProtoFile(filename="filename", data=b'data'), None)
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title="File Received",
+                              description="filename"
+                              )
 
         self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
         self.plugin.get_file_manager().path_on_disk.reset_mock()
-        mock_get.assert_called_once_with("http://mock.url", stream=True)
-        mock_get.reset_mock()
 
         with open("./temp.file", 'rb') as f:
-            self.assertEqual(b'1234', f.read())
+            self.assertEqual(b'data', f.read())
 
         os.remove("./temp.file")
 
@@ -463,32 +435,26 @@ class TestCommand(DiscordLinkTestCase):
         self.command.check_perms = mock.Mock()
         self.command.check_perms.return_value = True
 
-        response = self.command.download_file("filename", "http://mock.url", "1234")
-
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title="File Received")
+        response = self.command.download_file(ProtoFile(filename="filename", data=b'data'), "1234")
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title="File Received",
+                              description="filename"
+                              )
 
         self.plugin.get_file_manager().path_on_disk.assert_called_once_with('local', 'filename')
         self.plugin.get_file_manager().path_on_disk.reset_mock()
-        mock_get.assert_called_once_with("http://mock.url", stream=True)
-        mock_get.reset_mock()
 
         with open("./temp.file", 'rb') as f:
-            self.assertEqual(b'1234', f.read())
+            self.assertEqual(b'data', f.read())
 
         # Upload denied
         self.command.check_perms.return_value = False
 
-        response = self.command.download_file("filename", "http://mock.url", "1234")
-
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Permission Denied")
+        response = self.command.download_file(ProtoFile(filename="filename", data=b'data'), "1234")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Permission Denied")
 
     def test_parse_array(self):
         self.assertIsNone(self.command._parse_array(None))
@@ -557,12 +523,10 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_printer().is_operational.return_value = False
         response = self.command.gcode(["/gcode", "M0"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Printer not connected",
-                                    description="Connect to printer first.")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Printer not connected",
+                              description="Connect to printer first.")
 
         # Printer connected, invalid GCODE
         self.plugin.get_printer().is_operational.return_value = True
@@ -570,73 +534,62 @@ class TestCommand(DiscordLinkTestCase):
         self.plugin.get_settings().get.return_value = "G0, M0|M851"
         response = self.command.gcode(["/gcode", "M1"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Invalid GCODE",
-                                    description="If you want to use \"M1\", add it to the allowed GCODEs")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Invalid GCODE",
+                              description="If you want to use \"M1\", add it to the allowed GCODEs")
 
         # Failed to send
         self.plugin.get_printer().commands = mock.Mock()
         self.plugin.get_printer().commands.side_effect = Exception("Error")
         response = self.command.gcode(["/gcode", "M0"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Failed to execute gcode",
-                                    description="Error: Error")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Failed to execute gcode",
+                              description="Error: Error")
 
         # Success - Case Insensitive:
         self.plugin.get_printer().commands.reset_mock()
         self.plugin.get_printer().commands.side_effect = None
         response = self.command.gcode(["/gcode", "m0"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_SUCCESS,
-                                    title="Sent script")
+        self.validateResponse(response,
+                              COLOR_SUCCESS,
+                              title="Sent script")
         self.plugin.get_printer().commands.assert_called_once_with(['M0'])
 
-    @mock.patch('octoprint_discordremote.command.upload_file')
-    def test_parse_command_getfile(self, mock_upload):
+    def test_parse_command_getfile(self):
         self.command.find_file = mock.Mock()
         self.command.find_file.return_value = None
         response = self.command.getfile(["/getfile", "test.gcode"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Failed to find file matching the name given")
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Failed to find file matching the name given")
 
         self.command.find_file.return_value = {'location': None, 'path': None}
-        mock_upload.return_value = [(True, True)]
         self.plugin.get_file_manager = mock.Mock()
         mock_file_manager = mock.Mock()
+        mock_file_manager.path_on_disk.return_value = self._get_path("../test.gcode")
         self.plugin.get_file_manager.return_value = mock_file_manager
         response = self.command.getfile(["/getfile", "test.gcode"])
 
         self.assertIsNotNone(response)
+        self.assertIn("test.gcode", response.file.filename)
 
     @mock.patch('os.walk')
-    @mock.patch('octoprint_discordremote.command.upload_file')
-    def test_parse_command_gettimelapse(self, mock_upload, mock_oswalk):
+    def test_parse_command_gettimelapse(self, mock_oswalk):
         self.plugin._data_folder = ''
         mock_oswalk.return_value = [('', [], [])]
         response = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
 
-        self.assertIsNone(response.embed.snapshot.filename)
-        self.assertIsNone(response.embed.snapshot.data)
-        self._validate_simple_embed(response,
-                                    COLOR_ERROR,
-                                    title="Failed to find file matching the name given")
+
+        self.validateResponse(response,
+                              COLOR_ERROR,
+                              title="Failed to find file matching the name given")
 
         mock_oswalk.return_value = [('', [], ['test.gcode'])]
-        mock_upload.return_value = [(True, True)]
         response = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
 
         self.assertIsNotNone(response)

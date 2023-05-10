@@ -5,13 +5,14 @@ import time
 import os
 import zipfile
 
+from octoprint_discordremote import ProtoFile
 from octoprint_discordremote.responsebuilder import COLOR_INFO
 from octoprint_discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, MAX_VALUE, MAX_NUM_FIELDS, upload_file, \
     DISCORD_MAX_FILE_SIZE
-from discordshimtestcase import DiscordShimTestCase
+from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 
-class TestEmbedBuilder(DiscordShimTestCase):
+class TestEmbedBuilder(MockDiscordTestCase):
 
     def test_embedbuilder(self):
         # Success
@@ -36,8 +37,6 @@ class TestEmbedBuilder(DiscordShimTestCase):
                 self.assertEqual("a" * MAX_TITLE, field.name)
                 self.assertEqual("b" * MAX_VALUE, field.value)
 
-        self.discord.send(messages=messages)
-
     def test_unicode_embed(self):
         teststr = "٩(-̮̮̃-̃)۶ ٩(●̮̮̃•̃)۶ ٩(͡๏̯͡๏)۶ ٩(-̮̮̃•̃)."
         embed_builder = EmbedBuilder()
@@ -50,11 +49,11 @@ class TestEmbedBuilder(DiscordShimTestCase):
         self.assertIsNotNone(embeds)
 
     def test_upload_file(self):
-        small_file_path = self._get_path("test_pattern.png")
-        messages = upload_file(small_file_path, "Author")
+        data = b"filedata"
+        messages = upload_file(ProtoFile(filename="test_pattern.png",
+                                         data=data),
+                               author="Author")
         self.assertIsNotNone(messages)
-
-        self.discord.send(messages=messages)
 
         self.assertEqual(2, len(messages))
         embed, snapshot = messages[0]
@@ -66,27 +65,21 @@ class TestEmbedBuilder(DiscordShimTestCase):
 
         embed, snapshot = messages[1]
         self.assertEqual(snapshot.filename, "test_pattern.png")
-        with open(small_file_path, 'rb') as f:
-            snapshot.fp.seek(0)
-            self.assertEqual(f.read(), snapshot.fp.read())
+        self.assertEqual(data, snapshot.fp.read())
 
         # create large file, that requires splitting
-        large_file_path = self._get_path("large_file_temp")
         data = bytearray(1024)
         for i in range(1024):
             data[i] = i % 0xff
         data = bytes(data)
-        with open(large_file_path, 'wb') as f:
-            for i in range(0, int(round(DISCORD_MAX_FILE_SIZE / 1024 * 6))):
-                f.write(data)
+        large_file_data = b''
+        for i in range(0, int(round(DISCORD_MAX_FILE_SIZE / 1024 * 6))):
+            large_file_data += data
 
-        messages = upload_file(large_file_path, author="Author")
+        messages = upload_file(ProtoFile(filename="large_file_temp",
+                                         data=large_file_data),
+                               author="Author")
         self.assertIsNotNone(messages)
-
-        self.discord.send(messages=messages)
-        self.assertTrue(self.discord.process_queue.is_set())
-        while self.discord.process_queue.is_set():
-            time.sleep(1)
 
         self.assertEqual(8, len(messages))
         embed, snapshot = messages[0]
@@ -108,8 +101,6 @@ class TestEmbedBuilder(DiscordShimTestCase):
                 i += 1
 
         with zipfile.ZipFile("rebuilt.zip", 'r') as zip_file:
-            with open(large_file_path, 'rb') as f:
-                self.assertEqual(f.read(), zip_file.read("large_file_temp"))
+            self.assertEqual(large_file_data, zip_file.read("large_file_temp"))
 
         os.remove("rebuilt.zip")
-        os.remove(large_file_path)
