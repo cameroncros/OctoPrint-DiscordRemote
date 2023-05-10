@@ -147,20 +147,20 @@ class DiscordShim:
             '127.0.0.1', self.port)
 
         while True:
-            length_bytes = await reader.read(4)
+            length_bytes = await reader.readexactly(4)
             if len(length_bytes) == 0:
                 return
 
             length = int.from_bytes(length_bytes, byteorder='little')
 
-            data_bytes = await reader.read(length)
+            data_bytes = await reader.readexactly(length)
             data = Response()
             data.ParseFromString(data_bytes)
-            if data.embed:
+            if data.HasField('embed'):
                 await self.send(embed_simple(data.embed))
-            elif data.file:
+            elif data.HasField('file'):
                 await self.send(upload_file(data.file))
-            elif data.presence:
+            elif data.HasField('presence'):
                 self.current_status = data.presence.presence
 
     async def wait_for_shutdown(self):

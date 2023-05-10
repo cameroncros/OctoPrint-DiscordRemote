@@ -31,7 +31,7 @@ message Request {
 }
 
 message Response {
-    EmbedContent embed = 1;
-    Presence presence = 2;
-    ProtoFile file = 3;
+    optional EmbedContent embed = 1;
+    optional Presence presence = 2;
+    optional ProtoFile file = 3;
 }

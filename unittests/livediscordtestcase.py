@@ -3,12 +3,12 @@ import os
 import socket
 import threading
 import time
-import uuid
-from typing import IO, Optional
+from typing import List
 
 import discord
 import yaml
 from _pytest.outcomes import fail
+from discord.message import Message
 
 from octoprint_discordshim.discordshim import DiscordShim
 from unittests.mockdiscordtestcase import MockDiscordTestCase
@@ -17,10 +17,11 @@ from unittests.mockdiscordtestcase import MockDiscordTestCase
 class Scraper:
     lock = threading.Lock()
     running = True
-    file: Optional[IO]
+    messages = []
 
-    def __init__(self, filename: str, bot_token: str, channel_id: str):
-        self.filename = filename
+    def __init__(self, bot_token: str, channel_id: str):
+        self.is_connected = False
+        self.messages = []
         self.bot_token = bot_token
         self.channel_id = channel_id
         self.client = discord.Client(intents=discord.Intents.all())
@@ -32,31 +33,19 @@ class Scraper:
                 return
 
             self.lock.acquire()
-            embed = message.embeds[0]
-            js = f"Title: [{embed.title}] Description: [{embed.description}] "
-            if embed.fields is not None:
-                js += f" NumFields: [{len(embed.fields)}]"
-            if embed.image is not None:
-                js += f" Image: [{str(embed.image)}]"
-            js += '\n'
-            if self.file is None:
-                self.file = open(self.filename, 'w')
-            self.file.write(js)
-            self.file.flush()
+            self.messages.append(message)
             self.lock.release()
 
         @self.client.event
         async def on_ready():
             self.lock.acquire()
-            self.file = open(self.filename, 'w')
-            self.file.flush()
+            self.is_connected = True
             self.lock.release()
             asyncio.create_task(self.wait_for_shutdown())
 
     async def wait_for_shutdown(self):
         while self.running:
             await asyncio.sleep(1)
-        self.file.close()
         await self.client.close()
 
     def run(self):
@@ -75,7 +64,6 @@ class LiveDiscordTestCase(MockDiscordTestCase):
     snapshot_bytes: bytes = []
 
     scraper_pid: int
-    scraper_file: str
 
     @classmethod
     def discordshim_function(cls, port: int):
@@ -87,27 +75,23 @@ class LiveDiscordTestCase(MockDiscordTestCase):
         cls.discord.run()
 
     def start_scraper(self):
-        self.scraper_file = f'/tmp/discord_scraper_{str(uuid.uuid4())}'
-        self.scraper = Scraper(self.scraper_file, self.bot_token, self.channel_id)
+        self.scraper = Scraper(self.bot_token, self.channel_id)
         self.scraper_thread = threading.Thread(target=self.scraper.run)
         self.scraper_thread.start()
 
-        while not os.path.exists(self.scraper_file):
+        while not self.scraper.is_connected:
             time.sleep(1)
 
-    def stop_scraper(self):
-        time.sleep(5)
-        results = []
+    def stop_scraper(self, waitformessages, timeout=300) -> List[Message]:
+        count = 0
+        while len(self.scraper.messages) < waitformessages:
+            time.sleep(1)
+            count += 1
+            if count > timeout:
+                raise TimeoutError()
         self.scraper.stop()
         self.scraper_thread.join()
-
-        with open(self.scraper_file, 'r') as f:
-            line = f.readline()
-            print(f"Message Content: {line}")
-            if len(line.strip()) != 0:
-                results.append(line)
-        os.remove(self.scraper_file)
-        return results
+        return self.scraper.messages
 
     @classmethod
     def setUpClass(cls):
