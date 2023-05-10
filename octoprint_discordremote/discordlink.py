@@ -20,9 +20,6 @@ class DiscordLink:
         self.bot_token = bot_token
         self.channel_id = channel_id
 
-        self.listener_thread = threading.Thread(target=self.listener)
-        self.listener_thread.start()
-
     def spawn_discordshim(self, port: int):
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = self.bot_token
@@ -45,6 +42,8 @@ class DiscordLink:
                 server.close()
             except socket.timeout:
                 pass
+
+        threading.Thread(target=self.listener).start()
 
     def shutdown_discord(self):
         if self.process:
