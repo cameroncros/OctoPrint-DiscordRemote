@@ -39,22 +39,33 @@ class TestLogger(logging.Logger):
 class MockDiscordTestCase(TestCase):
     discord: Optional[DiscordLink] = None
     snapshot_bytes: bytes = []
-    client: socket
+    client: socket  # Discord link side
+    server: socket  # Discord shim side
 
     @classmethod
     def setUpClass(cls):
         cls.discord = DiscordLink(bot_token='bottoken',
                                   channel_id='channelid',
                                   command=Command(Mock()))
+        # Intentionally not calling cls.discord.run(),
+        # as it will spawn discordshim which we dont want
 
-        def dummy_socket_shim(port: int):
-            cls.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            cls.client.settimeout(10)
-            cls.client.connect(('127.0.0.1', port))
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.settimeout(10)
+        server.bind(('127.0.0.1', 0))
+        sock_details = server.getsockname()
+        server.listen()
 
-        cls.discord.spawn_discordshim = dummy_socket_shim
+        cls.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        cls.client.settimeout(10)
+        cls.client.connect(('127.0.0.1', sock_details[1]))
 
-        cls.discord.start_discord()
+        while cls.discord.client is None:
+            try:
+                cls.discord.client, _ = server.accept()
+                server.close()
+            except socket.timeout:
+                pass
 
         with open(cls._get_path("test_pattern.png"), "rb") as f:
             cls.snapshot_bytes = f.read()
