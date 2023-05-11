@@ -1,9 +1,8 @@
 stages:          # List of stages for jobs, and their order of execution
-  - python36
-  - python37
   - python38
   - python39
   - python310
+  - full_test
 
 .test-job:
   needs: []
@@ -18,7 +17,7 @@ stages:          # List of stages for jobs, and their order of execution
     - pip install -r requirements.txt -r requirements-dev.txt OctoPrint==$OCTOVER
     - python setup.py bdist_wheel
     - pip install dist/*.whl
-    - pytest --cov --cov-report term --cov-report xml:coverage.xml
+    - FAST_TEST=1 pytest --cov --cov-report term --cov-report xml:coverage.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
@@ -49,3 +48,25 @@ python310:
       - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
   extends: .test-job
   image: python:3.10
+
+full_test:
+  stage: python310
+  image: python:3.10
+  timeout: 20m
+  retry: 2
+  script:
+    - |
+      cat <<EOT >> config.yaml
+      channelid: '$CHANNEL_ID'
+      bottoken: '$BOT_TOKEN'
+      EOT
+    - pip install -r requirements.txt -r requirements-dev.txt OctoPrint=='1.8.7'
+    - python setup.py bdist_wheel
+    - pip install dist/*.whl
+    - pytest --cov --cov-report term --cov-report xml:coverage.xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml

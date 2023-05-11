@@ -1,4 +1,9 @@
+import os
+import sys
 import time
+from unittest import skipIf
+
+import octoprint
 
 from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
 from octoprint_discordremote.proto.messages_pb2 import ProtoFile, TextField, Response
@@ -8,6 +13,7 @@ from unittests.livediscordtestcase import LiveDiscordTestCase
 
 class TestDiscordShim(LiveDiscordTestCase):
 
+    @skipIf('FAST_TEST' in os.environ, "Running fast tests, skipping")
     def test_send_minimal_embed(self):
         self.start_scraper()
 
@@ -18,6 +24,7 @@ class TestDiscordShim(LiveDiscordTestCase):
 
         self.stop_scraper(waitformessages=1)
 
+    @skipIf('FAST_TEST' in os.environ, "Running fast tests, skipping")
     def test_send_complete_embed(self):
         self.start_scraper()
 
@@ -35,6 +42,7 @@ class TestDiscordShim(LiveDiscordTestCase):
         results = self.stop_scraper(waitformessages=1)
         self.assertIn("snapshot.png", results[0].embeds[0].image.url)
 
+    @skipIf('FAST_TEST' in os.environ, "Running fast tests, skipping")
     def test_send_small_file(self):
         self.start_scraper()
 
@@ -48,6 +56,7 @@ class TestDiscordShim(LiveDiscordTestCase):
         self.assertIn("Helloworld.txt", results[0].embeds[0].title)
         self.assertIn("Helloworld.txt", results[1].attachments[0].filename)
 
+    @skipIf('FAST_TEST' in os.environ, "Running fast tests, skipping")
     def test_send_large_file(self):
         self.start_scraper()
 
