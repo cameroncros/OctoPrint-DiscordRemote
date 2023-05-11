@@ -144,6 +144,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 "with_snapshot": True,
                 "message": "Hello hello! If you see this message, it means that the settings are correct!"
             },
+            "gcode_sent": {
+                "name": "Printing process : Specific gcode sent",
+                "enabled": False,
+                "with_snapshot": True,
+                "message": "📢 {gcode} gcode sent!",
+                "gcodes": "M600"
+            },
         }
         self.permissions = {
             '1': {'users': '*', 'commands': ''},
@@ -318,6 +325,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         return True
     
+    def parse_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
+        if gcode:
+            gcodes = self._settings.get(["events", "gcode_sent", "gcodes"]).split(",")
+            if gcode in gcodes:
+                self.notify_event("gcode_sent", {"gcode": gcode})
+        return
+
     def on_print_progress(self, location, path, progress):
         # Avoid sending duplicate percentage progress messages
         if progress != self.last_progress_percent:
@@ -681,5 +695,6 @@ def __plugin_load__():
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-        "octoprint.filemanager.extension_tree": __plugin_implementation__.get_extension_tree
+        "octoprint.filemanager.extension_tree": __plugin_implementation__.get_extension_tree,
+        "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.parse_gcode_sent
     }
