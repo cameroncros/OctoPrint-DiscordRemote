@@ -1,14 +1,11 @@
 import os
-import sys
 import time
 from unittest import skipIf
 from unittest.mock import Mock
 
-import octoprint
-
 from octoprint_discordremote import DiscordLink
-from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
 from octoprint_discordremote.proto.messages_pb2 import ProtoFile, TextField, Response
+from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
 from octoprint_discordshim.embedbuilder import DISCORD_MAX_FILE_SIZE
 from unittests.livediscordtestcase import LiveDiscordTestCase
 
@@ -87,7 +84,7 @@ class TestDiscordShim(LiveDiscordTestCase):
         self.assertIn("Helloworld.dat.zip.007", results[7].attachments[0].filename)
 
     def test_respawn_killed(self):
-        discord = DiscordLink(self.bot_token, self.channel_id, Mock())
+        discord = DiscordLink(self.bot_token, Mock())
         discord.start_discord()
 
         while discord.client is None:
@@ -106,7 +103,7 @@ class TestDiscordShim(LiveDiscordTestCase):
 
     @skipIf(True, "Works in development, but not for CI")
     def test_respawn_socket_closed(self):
-        discord = DiscordLink(self.bot_token, self.channel_id, Mock())
+        discord = DiscordLink(self.bot_token, Mock())
         discord.start_discord()
 
         while discord.client is None:

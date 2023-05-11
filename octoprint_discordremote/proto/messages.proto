@@ -24,6 +24,13 @@ message Presence {
     string presence = 1;
 }
 
+message Settings {
+    string channel_id = 1;
+    bool presence_enabled = 2;
+    int32 cycle_time = 3;
+    string command_prefix = 4;
+}
+
 message Request {
     string command = 1;
     int64 user = 2;
@@ -34,4 +41,5 @@ message Response {
     optional EmbedContent embed = 1;
     optional Presence presence = 2;
     optional ProtoFile file = 3;
+    optional Settings settings = 4;
 }

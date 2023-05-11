@@ -6,7 +6,7 @@ import time
 from typing import Optional
 
 from . import Command
-from .proto.messages_pb2 import Response, Request, Presence
+from .proto.messages_pb2 import Response, Request, Presence, Settings
 
 
 class DiscordLink:
@@ -14,17 +14,14 @@ class DiscordLink:
     client: Optional[socket.socket] = None
     command: Command
 
-    def __init__(self, bot_token, channel_id, command: Command):
+    def __init__(self, bot_token: str, command: Command):
         self.lock = threading.Lock()
         self.command = command
-
         self.bot_token = bot_token
-        self.channel_id = channel_id
 
     def spawn_discordshim(self, port: int):
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = self.bot_token
-        my_env["CHANNEL_ID"] = self.channel_id
         my_env["DISCORD_LINK_PORT"] = str(port)
         self.process = subprocess.Popen(["python", "-m", "octoprint_discordshim"], env=my_env)
 
@@ -65,8 +62,12 @@ class DiscordLink:
             pass
         self.lock.release()
 
-    def update_precence(self, status):
+    def update_precence(self, status: str):
         resp = Response(presence=Presence(presence=status))
+        self.send(resp)
+
+    def update_settings(self, settings: Settings):
+        resp = Response(settings=settings)
         self.send(resp)
 
     def listener(self):

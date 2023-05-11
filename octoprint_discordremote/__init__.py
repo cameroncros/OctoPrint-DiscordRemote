@@ -24,7 +24,7 @@ from octoprint.server import user_permission
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from .proto.messages_pb2 import EmbedContent, ProtoFile, Response
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Settings
 from .discordlink import DiscordLink
 from .libs import ipgetter
 
@@ -161,9 +161,13 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord.shutdown_discord()
 
         self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
-                                   self._settings.get(['channelid'], merged=True),
                                    self.command)
         self.discord.start_discord()
+
+        self.discord.update_settings(Settings(channel_id=self._settings.get(['channelid'], merged=True),
+                                              presence_enabled=self._settings.get(['presence'], merged=True),
+                                              cycle_time=self._settings.get(['presence_cycle_time'], merged=True),
+                                              command_prefix=self._settings.get(['prefix'], merged=True)))
 
         self.notify_event("startup")
         if send_test:

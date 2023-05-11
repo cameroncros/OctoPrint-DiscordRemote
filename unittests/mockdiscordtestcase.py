@@ -7,7 +7,7 @@ from unittest.mock import Mock
 from discord.embeds import Embed
 
 from octoprint_discordremote import DiscordLink, Command
-from octoprint_discordremote.proto.messages_pb2 import Response, ProtoFile
+from octoprint_discordremote.proto.messages_pb2 import Response, ProtoFile, Settings
 
 
 class TestLogger(logging.Logger):
@@ -45,7 +45,6 @@ class MockDiscordTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.discord = DiscordLink(bot_token='bottoken',
-                                  channel_id='channelid',
                                   command=Command(Mock()))
         # Intentionally not calling cls.discord.run(),
         # as it will spawn discordshim which we dont want

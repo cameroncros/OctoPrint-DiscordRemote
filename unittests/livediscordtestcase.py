@@ -10,6 +10,7 @@ import yaml
 from _pytest.outcomes import fail
 from discord.message import Message
 
+from octoprint_discordremote import Settings
 from octoprint_discordshim.discordshim import DiscordShim
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
@@ -68,10 +69,10 @@ class LiveDiscordTestCase(MockDiscordTestCase):
     @classmethod
     def discordshim_function(cls, port: int):
         os.environ['BOT_TOKEN'] = cls.bot_token
-        os.environ['CHANNEL_ID'] = cls.channel_id
         os.environ['DISCORD_LINK_PORT'] = str(port)
 
         cls.discord = DiscordShim()
+        cls.discord.channel_id = cls.channel_id
         cls.discord.run()
 
     def start_scraper(self):

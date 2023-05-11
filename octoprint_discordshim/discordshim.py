@@ -15,7 +15,7 @@ import yaml
 from discord.embeds import Embed
 from discord.file import File
 
-from octoprint_discordremote.proto.messages_pb2 import Request, Response, ProtoFile
+from octoprint_discordremote.proto.messages_pb2 import Request, Response, ProtoFile, Settings
 from octoprint_discordshim.embedbuilder import embed_simple, upload_file
 
 
@@ -42,6 +42,8 @@ class DiscordShim:
     }
     presence_cycle_id = 0
 
+    channel_id: str = "0"
+
     def __init__(self):
         self.logger = Logger("discordshim")
 
@@ -50,14 +52,10 @@ class DiscordShim:
             with open(config) as f:
                 data = yaml.load(f)
                 self.bot_token = data['bottoken']
-                self.channel_id = data['channelid']
                 self.port = 23456
         else:
             self.bot_token = os.environ['BOT_TOKEN']
             os.environ['BOT_TOKEN'] = ''
-
-            self.channel_id = os.environ['CHANNEL_ID']
-            os.environ['CHANNEL_ID'] = ''
 
             self.port = int(os.environ['DISCORD_LINK_PORT'])
             os.environ['DISCORD_LINK_PORT'] = ''
@@ -83,6 +81,8 @@ class DiscordShim:
 
     async def send(self, messages: List[Tuple[Optional[Embed], Optional[File]]]):
         channel = self.client.get_channel(int(self.channel_id))
+        if channel is None:
+            return
         for embed, snapshot in messages:
             try:
                 await channel.send(embed=embed, file=snapshot)
@@ -142,6 +142,14 @@ class DiscordShim:
 
             await asyncio.sleep(self.cycle_time)
 
+    async def process_settings(self, settings: Settings):
+
+        self.presence_enabled = settings.presence_enabled
+        self.cycle_time = settings.cycle_time
+        self.command_prefix = settings.command_prefix
+
+        self.presence_cycle[0] = "{}help".format(self.command_prefix)
+
     async def talk_to_octoprint(self):
         reader, self.writer = await asyncio.open_connection(
             '127.0.0.1', self.port)
@@ -163,6 +171,8 @@ class DiscordShim:
                 await self.send(upload_file(data.file))
             elif data.HasField('presence'):
                 self.current_status = data.presence.presence
+            elif data.HasField('settings'):
+                await self.process_settings(data.settings)
 
     async def wait_for_shutdown(self):
         while self.running:

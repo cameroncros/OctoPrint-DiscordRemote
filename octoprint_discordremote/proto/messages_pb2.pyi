@@ -46,14 +46,28 @@ class Request(_message.Message):
     def __init__(self, command: _Optional[str] = ..., user: _Optional[int] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
-    __slots__ = ["embed", "file", "presence"]
+    __slots__ = ["embed", "file", "presence", "settings"]
     EMBED_FIELD_NUMBER: _ClassVar[int]
     FILE_FIELD_NUMBER: _ClassVar[int]
     PRESENCE_FIELD_NUMBER: _ClassVar[int]
+    SETTINGS_FIELD_NUMBER: _ClassVar[int]
     embed: EmbedContent
     file: ProtoFile
     presence: Presence
-    def __init__(self, embed: _Optional[_Union[EmbedContent, _Mapping]] = ..., presence: _Optional[_Union[Presence, _Mapping]] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
+    settings: Settings
+    def __init__(self, embed: _Optional[_Union[EmbedContent, _Mapping]] = ..., presence: _Optional[_Union[Presence, _Mapping]] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ..., settings: _Optional[_Union[Settings, _Mapping]] = ...) -> None: ...
+
+class Settings(_message.Message):
+    __slots__ = ["channel_id", "command_prefix", "cycle_time", "presence_enabled"]
+    CHANNEL_ID_FIELD_NUMBER: _ClassVar[int]
+    COMMAND_PREFIX_FIELD_NUMBER: _ClassVar[int]
+    CYCLE_TIME_FIELD_NUMBER: _ClassVar[int]
+    PRESENCE_ENABLED_FIELD_NUMBER: _ClassVar[int]
+    channel_id: str
+    command_prefix: str
+    cycle_time: int
+    presence_enabled: bool
+    def __init__(self, channel_id: _Optional[str] = ..., presence_enabled: bool = ..., cycle_time: _Optional[int] = ..., command_prefix: _Optional[str] = ...) -> None: ...
 
 class TextField(_message.Message):
     __slots__ = ["inline", "text", "title"]
