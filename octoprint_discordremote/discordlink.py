@@ -3,6 +3,7 @@ import socket
 import subprocess
 import threading
 import time
+from typing import Optional
 
 from . import Command
 from .proto.messages_pb2 import Response, Request, Presence
@@ -10,7 +11,7 @@ from .proto.messages_pb2 import Response, Request, Presence
 
 class DiscordLink:
     process = None
-    client = None
+    client: Optional[socket.socket] = None
     command: Command
 
     def __init__(self, bot_token, channel_id, command: Command):
@@ -48,7 +49,7 @@ class DiscordLink:
     def shutdown_discord(self):
         if self.process:
             self.process.kill()
-            self.process.wait()
+            self.process.wait(timeout=5)
             self.process = None
         if self.client:
             self.client.close()
@@ -74,9 +75,10 @@ class DiscordLink:
                 time.sleep(1)
 
             try:
+                assert self.client is not None
                 length_bytes = self.client.recv(4)
                 if len(length_bytes) == 0:
-                    return  # Socket has closed.
+                    break  # Socket has closed.
                 length = int.from_bytes(length_bytes, byteorder='little')
 
                 data_bytes = self.client.recv(length)
@@ -92,6 +94,7 @@ class DiscordLink:
             except TimeoutError:
                 continue
             except Exception as e:
-                self.shutdown_discord()
-                time.sleep(5000)
-                self.start_discord()
+                break
+        self.shutdown_discord()
+        time.sleep(5)
+        self.start_discord()

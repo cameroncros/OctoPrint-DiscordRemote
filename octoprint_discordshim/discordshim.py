@@ -149,6 +149,7 @@ class DiscordShim:
         while True:
             length_bytes = await reader.readexactly(4)
             if len(length_bytes) == 0:
+                reader.feed_eof()
                 return
 
             length = int.from_bytes(length_bytes, byteorder='little')

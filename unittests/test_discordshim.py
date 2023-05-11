@@ -2,9 +2,11 @@ import os
 import sys
 import time
 from unittest import skipIf
+from unittest.mock import Mock
 
 import octoprint
 
+from octoprint_discordremote import DiscordLink
 from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
 from octoprint_discordremote.proto.messages_pb2 import ProtoFile, TextField, Response
 from octoprint_discordshim.embedbuilder import DISCORD_MAX_FILE_SIZE
@@ -83,3 +85,42 @@ class TestDiscordShim(LiveDiscordTestCase):
         self.assertIn("Helloworld.dat.zip.005", results[5].attachments[0].filename)
         self.assertIn("Helloworld.dat.zip.006", results[6].attachments[0].filename)
         self.assertIn("Helloworld.dat.zip.007", results[7].attachments[0].filename)
+
+    def test_respawn_killed(self):
+        discord = DiscordLink(self.bot_token, self.channel_id, Mock())
+        discord.start_discord()
+
+        while discord.client is None:
+            time.sleep(1)
+
+        first_pid = discord.process.pid
+        discord.process.kill()
+
+        time.sleep(20)
+
+        second_pid = discord.process.pid
+
+        self.assertNotEquals(first_pid, second_pid)
+
+        discord.shutdown_discord()
+
+    @skipIf(True, "Works in development, but not for CI")
+    def test_respawn_socket_closed(self):
+        discord = DiscordLink(self.bot_token, self.channel_id, Mock())
+        discord.start_discord()
+
+        while discord.client is None:
+            time.sleep(1)
+
+        first_pid = discord.process.pid
+
+        self.assertIsNotNone(self.client)
+        discord.client.close()
+
+        time.sleep(20)
+
+        second_pid = discord.process.pid
+
+        self.assertNotEqual(first_pid, second_pid)
+
+        discord.shutdown_discord()
