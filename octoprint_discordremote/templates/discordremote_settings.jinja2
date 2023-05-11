@@ -34,7 +34,7 @@
                 your local network. If left blank, this setting will fall back to the Pi's local IP.") }}
             </small>
         </div>
-        
+
         <div class="control-group">
             <label class="control-label">{{ _('Enable Presence') }}</label>
             <div class="controls">
@@ -44,7 +44,7 @@
         <div style="clear:both">
             <small>{{ _("Check this box to enable a rotating status message within Discord, showing the currently configured prefix and printer status. May require a restart to apply.") }}
             </small>
-        </div>   
+        </div>
 
         <div class="control-group">
             <label class="control-label">{{ _('Presence Cycle') }}</label>
@@ -56,7 +56,7 @@
             <small>{{ _("Time between each presence cycle update, in seconds. The default is 10. May require a restart to apply.") }}
             </small>
         </div>
-        
+
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
         </div>
@@ -188,6 +188,7 @@
                            data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
                 </div>
             </div>
+
             <!-- Special Case for Percentage reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Notify every") }}</label>
@@ -208,6 +209,7 @@
                            data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
                 </div>
             </div>
+
             <!-- Special Case for Periodic reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].period">
                 <label class="control-label">{{ _("Notify every") }}</label>
@@ -216,6 +218,7 @@
                            data-bind="value: $parent.settings.plugins.discordremote.events[$data].period"/>s
                 </div>
             </div>
+
         </div>
     </form>
     <h3>Scripts settings</h3>
