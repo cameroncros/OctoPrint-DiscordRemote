@@ -83,10 +83,10 @@ class DiscordLink:
                 data = Request()
                 data.ParseFromString(data_bytes)
 
-                if data.HasField('command'):
+                if data.command:
                     messages = self.command.parse_command(data.command, data.user)
                     self.send(messages=messages)
-                elif data.HasField('file'):
+                if data.HasField('file'):
                     messages = self.command.download_file(data.file, data.user)
                     self.send(messages=messages)
             except TimeoutError:
