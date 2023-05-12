@@ -10,8 +10,7 @@ import yaml
 from _pytest.outcomes import fail
 from discord.message import Message
 
-from octoprint_discordremote import Settings
-from octoprint_discordshim.discordshim import DiscordShim
+from octoprint_discordremote.discordshim.discordshim import DiscordShim
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 

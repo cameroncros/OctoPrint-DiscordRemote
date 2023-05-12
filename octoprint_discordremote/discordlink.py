@@ -18,14 +18,16 @@ class DiscordLink:
         self.lock = threading.Lock()
         self.command = command
         self.bot_token = bot_token
+        self.shutdown = False
 
     def spawn_discordshim(self, port: int):
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = self.bot_token
         my_env["DISCORD_LINK_PORT"] = str(port)
-        self.process = subprocess.Popen(["python", "-m", "octoprint_discordshim"], env=my_env)
+        self.process = subprocess.Popen(["python", "-m", "octoprint_discordremote.discordshim"], env=my_env)
 
     def start_discord(self):
+        self.shutdown = False
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(10)
         server.bind(('127.0.0.1', 0))
@@ -44,6 +46,10 @@ class DiscordLink:
         threading.Thread(target=self.listener).start()
 
     def shutdown_discord(self):
+        self.shutdown = True
+        self._stop_discord()
+
+    def _stop_discord(self):
         if self.process:
             self.process.kill()
             self.process.wait(timeout=5)
@@ -73,6 +79,8 @@ class DiscordLink:
     def listener(self):
         while True:
             while self.client is None:
+                if self.shutdown is True:
+                    return
                 time.sleep(1)
 
             try:
@@ -96,6 +104,7 @@ class DiscordLink:
                 continue
             except Exception as e:
                 break
-        self.shutdown_discord()
-        time.sleep(5)
-        self.start_discord()
+        self._stop_discord()
+        if not self.shutdown:
+            time.sleep(5)
+            self.start_discord()

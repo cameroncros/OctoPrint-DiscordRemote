@@ -6,7 +6,7 @@ from unittest.mock import Mock
 from octoprint_discordremote import DiscordLink
 from octoprint_discordremote.proto.messages_pb2 import ProtoFile, TextField, Response
 from octoprint_discordremote.responsebuilder import embed_simple, COLOR_INFO
-from octoprint_discordshim.embedbuilder import DISCORD_MAX_FILE_SIZE
+from octoprint_discordremote.discordshim.embedbuilder import DISCORD_MAX_FILE_SIZE
 from unittests.livediscordtestcase import LiveDiscordTestCase
 
 

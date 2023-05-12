@@ -584,12 +584,11 @@ class TestCommand(MockDiscordTestCase):
         mock_oswalk.return_value = [('', [], [])]
         response = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
 
-
         self.validateResponse(response,
                               COLOR_ERROR,
                               title="Failed to find file matching the name given")
 
-        mock_oswalk.return_value = [('', [], ['test.gcode'])]
+        mock_oswalk.return_value = [('', [], [self._get_path('../test.gcode')])]
         response = self.command.gettimelapse(["/gettimelapse", "test.gcode"])
 
         self.assertIsNotNone(response)

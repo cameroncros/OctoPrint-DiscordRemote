@@ -16,7 +16,7 @@ from discord.embeds import Embed
 from discord.file import File
 
 from octoprint_discordremote.proto.messages_pb2 import Request, Response, ProtoFile, Settings
-from octoprint_discordshim.embedbuilder import embed_simple, upload_file
+from octoprint_discordremote.discordshim.embedbuilder import embed_simple, upload_file
 
 
 def download_file(url) -> bytes:

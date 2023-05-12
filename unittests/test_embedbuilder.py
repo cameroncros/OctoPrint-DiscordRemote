@@ -1,13 +1,12 @@
 # This Python file uses the following encoding: utf-8
 from __future__ import unicode_literals
-import time
 
 import os
 import zipfile
 
 from octoprint_discordremote import ProtoFile
 from octoprint_discordremote.responsebuilder import COLOR_INFO
-from octoprint_discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, MAX_VALUE, MAX_NUM_FIELDS, upload_file, \
+from octoprint_discordremote.discordshim.embedbuilder import EmbedBuilder, MAX_TITLE, MAX_VALUE, MAX_NUM_FIELDS, upload_file, \
     DISCORD_MAX_FILE_SIZE
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
