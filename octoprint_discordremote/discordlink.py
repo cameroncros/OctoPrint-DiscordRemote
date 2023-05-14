@@ -83,8 +83,18 @@ class DiscordLink:
                     return
                 time.sleep(1)
 
+            # Check process is still running
+            try:
+                self.process.wait(timeout=0.001)
+                if self.process.returncode is not None:
+                    break
+            except subprocess.TimeoutExpired:
+                pass
+
+            # Try listening for message
             try:
                 assert self.client is not None
+
                 length_bytes = self.client.recv(4)
                 if len(length_bytes) == 0:
                     break  # Socket has closed.
