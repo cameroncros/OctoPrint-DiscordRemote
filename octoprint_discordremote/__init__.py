@@ -294,31 +294,31 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
         if event == "PrinterStateChanged":
             if payload["state_id"] == "OPERATIONAL":
-                self.discord.update_precence("Printer Operational")
+                self.update_presence("Printer Operational")
                 return self.notify_event("printer_state_operational")
             elif payload["state_id"] == "ERROR":
-                self.discord.update_precence("Printer Errored")
+                self.update_presence("Printer Errored")
                 return self.notify_event("printer_state_error")
             elif payload["state_id"] == "UNKNOWN":
                 return self.notify_event("printer_state_unknown")
 
         if event == "PrintStarted":
-            self.discord.update_precence("Print Started")
+            self.update_presence("Print Started")
             self.start_periodic_reporting()
             return self.notify_event("printing_started", payload)
         if event == "PrintPaused":
-            self.discord.update_precence("Print Paused")
+            self.update_presence("Print Paused")
             return self.notify_event("printing_paused", payload)
         if event == "PrintResumed":
-            self.discord.update_precence("Print Resumed")
+            self.update_presence("Print Resumed")
             return self.notify_event("printing_resumed", payload)
         if event == "PrintCancelled":
-            self.discord.update_precence("Complete")
+            self.update_presence("Complete")
             return self.notify_event("printing_cancelled", payload)
 
         if event == "PrintDone":
             self.stop_periodic_reporting()
-            self.discord.update_precence("Complete")
+            self.update_presence("Complete")
             payload['time_formatted'] = timedelta(seconds=int(payload["time"]))
             return self.notify_event("printing_done", payload)
 
@@ -329,7 +329,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if progress != self.last_progress_percent:
             self.last_progress_percent = progress
 
-            self.discord.update_precence(f"Print Progress: {progress}%")
+            self.update_presence(f"Print Progress: {progress}%")
             self.notify_event("printing_progress", {"progress": progress})
 
     def on_settings_save(self, data):
@@ -681,6 +681,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                     return
 
             self.notify_event("printing_progress_periodic", data={"progress": self.last_progress_percent})
+
+    def update_presence(self, param: str):
+        if self.discord is not None:
+            self.discord.update_presence(param)
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

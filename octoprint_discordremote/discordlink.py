@@ -68,7 +68,7 @@ class DiscordLink:
             pass
         self.lock.release()
 
-    def update_precence(self, status: str):
+    def update_presence(self, status: str):
         resp = Response(presence=Presence(presence=status))
         self.send(resp)
 
