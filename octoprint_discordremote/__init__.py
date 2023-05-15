@@ -161,7 +161,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self.discord.shutdown_discord()
 
         self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
-                                   self.command)
+                                   self.command,
+                                   self._logger)
         self.discord.start_discord()
 
         self.discord.update_settings(Settings(channel_id=self._settings.get(['channelid'], merged=True),

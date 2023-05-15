@@ -45,7 +45,8 @@ class MockDiscordTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.discord = DiscordLink(bot_token='bottoken',
-                                  command=Command(Mock()))
+                                  command=Command(Mock()),
+                                  logger=Mock())
         # Intentionally not calling cls.discord.run(),
         # as it will spawn discordshim which we dont want
 

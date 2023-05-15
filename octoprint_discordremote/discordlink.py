@@ -1,6 +1,7 @@
 import os
 import socket
 import subprocess
+import sys
 import threading
 import time
 from typing import Optional
@@ -14,11 +15,12 @@ class DiscordLink:
     client: Optional[socket.socket] = None
     command: Command
 
-    def __init__(self, bot_token: str, command: Command):
+    def __init__(self, bot_token: str, command: Command, logger):
         self.lock = threading.Lock()
         self.command = command
         self.bot_token = bot_token
         self.shutdown = False
+        self._logger = logger
 
     def spawn_discordshim(self, port: int):
         my_env = os.environ.copy()
@@ -113,6 +115,7 @@ class DiscordLink:
             except TimeoutError:
                 continue
             except Exception as e:
+                self._logger.error(f"Listener failed with: [{e}]")
                 break
         self._stop_discord()
         if not self.shutdown:

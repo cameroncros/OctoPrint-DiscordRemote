@@ -84,7 +84,7 @@ class TestDiscordShim(LiveDiscordTestCase):
         self.assertIn("Helloworld.dat.zip.007", results[7].attachments[0].filename)
 
     def test_respawn_killed(self):
-        discord = DiscordLink(self.bot_token, Mock())
+        discord = DiscordLink(self.bot_token, Mock(), Mock())
         discord.start_discord()
 
         while discord.client is None:
