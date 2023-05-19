@@ -1,7 +1,6 @@
 import os
 import socket
 import subprocess
-import sys
 import threading
 import time
 from typing import Optional
@@ -26,7 +25,16 @@ class DiscordLink:
         my_env = os.environ.copy()
         my_env["BOT_TOKEN"] = self.bot_token
         my_env["DISCORD_LINK_PORT"] = str(port)
-        self.process = subprocess.Popen(["python", "-m", "octoprint_discordremote.discordshim"], env=my_env)
+
+        path_guess = os.path.abspath(__file__).split('/')[0:-5]
+        path_guess.append('bin')
+        venv_path = '/git'.join(path_guess)
+        my_env['PATH'] = f'{venv_path}:{my_env["PATH"]}'
+        self._logger.info(f"env: [{my_env}]")
+        self._logger.info(f"cwd: [{os.getcwd()}]")
+        self._logger.info(f"file_path: [{__file__}]")
+        self.process = subprocess.Popen(["python3", "-m", "octoprint_discordremote.discordshim"], env=my_env)
+        self._logger.info("Started discordshim");
 
     def start_discord(self):
         self.shutdown = False
@@ -112,6 +120,8 @@ class DiscordLink:
                 if data.HasField('file'):
                     messages = self.command.download_file(data.file, data.user)
                     self.send(messages=messages)
+            except socket.timeout:
+                continue
             except TimeoutError:
                 continue
             except Exception as e:
