@@ -8,6 +8,7 @@ import socket
 import subprocess
 import threading
 import time
+import re
 from base64 import b64decode
 from datetime import timedelta, datetime
 from io import BytesIO
@@ -17,6 +18,8 @@ from typing import Tuple, Optional
 import humanfriendly
 import octoprint.plugin
 import octoprint.settings
+import octoprint.filemanager
+import octoprint.filemanager.util
 import requests
 from PIL import Image
 from flask import make_response
@@ -28,7 +31,6 @@ from octoprint_discordremote.embedbuilder import info_embed
 from octoprint_discordremote.libs import ipgetter
 from octoprint_discordremote.presence import Presence
 from .discordimpl import DiscordImpl
-
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                           octoprint.plugin.StartupPlugin,
@@ -290,6 +292,24 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 pip="https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/{target_version}.zip"
             )
         )
+        
+    def get_gcode_format(self, file):
+        file = self._file_manager.path_on_disk("local", file)
+        with open(file, "r") as file:
+            contents = file.read()
+            if "Cura_SteamEngine" in contents and "thumbnail begin" in contents:
+                return "Cura"
+            else:
+                return False
+
+    # Thumbnail parser for Cura format
+    def get_thumbnail_cura(self, file):
+        file = self._file_manager.path_on_disk("local", file)
+        with open(file, "r") as file:
+            contents = file.read()
+            b64 = re.search(r"; thumbnail begin.+\n(; (.+\n)+)+; thumbnail end", contents).group(1)
+            b64 = b64.replace("; ", "")
+            return b64
 
     # EventHandlerPlugin hook
     def on_event(self, event, payload):
@@ -378,7 +398,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if 'author' in data:
             builder.set_author(data['author'])
         if 'color' in data:
-            builder.set_color(data['color'])
+            if isinstance(data['color'], str):
+                builder.set_color(int(data['color'].replace('#', ''), 16))
+            else:
+                builder.set_color(data['color'])
         if 'description' in data:
             builder.set_description(data['description'])
         if 'image' in data:
@@ -414,6 +437,11 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         data['timespent'] = self.get_print_time_spent()
         data['eta'] = self.get_print_eta()
 
+        # Attempt to parse potential thumbnail
+        if event_id == "printing_started" and self.get_gcode_format(data["path"]):
+            self._logger.info("Print appears to have a thumbnail, trying to parse")
+            print_thumbnail = self.get_thumbnail_cura(data["path"])
+
         # Special case for progress eventID : we check for progress and steps
         if event_id == 'printing_progress':
             # Skip if just started
@@ -445,7 +473,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
             self.last_progress_message = datetime.now()
 
-        return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"])
+        return self.send_message(event_id, tmp_config["message"].format(**data), tmp_config["with_snapshot"], print_thumbnail)
 
     def get_ip_address(self):
         if self._settings.get(['show_local_ip'], merged=True) == 'hostname':
@@ -510,17 +538,25 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
             return out
 
-    def send_message(self, event_id, message, with_snapshot=False):
+    def send_message(self, event_id, message, with_snapshot=False, print_thumbnail=None):
         # exec "before" script if any
         self.exec_script(event_id, "before")
 
         if self.discord is None:
             return
 
-        # Get snapshot if asked for
+        # Get snapshot if asked for, otherwise try thumbnail
         snapshot = None
         if with_snapshot:
             snapshot = self.get_snapshot()
+        else:
+            if print_thumbnail is not None:
+                try:
+                    bytes = b64decode(print_thumbnail)
+                    image = BytesIO(bytes)
+                    snapshot = ("Thumbnail.png", image)
+                except:
+                    self._logger.info("Failed to parse thumbnail\n\n{}\n\n".format(print_thumbnail))
 
         messages = info_embed(author=self.get_printer_name(),
                               title=message,
