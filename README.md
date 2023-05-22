@@ -58,10 +58,13 @@ See the following link for instructions on how to setup a Discord bot:
 
     https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
 
+
 #### Tips
 
 - The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
 - When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
+- You **must** enable all "Privileged Intents" as shown in the screenshot below
+![image](https://github.com/Coder-Tavi/OctoPrint-DiscordRemote/assets/66774833/f12ac7b1-2423-4062-a5cf-435bb3599ed9)
 - OAuth2 permissions are not necessary.
 - If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
 
