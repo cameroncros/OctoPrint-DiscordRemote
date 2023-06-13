@@ -1,13 +1,15 @@
 import logging
 import os
 import socket
+from random import randint
 from typing import Optional
 from unittest import TestCase
 from unittest.mock import Mock
+
 from discord.embeds import Embed
 
 from octoprint_discordremote import DiscordLink, Command
-from octoprint_discordremote.proto.messages_pb2 import Response, ProtoFile, Settings
+from octoprint_discordremote.proto.messages_pb2 import Response, ProtoFile
 
 
 class TestLogger(logging.Logger):
@@ -44,28 +46,17 @@ class MockDiscordTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.discord = DiscordLink(bot_token='bottoken',
-                                  command=Command(Mock()),
-                                  logger=Mock())
-        # Intentionally not calling cls.discord.run(),
-        # as it will spawn discordshim which we dont want
-
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(10)
         server.bind(('127.0.0.1', 0))
         sock_details = server.getsockname()
         server.listen()
 
-        cls.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        cls.client.settimeout(10)
-        cls.client.connect(('127.0.0.1', sock_details[1]))
-
-        while cls.discord.client is None:
-            try:
-                cls.discord.client, _ = server.accept()
-                server.close()
-            except socket.timeout:
-                pass
+        cls.discord = DiscordLink(shim_address=('127.0.0.1', sock_details[1]),
+                                  command=Command(Mock()),
+                                  logger=Mock())
+        cls.discord.start_discord()
+        cls.client, _ = server.accept()
 
         with open(cls._get_path("test_pattern.png"), "rb") as f:
             cls.snapshot_bytes = f.read()

@@ -43,7 +43,7 @@ class Request(_message.Message):
     command: str
     file: ProtoFile
     user: int
-    def __init__(self, command: _Optional[str] = ..., user: _Optional[int] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
+    def __init__(self, user: _Optional[int] = ..., command: _Optional[str] = ..., file: _Optional[_Union[ProtoFile, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["embed", "file", "presence", "settings"]
@@ -63,11 +63,11 @@ class Settings(_message.Message):
     COMMAND_PREFIX_FIELD_NUMBER: _ClassVar[int]
     CYCLE_TIME_FIELD_NUMBER: _ClassVar[int]
     PRESENCE_ENABLED_FIELD_NUMBER: _ClassVar[int]
-    channel_id: str
+    channel_id: int
     command_prefix: str
     cycle_time: int
     presence_enabled: bool
-    def __init__(self, channel_id: _Optional[str] = ..., presence_enabled: bool = ..., cycle_time: _Optional[int] = ..., command_prefix: _Optional[str] = ...) -> None: ...
+    def __init__(self, channel_id: _Optional[int] = ..., presence_enabled: bool = ..., cycle_time: _Optional[int] = ..., command_prefix: _Optional[str] = ...) -> None: ...
 
 class TextField(_message.Message):
     __slots__ = ["inline", "text", "title"]

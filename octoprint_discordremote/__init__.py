@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-import io
 import logging
 import os
 import socket
@@ -12,7 +11,7 @@ from base64 import b64decode
 from datetime import timedelta, datetime
 from io import BytesIO
 from threading import Thread, Event
-from typing import Tuple, Optional
+from typing import Optional
 
 import humanfriendly
 import octoprint.plugin
@@ -24,9 +23,9 @@ from octoprint.server import user_permission
 from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
-from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Settings
 from .discordlink import DiscordLink
 from .libs import ipgetter
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Settings
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -44,6 +43,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         for i in range(0, 100):
             allowed_list.append(str(i).zfill(3))
         return dict(machinecode=dict(discordremote=allowed_list))
+
 
     def __init__(self):
         self.discord: Optional[DiscordLink] = None
@@ -160,15 +160,19 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord:
             self.discord.shutdown_discord()
 
-        self.discord = DiscordLink(self._settings.get(['bottoken'], merged=True),
-                                   self.command,
-                                   self._logger)
+        shimaddress = self._settings.get(['shimaddress'], merged=True)
+        if shimaddress is None or len(shimaddress) == 0:
+            shimaddress = 'opdrshim.uk:23416'
+        parts = shimaddress.split(':')
+        shimaddress = (parts[0], int(parts[1]))
+        self.discord = DiscordLink(shimaddress,
+                                   channel_id=self._settings.get(['channelid'], merged=True),
+                                   command=self.command,
+                                   logger=self._logger,
+                                   presence_enabled=self._settings.get(['presence'], merged=True),
+                                   cycle_time=self._settings.get(['presence_cycle_time'], merged=True),
+                                   command_prefix=self._settings.get(['prefix'], merged=True))
         self.discord.start_discord()
-
-        self.discord.update_settings(Settings(channel_id=self._settings.get(['channelid'], merged=True),
-                                              presence_enabled=self._settings.get(['presence'], merged=True),
-                                              cycle_time=self._settings.get(['presence_cycle_time'], merged=True),
-                                              command_prefix=self._settings.get(['prefix'], merged=True)))
 
         self.notify_event("startup")
         if send_test:
@@ -207,7 +211,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     # SettingsPlugin mixin
     def get_settings_defaults(self):
         return {
-            'bottoken': "",
+            'bottoken': "",  # Ignored: Used by old bot.
+            'shimaddress': "",
             'channelid': "",
             'baseurl': "",
             'presence': True,
@@ -337,8 +342,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
         self._logger.info("Settings have saved. Send a test message...")
-        thread = threading.Thread(target=self.configure_discord, args=(True,))
-        thread.start()
+        self.configure_discord()
 
     # SimpleApiPlugin mixin
     def get_api_commands(self):

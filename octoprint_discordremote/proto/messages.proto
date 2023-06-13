@@ -1,4 +1,5 @@
 syntax = "proto3";
+package DiscordShim;
 
 message ProtoFile {
     bytes data = 1;
@@ -25,21 +26,27 @@ message Presence {
 }
 
 message Settings {
-    string channel_id = 1;
+    uint64 channel_id = 1;
+
+    // Only relevant when self-hosting, global discordshim wont support presence anyway
     bool presence_enabled = 2;
     int32 cycle_time = 3;
     string command_prefix = 4;
 }
 
 message Request {
-    string command = 1;
-    int64 user = 2;
-    ProtoFile file = 3;
+    uint64 user = 1;
+    oneof message {
+        string command = 2;
+        ProtoFile file = 3;
+    }
 }
 
 message Response {
-    optional EmbedContent embed = 1;
-    optional Presence presence = 2;
-    optional ProtoFile file = 3;
-    optional Settings settings = 4;
+    oneof field {
+        EmbedContent embed = 1;
+        Presence presence = 2;
+        ProtoFile file = 3;
+        Settings settings = 4;
+    }
 }
