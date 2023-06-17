@@ -75,4 +75,5 @@ class DiscordLink:
         self.discordshim_conn.stop()
 
     def send(self, messages: Response):
-        self.discordshim_conn.send((messages,))
+        if messages is not None:
+            self.discordshim_conn.send((messages,))
