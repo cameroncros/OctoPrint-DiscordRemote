@@ -20,6 +20,7 @@ def mock_global_get_boolean(array):
 
 class TestPlugin(MockDiscordTestCase):
     def setUp(self):
+        super().setUp()
         self.plugin = DiscordRemotePlugin()
         self.plugin._settings = mock.Mock()
         self.plugin._printer = mock.Mock()

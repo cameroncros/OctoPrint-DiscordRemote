@@ -76,6 +76,7 @@ class TestCommand(MockDiscordTestCase):
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
     def setUp(self):
+        super().setUp()
         self.plugin = DiscordRemotePlugin()
         self.plugin.discord = mock.Mock()
         self.plugin._printer = mock.Mock()

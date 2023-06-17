@@ -45,26 +45,30 @@ class MockDiscordTestCase(TestCase):
     server: socket  # Discord shim side
 
     @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(10)
         server.bind(('127.0.0.1', 0))
         sock_details = server.getsockname()
         server.listen()
 
-        cls.discord = DiscordLink(shim_address=('127.0.0.1', sock_details[1]),
+        self.discord = DiscordLink(shim_address=('127.0.0.1', sock_details[1]),
+                                  channel_id='1234',
                                   command=Command(Mock()),
-                                  logger=Mock())
-        cls.discord.start_discord()
-        cls.client, _ = server.accept()
+                                  logger=Mock(),
+                                  presence_enabled=False,
+                                  cycle_time=5,
+                                  command_prefix='/')
+        self.discord.start_discord()
+        self.client, _ = server.accept()
 
-        with open(cls._get_path("test_pattern.png"), "rb") as f:
-            cls.snapshot_bytes = f.read()
+        with open(self._get_path("test_pattern.png"), "rb") as f:
+            self.snapshot_bytes = f.read()
 
     @classmethod
-    def tearDownClass(cls):
-        cls.client.close()
-        cls.discord.shutdown_discord()
+    def tearDown(self):
+        self.client.close()
+        self.discord.shutdown_discord()
 
     @staticmethod
     def _get_path(filename):

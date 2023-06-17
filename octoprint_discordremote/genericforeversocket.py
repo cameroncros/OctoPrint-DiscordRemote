@@ -17,14 +17,22 @@ class GenericForeverSocket:
             self.socket = s
 
         def sendsafe(self, data: bytes):
-            if self.socket.sendall(data) == 0:
+            try:
+                if self.socket.sendall(data) == 0:
+                    raise GenericForeverSocket.ConnectionClosed()
+            except ConnectionResetError:
+                raise GenericForeverSocket.ConnectionClosed()
+            except BrokenPipeError:
                 raise GenericForeverSocket.ConnectionClosed()
 
         def recvsafe(self, length: int) -> bytes:
-            data = self.socket.recv(length)
-            if len(data) == 0:
-                raise GenericForeverSocket.ConnectionClosed
-            return data
+            try:
+                data = self.socket.recv(length)
+                if len(data) == 0:
+                    raise GenericForeverSocket.ConnectionClosed()
+                return data
+            except ConnectionResetError:
+                raise GenericForeverSocket.ConnectionClosed()
 
     def __init__(self, address: str, port: int, init_fn, read_fn, write_fn):
         self.address = address

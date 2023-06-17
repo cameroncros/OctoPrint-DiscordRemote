@@ -9,6 +9,7 @@ from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 class TestSystemCommand(MockDiscordTestCase):
     def setUp(self):
+        super().setUp()
         self.system_commands = SystemCommands()
 
     def test_setup(self):
