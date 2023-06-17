@@ -76,6 +76,8 @@ class GenericForeverSocket:
                         self.read_fn(safe)
                     except TimeoutError:
                         pass
+                    except socket.timeout:
+                        pass
 
                     if len(self.queued_messages) != 0:
                         with self.queued_messages_lock:
