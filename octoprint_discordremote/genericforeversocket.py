@@ -59,7 +59,8 @@ class GenericForeverSocket:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((self.address, self.port))
-                s.setblocking(False)
+                s.setblocking(True)
+                s.settimeout(0.1)
             except Exception as e:
                 time.sleep(2)
                 continue
@@ -73,7 +74,7 @@ class GenericForeverSocket:
                 while True:
                     try:
                         self.read_fn(safe)
-                    except BlockingIOError:
+                    except TimeoutError:
                         pass
 
                     if len(self.queued_messages) != 0:
