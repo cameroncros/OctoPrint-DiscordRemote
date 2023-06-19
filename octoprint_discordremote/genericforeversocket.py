@@ -90,7 +90,15 @@ class GenericForeverSocket:
 
             except GenericForeverSocket.ConnectionClosed:
                 pass
+            except Exception as e:
+                print(f"Exception: [{e}]")
+                pass
             print("Disconnected")
+            # To be safe:
+            try:
+                s.close()
+            except:
+                pass
 
     def run(self):
         self.thread.start()
