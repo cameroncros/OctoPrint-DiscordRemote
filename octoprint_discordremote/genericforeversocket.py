@@ -1,7 +1,8 @@
+import logging
 import socket
 import threading
 import time
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Optional
 
 
 class GenericForeverSocket:
@@ -34,12 +35,22 @@ class GenericForeverSocket:
             except ConnectionResetError:
                 raise GenericForeverSocket.ConnectionClosed()
 
-    def __init__(self, address: str, port: int, init_fn, read_fn, write_fn):
+    def __init__(self,
+                 address: str,
+                 port: int,
+                 init_fn: Callable[[SocketWrapper], None],
+                 read_fn: Callable[[SocketWrapper], None],
+                 write_fn: Callable[[SocketWrapper, Tuple], None],
+                 logger: Optional[logging.Logger]=None):
         self.address = address
         self.port = port
         self.init_fn: Callable[[GenericForeverSocket.SocketWrapper], None] = init_fn
-        self.read_fn: Callable[[GenericForeverSocket.SocketWrapper], bytes] = read_fn
+        self.read_fn: Callable[[GenericForeverSocket.SocketWrapper], None] = read_fn
         self.write_fn: Callable[[GenericForeverSocket.SocketWrapper, Tuple], None] = write_fn
+        if logger is None:
+            self.logger = logging.getLogger("GenericForeverSocket")
+        else:
+            self.logger = logger
         self.running = True
         self.thread = threading.Thread(target=self.thread_fn)
 
@@ -66,9 +77,10 @@ class GenericForeverSocket:
                 continue
 
             safe = GenericForeverSocket.SocketWrapper(s)
-            print("Connected")
+            self.logger.info("Connected")
             if self.init_fn:
                 self.init_fn(safe)
+            self.logger.info("Initialised")
 
             try:
                 while True:
@@ -91,9 +103,9 @@ class GenericForeverSocket:
             except GenericForeverSocket.ConnectionClosed:
                 pass
             except Exception as e:
-                print(f"Exception: [{e}]")
+                self.logger.error(f"Exception: [{e}]")
                 pass
-            print("Disconnected")
+            self.logger.info("Disconnected")
             # To be safe:
             try:
                 s.close()

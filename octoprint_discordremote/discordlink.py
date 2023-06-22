@@ -34,7 +34,8 @@ class DiscordLink:
                                                      port=self.shim_address[1],
                                                      init_fn=self._init_fn,
                                                      write_fn=self._write_fn,
-                                                     read_fn=self._read_fn)
+                                                     read_fn=self._read_fn,
+                                                     logger=self._logger)
 
     def _init_fn(self, s: GenericForeverSocket.SocketWrapper):
         response = Response(
