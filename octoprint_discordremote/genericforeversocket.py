@@ -41,7 +41,7 @@ class GenericForeverSocket:
                  init_fn: Callable[[SocketWrapper], None],
                  read_fn: Callable[[SocketWrapper], None],
                  write_fn: Callable[[SocketWrapper, Tuple], None],
-                 logger: Optional[logging.Logger]=None):
+                 logger: Optional[logging.Logger] = None):
         self.address = address
         self.port = port
         self.init_fn: Callable[[GenericForeverSocket.SocketWrapper], None] = init_fn
@@ -72,6 +72,10 @@ class GenericForeverSocket:
                 s.connect((self.address, self.port))
                 s.setblocking(True)
                 s.settimeout(0.1)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 300)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 2)
             except Exception as e:
                 time.sleep(2)
                 continue
