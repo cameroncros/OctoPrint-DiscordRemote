@@ -20,7 +20,7 @@
 
         <small>
             {{ _("Alternatively, you may setup your own bot. See ") }}
-            <a href="">DiscordShimRS</a>
+            <a href="https://github.com/cameroncros/discordshim_rs">DiscordShimRS</a>
             {{ _("for further details. If you are using the provided bot, leave this field blank") }}
         </small>
         <div class="control-group">
@@ -41,6 +41,7 @@
                 <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.baseurl"/>
             </div>
         </div>
+<!--  Presence is currently broken, and I have no intent on fixing it right now - PLS HELP
         <small>
             {{ _("Check this box to enable a rotating status message within Discord, showing the currently
                 configured prefix and printer status. May require a restart to apply.") }}
@@ -66,6 +67,7 @@
             <small>{{ _("Time between each presence cycle update, in seconds. The default is 10. May require a restart to apply.") }}
             </small>
         </div>
+-->
 
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
