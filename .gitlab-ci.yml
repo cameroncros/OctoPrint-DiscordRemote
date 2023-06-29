@@ -1,4 +1,7 @@
 stages:          # List of stages for jobs, and their order of execution
+  - python27
+  - python36
+  - python37
   - python38
   - python39
   - python310
@@ -18,6 +21,39 @@ stages:          # List of stages for jobs, and their order of execution
     - python setup.py bdist_wheel
     - pip install dist/*.whl
     - FAST_TEST=1 pytest
+
+.install-only:
+  needs: []
+  timeout: 10m
+  retry: 2
+  script:
+    - pip install -r requirements.txt OctoPrint==$OCTOVER
+    - python setup.py bdist_wheel
+    - pip install dist/*.whl
+
+python27-installonly:
+  stage: python27
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3' ]
+  extends: .install-only
+  image: python:2.7
+
+python36-installonly:
+  stage: python36
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3' ]
+  extends: .install-only
+  image: python:3.6
+
+python37:
+  stage: python37
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.7.3', '1.8.7' ]
+  extends: .test-job
+  image: python:3.7
 
 python38:
   stage: python38

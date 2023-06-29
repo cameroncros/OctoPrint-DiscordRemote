@@ -81,7 +81,7 @@ additional_setup_parameters = {
     'cmdclass': {
         'coverage': CoverageCommand
     },
-    'python_requires': '>=3.8.0'
+    'python_requires': '>=2.7.0'
 }
 
 ########################################################################################################################
