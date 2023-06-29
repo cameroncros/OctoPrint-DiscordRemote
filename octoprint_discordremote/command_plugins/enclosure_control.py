@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 import requests
 
 from octoprint_discordremote.command_plugins.abstract_plugin import AbstractPlugin
-from octoprint_discordremote.embedbuilder import EmbedBuilder, success_embed, error_embed
+from octoprint_discordremote.proto.messages_pb2 import Response, TextField, EmbedContent
+from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed
 
 
 class EnclosureControl(AbstractPlugin):
@@ -81,22 +82,22 @@ class EnclosureControl(AbstractPlugin):
                            title="Failed to turn ID %i off." % int(params[1]),
                            description=result.content)
 
-    def enc_status(self):
+    def enc_status(self) -> Response:
         result = self.api_command("state", -1)
         data = result.json()
 
-        builder = EmbedBuilder()
-        builder.set_title('Enclosure Status')
-        builder.set_author(name=self.plugin.get_printer_name())
+        builder = EmbedContent()
+        builder.title = 'Enclosure Status'
+        builder.author = self.plugin.get_printer_name()
 
         for file in data:
             title = ("ID: %s" % file['index_id'])
             description = file['status']
 
-            builder.add_field(title=title, text=description)
+            builder.textfields.append(TextField(title=title, text=description))
 
         # Use data in status to build an embed
-        return builder.get_embeds()
+        return Response(embed=builder)
 
     def api_command(self, command, id):
         api_key = self.plugin.get_settings().global_get(["api", "key"])

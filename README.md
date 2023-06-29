@@ -1,13 +1,20 @@
 # OctoPrint-DiscordRemote
 
 DiscordRemote is a plugin allowing Octoprint to send notifications to a Discord channel.
-The plugin acts as a Discord bot, which allows it to listen on the channel and respond to commands to control the printer.
-There is a small amount of configuration needed on Discord to create the bot, but no programming is required.
+The plugin connects to a [DiscordShim](https://github.com/cameroncros/discordshim_rs)
+which manages the actual discord interactions.
+
+There is an existing DiscordShim that is already setup, or users may create and use their own DiscordShim instance.
+
 This is forked from  https://github.com/bchanudet/OctoPrint-Octorant.
 
-Note, using this plug-in requires building and setting up your own discord bot.
+Note, using this plug-in requires either:
 
-[![](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cameroncros/OctoPrint-DiscordRemote)
+- Adding the existing discordshim bot to your server:
+  - https://discord.com/oauth2/authorize?client_id=433252064324354048&permissions=11264&scope=bot
+or
+- Self host your own discordshim:
+  - https://github.com/cameroncros/discordshim_rs
 
 License : MIT
 
@@ -52,21 +59,10 @@ or manually using this URL:
 
     https://github.com/cameroncros/OctoPrint-DiscordRemote/archive/master.zip
 
-### Create the Discord Bot  in Discord
-
-See the following link for instructions on how to setup a Discord bot:
-
-    https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord
-
-
 #### Tips
 
 - The Channel ID is the ID of the TEXT channel within the Discord Server that the bot is communicating with, not the Discord Server.
-- When following (https://github.com/Chikachi/DiscordIntegration/wiki/How-to-get-a-token-and-channel-ID-for-Discord), STOP after "Get the channel ID of the Discord text channel" section. Everything else is not needed on that page.
-- You **must** enable all "Privileged Intents" as shown in the screenshot below
-![image](https://github.com/Coder-Tavi/OctoPrint-DiscordRemote/assets/66774833/f12ac7b1-2423-4062-a5cf-435bb3599ed9)
-- OAuth2 permissions are not necessary.
-- If you reinstall your Octoprint system, you only need the bot token and channel ID to get it back up and running.
+- If you reinstall your Octoprint system, you only need the channel ID, and DiscordShim address to get it back up and running.
 
 ## API
 
@@ -114,7 +110,6 @@ The plugin can be configured in the configuration panel, under the "DiscordRemot
 
 ### Discord Settings
 
-- Bot Token: The token for a discord bot.
 - Channel ID: The ID of a channel the bot will listen and post to.
   Ensure that this is locked down so that strangers cannot send commands to your printer, or whitelist users using the "Access Settings"
 

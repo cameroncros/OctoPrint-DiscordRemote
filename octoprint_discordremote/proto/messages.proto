@@ -1,0 +1,52 @@
+syntax = "proto3";
+package DiscordShim;
+
+message ProtoFile {
+    bytes data = 1;
+    string filename = 2;
+}
+
+message TextField {
+    string title = 1;
+    string text = 2;
+    bool inline = 3;
+}
+
+message EmbedContent {
+    string title = 1;
+    string description = 2;
+    string author = 3;
+    int32 color = 4;
+    ProtoFile snapshot = 5;
+    repeated TextField textfield = 6;
+}
+
+message Presence {
+    string presence = 1;
+}
+
+message Settings {
+    uint64 channel_id = 1;
+
+    // Only relevant when self-hosting, global discordshim wont support presence anyway
+    bool presence_enabled = 2;
+    int32 cycle_time = 3;
+    string command_prefix = 4;
+}
+
+message Request {
+    uint64 user = 1;
+    oneof message {
+        string command = 2;
+        ProtoFile file = 3;
+    }
+}
+
+message Response {
+    oneof field {
+        EmbedContent embed = 1;
+        Presence presence = 2;
+        ProtoFile file = 3;
+        Settings settings = 4;
+    }
+}

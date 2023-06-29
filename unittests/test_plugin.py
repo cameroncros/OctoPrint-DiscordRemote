@@ -6,8 +6,8 @@ from unittest.mock import Mock
 import mock
 import yaml
 
-from octoprint_discordremote import DiscordRemotePlugin, DiscordImpl, Command
-from unittests.discordremotetestcase import DiscordRemoteTestCase, TestLogger
+from octoprint_discordremote import DiscordRemotePlugin
+from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 
 def mock_global_get_boolean(array):
@@ -18,33 +18,13 @@ def mock_global_get_boolean(array):
     }[u"_".join(array)]
 
 
-class TestPlugin(DiscordRemoteTestCase):
+class TestPlugin(MockDiscordTestCase):
     def setUp(self):
+        super().setUp()
         self.plugin = DiscordRemotePlugin()
         self.plugin._settings = mock.Mock()
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
-
-        if "NET_TEST" in os.environ:
-            config_file = self._get_path("../config.yaml")
-            try:
-                with open(config_file, "r") as config:
-                    config = yaml.load(config.read(), Loader=yaml.SafeLoader)
-                self.plugin.discord = DiscordImpl(bot_token=config['bottoken'],
-                                                  channel_id=config['channelid'],
-                                                  logger=TestLogger(),
-                                                  command=Mock(spec=Command),
-                                                  status_callback=Mock(spec=(str)))
-                time.sleep(5)
-            except:
-                self.fail("To test discord bot posting, you need to create a file "
-                          "called config.yaml in the root directory with your bot "
-                          "details. NEVER COMMIT THIS FILE.")
-        else:
-            self.plugin.discord = Mock(spec=DiscordImpl)
-
-    def tearDown(self) -> None:
-        self.plugin.discord.shutdown_discord()
 
     def test_plugin_get_snapshot_http(self):
         self.plugin._settings.global_get = mock.Mock()
@@ -58,12 +38,11 @@ class TestPlugin(DiscordRemoteTestCase):
             mock_requests_get.return_value = mock.Mock()
             mock_requests_get.return_value.content = file_data
 
-            filename, file = self.plugin.get_snapshot()
+            file = self.plugin.get_snapshot()
 
-            self.assertEqual("snapshot.png", filename)
-            snapshot_data = file.read()
-            self.assertEqual(len(file_data), len(snapshot_data))
-            self.assertEqual([file_data], [snapshot_data])
+            self.assertEqual("snapshot.png", file.filename)
+            self.assertEqual(len(file_data), len(file.data))
+            self.assertEqual([file_data], [file.data])
 
     def test_plugin_get_snapshot_file(self):
         self.plugin._settings.global_get = mock.Mock()
@@ -73,12 +52,11 @@ class TestPlugin(DiscordRemoteTestCase):
         with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()
 
-        filename, file = self.plugin.get_snapshot()
+        file = self.plugin.get_snapshot()
 
-        self.assertEqual("snapshot.png", filename)
-        snapshot_data = file.read()
-        self.assertEqual(len(file_data), len(snapshot_data))
-        self.assertEqual([file_data], [snapshot_data])
+        self.assertEqual("snapshot.png", file.filename)
+        self.assertEqual(len(file_data), len(file.data))
+        self.assertEqual([file_data], [file.data])
 
     def test_plugin_get_printer_name(self):
         self.plugin._settings.global_get = mock.Mock()
@@ -134,6 +112,7 @@ class TestPlugin(DiscordRemoteTestCase):
             'imagename': "snapshot.jpg"
         }
 
+        self.plugin.discord = mock.Mock()
         self.plugin.discord.send = mock.Mock()
         self.plugin.unpack_message(data)
         self.plugin.discord.send.assert_called()

@@ -2,17 +2,13 @@
     <h3>{{ _('Discord settings') }}</h3>
     <form class="form-horizontal">
         <div style="clear:both">
-            <small>{{ _("See the github README.md for how to setup a bot and get the channel ID.
-                Allowed users should be a list of discord user ID's.
-                If allowed users is blank, all users can use the bot") }}
+            <small>
+            {{ _("You can add the bot to your discord with the following link:") }}
+            <p>
+            <a href="https://discord.com/oauth2/authorize?client_id=433252064324354048&permissions=11264&scope=bot">{{ _("Discord Bot Invite Link") }}</a>
+            </p>
+            {{ _("All messages will be visible to the discord bot, and its owner") }}
             </small>
-        </div>
-        <div class="control-group">
-            <label class="control-label">{{ _('Bot Token') }}</label>
-            <div class="controls">
-                <input type="text" class="input-block-level"
-                       data-bind="value: settings.plugins.discordremote.bottoken"/>
-            </div>
         </div>
         <div class="control-group">
             <label class="control-label">{{ _('Channel ID') }}</label>
@@ -22,28 +18,43 @@
             </div>
         </div>
 
+        <small>
+            {{ _("Alternatively, you may setup your own bot. See ") }}
+            <a href="https://github.com/cameroncros/discordshim_rs">DiscordShimRS</a>
+            {{ _("for further details. If you are using the provided bot, leave this field blank") }}
+        </small>
+        <div class="control-group">
+            <label class="control-label">{{ _('Discord Shim Address') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level"
+                       data-bind="value: settings.plugins.discordremote.shimaddress"/>
+            </div>
+        </div>
+
+        <small>{{ _("The base URL should be an address that you can access your octoprint installation from. Keep in
+            mind that if you do not have port forwarding set up, you can only download files from Discord on
+            your local network. If left blank, this setting will fall back to the Pi's local IP.") }}
+        </small>
         <div class="control-group">
             <label class="control-label">{{ _('Base URL') }}</label>
             <div class="controls">
                 <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.baseurl"/>
             </div>
         </div>
-        <div style="clear:both">
-            <small>{{ _("The base URL should be an address that you can access your octoprint installation from. Keep in
-                mind that if you do not have port forwarding set up, you can only download files from Discord on
-                your local network. If left blank, this setting will fall back to the Pi's local IP.") }}
-            </small>
-        </div>
-
+<!--  Presence is currently broken, and I have no intent on fixing it right now - PLS HELP
+        <small>
+            {{ _("Check this box to enable a rotating status message within Discord, showing the currently
+                configured prefix and printer status. May require a restart to apply.") }}
+        </small>
+        <small>
+            {{ _("Presence will only work if you setup your own bot.") }}
+        </small>
         <div class="control-group">
+
             <label class="control-label">{{ _('Enable Presence') }}</label>
             <div class="controls">
                 <input type="checkbox" class="" data-bind="checked: settings.plugins.discordremote.presence"/>
             </div>
-        </div>
-        <div style="clear:both">
-            <small>{{ _("Check this box to enable a rotating status message within Discord, showing the currently configured prefix and printer status. May require a restart to apply.") }}
-            </small>
         </div>
 
         <div class="control-group">
@@ -56,6 +67,7 @@
             <small>{{ _("Time between each presence cycle update, in seconds. The default is 10. May require a restart to apply.") }}
             </small>
         </div>
+-->
 
         <div style="clear:both">
             <small>{{ _("If you modify these settings, a test message will be sent to the Discord channel.") }}</small>
@@ -188,7 +200,6 @@
                            data-bind="checked: $parent.settings.plugins.discordremote.events[$data].with_snapshot"/>
                 </div>
             </div>
-
             <!-- Special Case for Percentage reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].step">
                 <label class="control-label">{{ _("Notify every") }}</label>
@@ -209,7 +220,6 @@
                            data-bind="value: $parent.settings.plugins.discordremote.events[$data].timeout"/>s
                 </div>
             </div>
-
             <!-- Special Case for Periodic reporting -->
             <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].period">
                 <label class="control-label">{{ _("Notify every") }}</label>
@@ -218,17 +228,6 @@
                            data-bind="value: $parent.settings.plugins.discordremote.events[$data].period"/>s
                 </div>
             </div>
-
-            <!-- Special Case for gcode reporting -->
-            <div class="control-group" data-bind="if: $parent.settings.plugins.discordremote.events[$data].gcodes">
-                <p>{{ _("A comma-seperated list of gcodes to monitor for (e.g M600,M620,M510).") }}
-                </p>
-                <label class="control-label">{{ _("List of gcodes (csv)") }}</label>
-                <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: $parent.settings.plugins.discordremote.events[$data].gcodes"/>
-                </div>
-            </div>
-
         </div>
     </form>
     <h3>Scripts settings</h3>
