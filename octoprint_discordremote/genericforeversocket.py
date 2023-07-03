@@ -1,5 +1,6 @@
 import logging
 import socket
+import sys
 import threading
 import time
 from typing import List, Tuple, Callable, Optional
@@ -73,7 +74,8 @@ class GenericForeverSocket:
                 s.setblocking(True)
                 s.settimeout(0.1)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)
+                if sys.platform != "darwin":
+                    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 300)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 2)
             except Exception as e:
