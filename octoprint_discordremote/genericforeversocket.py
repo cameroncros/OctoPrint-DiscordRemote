@@ -14,9 +14,9 @@ class GenericForeverSocket:
     class ConnectionClosed(Exception):
         pass
 
-    class SocketWrapper:
-        def __init__(self, s: socket):
-            self.socket = s
+    class BufferedSocketWrapper:
+        def __init__(self, s: socket.socket):
+            self.socket: socket.socket = s
 
         def sendsafe(self, data: bytes):
             try:
@@ -27,27 +27,52 @@ class GenericForeverSocket:
             except BrokenPipeError:
                 raise GenericForeverSocket.ConnectionClosed()
 
-        def recvsafe(self, length: int) -> bytes:
+        def peek(self, length: int) -> bytes:
             try:
-                data = self.socket.recv(length)
-                if len(data) == 0:
+                tmp = self.socket.recv(length, socket.MSG_PEEK)
+                if len(tmp) == 0:
                     raise GenericForeverSocket.ConnectionClosed()
-                return data
+                if len(tmp) < length:
+                    raise TimeoutError("Data not ready yet")
+                return tmp
             except ConnectionResetError:
                 raise GenericForeverSocket.ConnectionClosed()
+
+        def recvblocking(self, length: int) -> bytes:
+            """
+            Use this sparingly, if ever.
+            Ideally, you do not want to block on reading unless
+            you know for sure that there is data.
+            """
+            data = b''
+            while len(data) < length:
+                try:
+                    tmp = self.socket.recv(length-len(data))
+                    if len(tmp) == 0:
+                        raise GenericForeverSocket.ConnectionClosed()
+                    data += tmp
+                except ConnectionResetError:
+                    raise GenericForeverSocket.ConnectionClosed()
+            return data
+
+        def skipahead(self, length):
+            """
+            This should be used after a series of `peek` calls, to advance the socket.
+            """
+            self.recvblocking(length)
 
     def __init__(self,
                  address: str,
                  port: int,
-                 init_fn: Callable[[SocketWrapper], None],
-                 read_fn: Callable[[SocketWrapper], None],
-                 write_fn: Callable[[SocketWrapper, Tuple], None],
+                 init_fn: Callable[[BufferedSocketWrapper], None],
+                 read_fn: Callable[[BufferedSocketWrapper], None],
+                 write_fn: Callable[[BufferedSocketWrapper, Tuple], None],
                  logger: Optional[logging.Logger] = None):
         self.address = address
         self.port = port
-        self.init_fn: Callable[[GenericForeverSocket.SocketWrapper], None] = init_fn
-        self.read_fn: Callable[[GenericForeverSocket.SocketWrapper], None] = read_fn
-        self.write_fn: Callable[[GenericForeverSocket.SocketWrapper, Tuple], None] = write_fn
+        self.init_fn: Callable[[GenericForeverSocket.BufferedSocketWrapper], None] = init_fn
+        self.read_fn: Callable[[GenericForeverSocket.BufferedSocketWrapper], None] = read_fn
+        self.write_fn: Callable[[GenericForeverSocket.BufferedSocketWrapper, Tuple], None] = write_fn
         if logger is None:
             self.logger = logging.getLogger("GenericForeverSocket")
         else:
@@ -79,10 +104,11 @@ class GenericForeverSocket:
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 300)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 2)
             except Exception as e:
+                print(e)
                 time.sleep(2)
                 continue
 
-            safe = GenericForeverSocket.SocketWrapper(s)
+            safe = GenericForeverSocket.BufferedSocketWrapper(s)
             self.logger.info("Connected")
             if self.init_fn:
                 self.init_fn(safe)
@@ -106,7 +132,8 @@ class GenericForeverSocket:
                         s.close()
                         return
 
-            except GenericForeverSocket.ConnectionClosed:
+            except GenericForeverSocket.ConnectionClosed as e:
+                self.logger.error(e)
                 pass
             except Exception as e:
                 self.logger.error(f"Exception: [{e}]")

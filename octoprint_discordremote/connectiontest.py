@@ -12,7 +12,7 @@ except:
 channelid = 0
 
 
-def init_fn(s: GenericForeverSocket.SocketWrapper):
+def init_fn(s: GenericForeverSocket.BufferedSocketWrapper):
     response = Response(
         settings=Settings(channel_id=int(channelid),
                           presence_enabled=False,
@@ -24,20 +24,24 @@ def init_fn(s: GenericForeverSocket.SocketWrapper):
     s.sendsafe(cmdproto)
 
 
-def send_fn(s: GenericForeverSocket.SocketWrapper, data: Tuple):
+def send_fn(s: GenericForeverSocket.BufferedSocketWrapper, data: Tuple):
     response = data[0]
     cmdproto = response.SerializeToString()
     s.sendsafe(len(cmdproto).to_bytes(length=4, byteorder='little'))
     s.sendsafe(cmdproto)
 
 
-def recv_fn(s: GenericForeverSocket.SocketWrapper):
-    length_bytes = s.recvsafe(4)
+def recv_fn(s: GenericForeverSocket.BufferedSocketWrapper):
+    length_bytes = s.peek(4)
     length = int.from_bytes(length_bytes, byteorder='little')
+    logger.info(f"Message was {len(length_bytes)} long, next message will be {length} bytes long")
 
-    data_bytes = s.recvsafe(length)
+    data_bytes = s.peek(4 + length)
+    logger.info(f"Message was {len(data_bytes)} long")
     data = Request()
-    data.ParseFromString(data_bytes)
+    data.ParseFromString(data_bytes[4:])
+
+    s.skipahead(4 + length)
 
     print(f'Received: {data}')
 
