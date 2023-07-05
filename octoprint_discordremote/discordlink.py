@@ -37,7 +37,7 @@ class DiscordLink:
                                                      read_fn=self._read_fn,
                                                      logger=self._logger)
 
-    def _init_fn(self, s: GenericForeverSocket.SocketWrapper):
+    def _init_fn(self, s: GenericForeverSocket.BufferedSocketWrapper):
         response = Response(
             settings=Settings(channel_id=int(self.channel_id),
                               presence_enabled=self.presence_enabled,
@@ -48,19 +48,20 @@ class DiscordLink:
         s.sendsafe(len(cmdproto).to_bytes(length=4, byteorder='little'))
         s.sendsafe(cmdproto)
 
-    def _write_fn(self, s: GenericForeverSocket.SocketWrapper, data: Tuple):
+    def _write_fn(self, s: GenericForeverSocket.BufferedSocketWrapper, data: Tuple):
         response = data[0]
         cmdproto = response.SerializeToString()
         s.sendsafe(len(cmdproto).to_bytes(length=4, byteorder='little'))
         s.sendsafe(cmdproto)
 
-    def _read_fn(self, s: GenericForeverSocket.SocketWrapper):
-        length_bytes = s.recvsafe(4)
+    def _read_fn(self, s: GenericForeverSocket.BufferedSocketWrapper):
+        length_bytes = s.peek(4)
         length = int.from_bytes(length_bytes, byteorder='little')
 
-        data_bytes = s.recvsafe(length)
+        data_bytes = s.peek(4 + length)
         data = Request()
-        data.ParseFromString(data_bytes)
+        data.ParseFromString(data_bytes[4:])
+        s.skipahead(4 + length)
 
         if data.command:
             messages = self.command.parse_command(data.command, data.user)
