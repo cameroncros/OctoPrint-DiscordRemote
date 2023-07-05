@@ -46,6 +46,8 @@ License : MIT
 
 [grantrules](https://github.com/grantrules) for fixing presence.
 
+[Jester](https://discord.com) for assisting with debugging the network issues in v5.0
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
