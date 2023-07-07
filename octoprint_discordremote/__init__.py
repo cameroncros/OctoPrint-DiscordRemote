@@ -5,7 +5,6 @@ import logging
 import os
 import socket
 import subprocess
-import threading
 import time
 from base64 import b64decode
 from datetime import timedelta, datetime
@@ -25,7 +24,7 @@ from requests import ConnectionError
 from octoprint_discordremote.command import Command
 from .discordlink import DiscordLink
 from .libs import ipgetter
-from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Settings
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -336,7 +335,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return self.notify_event("printing_done", payload)
 
         return True
-    
+
     def parse_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         if gcode:
             gcodes = self._settings.get(["events", "gcode_sent", "gcodes"]).split(",")

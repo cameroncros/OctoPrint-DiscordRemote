@@ -4,10 +4,10 @@ from typing import Tuple
 
 try:
     from .genericforeversocket import GenericForeverSocket
-    from .proto.messages_pb2 import Response, Settings, Request, EmbedContent
+    from .proto.messages_pb2 import Response, Settings, Request, EmbedContent, ProtoFile
 except:
     from octoprint_discordremote.genericforeversocket import GenericForeverSocket
-    from octoprint_discordremote.proto.messages_pb2 import Response, Settings, Request, EmbedContent
+    from octoprint_discordremote.proto.messages_pb2 import Response, Settings, Request, EmbedContent, ProtoFile
 
 channelid = 0
 
@@ -53,6 +53,7 @@ if __name__ == '__main__':
     channelid = int(sys.argv[1])
 
     logger = logging.Logger("gfstester")
+    logger.setLevel('DEBUG')
     gfs = GenericForeverSocket(address='opdrshim.uk',
                                port=23416,
                                init_fn=init_fn,
@@ -63,6 +64,12 @@ if __name__ == '__main__':
 
     while True:
         text = input("> ")
-        resp = Response(embed=EmbedContent(title=text, description=text))
+        try:
+            with open(text, 'rb') as f:
+                resp = Response(embed=EmbedContent(title=text, description=text, snapshot=ProtoFile(data=f.read(), filename=text)))
+                gfs.send((resp,))
+        except Exception as e:
+            resp = Response(embed=EmbedContent(title=text, description=text))
+            gfs.send((resp,))
 
-        gfs.send((resp,))
+

@@ -97,7 +97,6 @@ class GenericForeverSocket:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((self.address, self.port))
                 s.setblocking(True)
-                s.settimeout(0.1)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
                 if sys.platform != "darwin":
                     s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)
