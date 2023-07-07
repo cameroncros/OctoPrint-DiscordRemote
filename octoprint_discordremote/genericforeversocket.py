@@ -29,14 +29,16 @@ class GenericForeverSocket:
 
         def peek(self, length: int) -> bytes:
             try:
-                tmp = self.socket.recv(length, socket.MSG_PEEK)
+                tmp = self.socket.recv(length, socket.MSG_PEEK + socket.MSG_DONTWAIT)
                 if len(tmp) == 0:
                     raise GenericForeverSocket.ConnectionClosed()
                 if len(tmp) < length:
-                    raise TimeoutError("Data not ready yet")
+                    raise TimeoutError("Data not ready yet - Timed Out")
                 return tmp
             except ConnectionResetError:
                 raise GenericForeverSocket.ConnectionClosed()
+            except BlockingIOError:
+                raise TimeoutError("Data not ready yet - Would block")
 
         def recvblocking(self, length: int) -> bytes:
             """
@@ -96,7 +98,6 @@ class GenericForeverSocket:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((self.address, self.port))
-                s.setblocking(True)
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
                 if sys.platform != "darwin":
                     s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 300)
