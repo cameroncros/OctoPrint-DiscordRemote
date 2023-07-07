@@ -132,6 +132,8 @@ class GenericForeverSocket:
                         s.close()
                         return
 
+                    time.sleep(0.1)
+
             except GenericForeverSocket.ConnectionClosed as e:
                 self.logger.error(e)
                 pass
