@@ -46,7 +46,7 @@ License : MIT
 
 [grantrules](https://github.com/grantrules) for fixing presence.
 
-[Jester](https://discord.com) for assisting with debugging the network issues in v5.0
+[MrFrickinFixit](https://github.com/MrFrickinFixit) for assisting with debugging the network issues in v5.0
 
 ## Changelog
 
