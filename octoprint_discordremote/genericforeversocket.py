@@ -29,6 +29,7 @@ class GenericForeverSocket:
 
         def peek(self, length: int) -> bytes:
             try:
+                self.socket.settimeout(0.1)
                 tmp = self.socket.recv(length, socket.MSG_PEEK + socket.MSG_DONTWAIT)
                 if len(tmp) == 0:
                     raise GenericForeverSocket.ConnectionClosed()
@@ -39,6 +40,8 @@ class GenericForeverSocket:
                 raise GenericForeverSocket.ConnectionClosed()
             except BlockingIOError:
                 raise TimeoutError("Data not ready yet - Would block")
+            finally:
+                self.socket.settimeout(10)
 
         def recvblocking(self, length: int) -> bytes:
             """
@@ -49,7 +52,7 @@ class GenericForeverSocket:
             data = b''
             while len(data) < length:
                 try:
-                    tmp = self.socket.recv(length-len(data))
+                    tmp = self.socket.recv(length - len(data))
                     if len(tmp) == 0:
                         raise GenericForeverSocket.ConnectionClosed()
                     data += tmp
@@ -104,7 +107,7 @@ class GenericForeverSocket:
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 300)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 2)
             except Exception as e:
-                print(e)
+                self.logger.error(f"Exception: [{e}]")
                 time.sleep(2)
                 continue
 
@@ -123,10 +126,15 @@ class GenericForeverSocket:
                     except socket.timeout:
                         pass
 
-                    if len(self.queued_messages) != 0:
-                        with self.queued_messages_lock:
-                            self.write_fn(safe, self.queued_messages[0])
-                            self.queued_messages.pop()
+                    try:
+                        if len(self.queued_messages) > 0:
+                            with self.queued_messages_lock:
+                                self.write_fn(safe, self.queued_messages[0])
+                                self.queued_messages.pop(0)
+                    except TimeoutError:
+                        pass
+                    except socket.timeout:
+                        pass
 
                     if not self.running:
                         s.close()

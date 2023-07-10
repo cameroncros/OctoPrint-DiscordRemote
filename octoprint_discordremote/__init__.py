@@ -24,7 +24,7 @@ from requests import ConnectionError
 from octoprint_discordremote.command import Command
 from .discordlink import DiscordLink
 from .libs import ipgetter
-from .proto.messages_pb2 import EmbedContent, ProtoFile, Response
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Presence
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
@@ -702,7 +702,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def update_presence(self, param: str):
         if self.discord is not None:
-            self.discord.update_presence(param)
+            response = Response(presence=Presence(presence=param))
+            self.discord.send(response)
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
