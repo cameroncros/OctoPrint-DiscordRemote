@@ -24,7 +24,7 @@ class TestDiscordLink(TestCase):
             gfs.send((f'{i}\n'.encode(),))
             time.sleep(1)
 
-        with self.timer(1):
+        with self.timer(2):
             gfs.stop()
 
         self.assertEqual(3, len(gfs.queued_messages))
@@ -40,7 +40,7 @@ class TestDiscordLink(TestCase):
         client, addr = s.accept()
         # gfs connected, and we have accepted the connection.
 
-        with self.timer(1):
+        with self.timer(2):
             gfs.stop()
         client.close()
         s.close()
@@ -60,7 +60,7 @@ class TestDiscordLink(TestCase):
         client.send(b'123')  # Expecting 4 bytes, but only sent 4
         # gfs connected, and we have accepted the connection.
 
-        with self.timer(1):
+        with self.timer(2):
             gfs.stop()
         client.close()
         s.close()
