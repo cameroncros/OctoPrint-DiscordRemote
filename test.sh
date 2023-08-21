@@ -19,4 +19,4 @@ ${PYTHON} -m pip uninstall OctoPrint-DiscordRemote
 ${PYTHON} -m pip install .
 ${PYTHON} configtest.py
 ${PYTHON} -m webbrowser -t http://127.0.0.1:5000
-FAKE_SNAPSHOT=unittests/test_pattern.png octoprint serve -b testconfig
+octoprint serve -b testconfig
