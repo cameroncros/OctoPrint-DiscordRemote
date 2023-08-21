@@ -26,7 +26,27 @@ class TestPlugin(MockDiscordTestCase):
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
 
+    def test_plugin_get_snapshot_camera_api(self):
+        with open(self._get_path('test_pattern.png'), "rb") as f:
+            file_data = f.read()
+
+        camera_mock = mock.MagicMock()
+        self.plugin._plugin_manager = mock.MagicMock()
+        self.plugin._plugin_manager.get_implementations.return_value = [camera_mock]
+
+        camera_mock.get_webcam_configurations.return_value = ["Camera"]
+        camera_mock.take_webcam_snapshot.return_value = [file_data]
+
+        file = self.plugin.get_snapshot()
+
+        self.assertEqual("snapshot.jpg", file.filename)
+        self.assertEqual(len(file_data), len(file.data))
+        self.assertEqual([file_data], [file.data])
+
     def test_plugin_get_snapshot_http(self):
+        self.plugin._plugin_manager = mock.MagicMock()
+        self.plugin._plugin_manager.get_implementations.return_value = []
+
         self.plugin._settings.global_get = mock.Mock()
         self.plugin._settings.global_get.return_value = "http://ValidSnapshot"
         self.plugin._settings.global_get_boolean = mock_global_get_boolean
@@ -45,6 +65,9 @@ class TestPlugin(MockDiscordTestCase):
             self.assertEqual([file_data], [file.data])
 
     def test_plugin_get_snapshot_file(self):
+        self.plugin._plugin_manager = mock.MagicMock()
+        self.plugin._plugin_manager.get_implementations.return_value = []
+
         self.plugin._settings.global_get = mock.Mock()
         self.plugin._settings.global_get.return_value = "file://" + self._get_path('test_pattern.png')
         self.plugin._settings.global_get_boolean = mock_global_get_boolean
