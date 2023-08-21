@@ -1,4 +1,3 @@
-PyYAML
 mock
 coverage
 pytest
