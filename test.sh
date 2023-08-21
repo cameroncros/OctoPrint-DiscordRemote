@@ -14,6 +14,7 @@ fi
 
 ${PYTHON} -m pip install -r requirements-dev.txt
 ${PYTHON} -m pip install --upgrade --no-cache-dir git+https://github.com/foosel/OctoPrint.git@devel
+${PYTHON} -m pip install --upgrade --no-cache-dir https://github.com/OctoPrint/OctoPrint-Testpicture/archive/refs/heads/main.zip
 ${PYTHON} -m pip uninstall OctoPrint-DiscordRemote
 ${PYTHON} -m pip install .
 ${PYTHON} configtest.py
