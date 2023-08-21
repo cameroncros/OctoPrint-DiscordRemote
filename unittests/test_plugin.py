@@ -1,9 +1,11 @@
 import os
 import time
 from base64 import b64encode
+from unittest import skipIf
 from unittest.mock import Mock
 
 import mock
+import octoprint
 import yaml
 
 from octoprint_discordremote import DiscordRemotePlugin
@@ -26,6 +28,7 @@ class TestPlugin(MockDiscordTestCase):
         self.plugin._printer = mock.Mock()
         self.plugin._logger = mock.Mock()
 
+    @skipIf(not hasattr(octoprint.plugin.types, "WebcamProviderPlugin"), "Camera API not supported")
     def test_plugin_get_snapshot_camera_api(self):
         with open(self._get_path('test_pattern.png'), "rb") as f:
             file_data = f.read()

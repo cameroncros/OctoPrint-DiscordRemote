@@ -551,15 +551,16 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
 
     def get_snapshot(self) -> Optional[ProtoFile]:
         # Try new method.
-        cameras = self.get_plugin_manager().get_implementations(octoprint.plugin.types.WebcamProviderPlugin)
-        for camera in cameras:
-            configs = camera.get_webcam_configurations()
-            for config in configs:
-                try:
-                    snapshot = camera.take_webcam_snapshot(config)
-                    return ProtoFile(filename="snapshot.jpg", data=snapshot[0])
-                except:
-                    pass
+        if hasattr(octoprint.plugin.types, "WebcamProviderPlugin"):
+            cameras = self.get_plugin_manager().get_implementations(octoprint.plugin.types.WebcamProviderPlugin)
+            for camera in cameras:
+                configs = camera.get_webcam_configurations()
+                for config in configs:
+                    try:
+                        snapshot = camera.take_webcam_snapshot(config)
+                        return ProtoFile(filename="snapshot.jpg", data=snapshot[0])
+                    except:
+                        pass
 
         # And fall back to old method.
         snapshot = None
