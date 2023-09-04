@@ -602,10 +602,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             return None
         if "http" in snapshot_url:
             try:
-                snapshot_call = requests.get(snapshot_url)
-                if not snapshot_call:
-                    return None
-                snapshot = BytesIO(snapshot_call.content)
+                snapshot = requests.get(snapshot_url).content
             except ConnectionError:
                 return None
         if snapshot_url.startswith("file://"):
