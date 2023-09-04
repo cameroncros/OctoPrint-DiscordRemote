@@ -590,12 +590,12 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                         must_rotate = config.rotate90
 
                         snapshot = self.transform_image(snapshot, must_flip_h, must_flip_v, must_rotate)
-
+                        logging.info(config)
                         return ProtoFile(filename="snapshot.jpg", data=snapshot)
                     except:
                         pass
 
-        # And fall back to old method.
+        logging.info("Falling back to old method")
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:
