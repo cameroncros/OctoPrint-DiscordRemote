@@ -550,18 +550,19 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.exec_script(event_id, "after")
 
     def get_snapshot(self) -> Optional[ProtoFile]:
-        if 'FAKE_SNAPSHOT' in os.environ:
-            return self.get_snapshot_fake()
-        else:
-            return self.get_snapshot_camera()
+        # Try new method.
+        if hasattr(octoprint.plugin.types, "WebcamProviderPlugin"):
+            cameras = self.get_plugin_manager().get_implementations(octoprint.plugin.types.WebcamProviderPlugin)
+            for camera in cameras:
+                configs = camera.get_webcam_configurations()
+                for config in configs:
+                    try:
+                        snapshot = camera.take_webcam_snapshot(config)
+                        return ProtoFile(filename="snapshot.jpg", data=snapshot[0])
+                    except:
+                        pass
 
-    @staticmethod
-    def get_snapshot_fake() -> Optional[ProtoFile]:
-        with open(os.environ['FAKE_SNAPSHOT'], "rb") as f:
-            file_data = f.read()
-        return ProtoFile(filename="snapshot.png", data=file_data)
-
-    def get_snapshot_camera(self) -> Optional[ProtoFile]:
+        # And fall back to old method.
         snapshot = None
         snapshot_url = self._settings.global_get(["webcam", "snapshot"])
         if snapshot_url is None:

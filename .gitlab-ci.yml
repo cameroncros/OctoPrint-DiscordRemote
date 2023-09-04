@@ -5,6 +5,7 @@ stages:          # List of stages for jobs, and their order of execution
   - python38
   - python39
   - python310
+  - python311
   - full_test
 
 .test-job:
@@ -59,7 +60,7 @@ python38:
   stage: python38
   parallel:
     matrix:
-      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.2' ]
   extends: .test-job
   image: python:3.8
 
@@ -67,7 +68,7 @@ python39:
   stage: python39
   parallel:
     matrix:
-      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.2' ]
   extends: .test-job
   image: python:3.9
 
@@ -75,13 +76,21 @@ python310:
   stage: python310
   parallel:
     matrix:
-      - OCTOVER: [ '1.7.3', '1.8.7', '1.9.0rc5' ]
+      - OCTOVER: [ '1.9.2' ]
   extends: .test-job
   image: python:3.10
 
+python311:
+  stage: python311
+  parallel:
+    matrix:
+      - OCTOVER: [ '1.9.2' ]
+  extends: .test-job
+  image: python:3.11
+
 full_test:
-  stage: python310
-  image: python:3.10
+  stage: python311
+  image: python:3.11
   timeout: 20m
   retry: 2
   script:
@@ -90,7 +99,7 @@ full_test:
       channelid: '$CHANNEL_ID'
       bottoken: '$BOT_TOKEN'
       EOT
-    - pip install -r requirements.txt -r requirements-dev.txt OctoPrint=='1.8.7'
+    - pip install -r requirements.txt -r requirements-dev.txt OctoPrint=='1.9.2'
     - python setup.py bdist_wheel
     - pip install dist/*.whl
     - pytest --cov --cov-report term --cov-report xml:coverage.xml

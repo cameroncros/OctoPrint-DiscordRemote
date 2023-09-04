@@ -51,7 +51,7 @@ plugin_url = "https://github.com/cameroncros/Octoprint-DiscordRemote"
 plugin_license = "MIT"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow", "requests", "humanfriendly", "OctoPrint>=1.3.11", "PyYAML", "protobuf"]
+plugin_requires = ["pillow", "requests", "humanfriendly", "OctoPrint>=1.3.11", "protobuf"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
