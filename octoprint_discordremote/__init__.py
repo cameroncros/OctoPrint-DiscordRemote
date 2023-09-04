@@ -549,6 +549,33 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         # exec "after" script if any
         self.exec_script(event_id, "after")
 
+    def transform_image(self,
+                        snapshot: bytes,
+                        must_flip_h: bool,
+                        must_flip_v: bool,
+                        must_rotate: bool) -> bytes:
+        # Only call Pillow if we need to transpose anything
+        if must_flip_h or must_flip_v or must_rotate:
+            img = Image.open(BytesIO(snapshot))
+
+            self._logger.info(
+                "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
+
+            if must_flip_h:
+                img = img.transpose(Image.FLIP_LEFT_RIGHT)
+
+            if must_flip_v:
+                img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+            if must_rotate:
+                img = img.transpose(Image.ROTATE_90)
+
+            tmp = BytesIO()
+            img.save(tmp, 'png')
+            tmp.seek(0)
+            snapshot = tmp.read()
+        return snapshot
+
     def get_snapshot(self) -> Optional[ProtoFile]:
         # Try new method.
         if hasattr(octoprint.plugin.types, "WebcamProviderPlugin"):
@@ -557,8 +584,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 configs = camera.get_webcam_configurations()
                 for config in configs:
                     try:
-                        snapshot = camera.take_webcam_snapshot(config)
-                        return ProtoFile(filename="snapshot.jpg", data=snapshot[0])
+                        snapshot = camera.take_webcam_snapshot(config)[0]
+                        must_flip_h = config.flipH
+                        must_flip_v = config.flipV
+                        must_rotate = config.rotate90
+
+                        snapshot = self.transform_image(snapshot, must_flip_h, must_flip_v, must_rotate)
+
+                        return ProtoFile(filename="snapshot.jpg", data=snapshot)
                     except:
                         pass
 
@@ -576,7 +609,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             except ConnectionError:
                 return None
         if snapshot_url.startswith("file://"):
-            snapshot = open(snapshot_url.partition('file://')[2], "rb")
+            snapshot = open(snapshot_url.partition('file://')[2], "rb").read()
 
         if snapshot is None:
             return None
@@ -586,26 +619,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         must_flip_v = self._settings.global_get_boolean(["webcam", "flipV"])
         must_rotate = self._settings.global_get_boolean(["webcam", "rotate90"])
 
-        # Only call Pillow if we need to transpose anything
-        if must_flip_h or must_flip_v or must_rotate:
-            img = Image.open(snapshot)
+        snapshot = self.transform_image(snapshot, must_flip_h, must_flip_v, must_rotate)
 
-            self._logger.info(
-                "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
-
-            if must_flip_h:
-                img = img.transpose(Image.FLIP_LEFT_RIGHT)
-
-            if must_flip_v:
-                img = img.transpose(Image.FLIP_TOP_BOTTOM)
-
-            if must_rotate:
-                img = img.transpose(Image.ROTATE_90)
-
-            snapshot = BytesIO()
-            img.save(snapshot, 'png')
-            snapshot.seek(0)
-        return ProtoFile(filename="snapshot.png", data=snapshot.read())
+        return ProtoFile(filename="snapshot.png", data=snapshot)
 
     def get_printer_name(self):
         printer_name = self._settings.global_get(["appearance", "name"])
