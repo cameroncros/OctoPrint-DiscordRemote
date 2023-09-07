@@ -554,10 +554,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                         must_flip_h: bool,
                         must_flip_v: bool,
                         must_rotate: bool) -> bytes:
+        img = Image.open(BytesIO(snapshot))
         # Only call Pillow if we need to transpose anything
         if must_flip_h or must_flip_v or must_rotate:
-            img = Image.open(BytesIO(snapshot))
-
             self._logger.info(
                 "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
 
@@ -570,10 +569,10 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             if must_rotate:
                 img = img.transpose(Image.ROTATE_90)
 
-            tmp = BytesIO()
-            img.save(tmp, 'png')
-            tmp.seek(0)
-            snapshot = tmp.read()
+        tmp = BytesIO()
+        img.save(tmp, 'png')
+        tmp.seek(0)
+        snapshot = tmp.read()
         return snapshot
 
     def get_snapshot(self) -> Optional[ProtoFile]:
@@ -584,14 +583,18 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                 configs = camera.get_webcam_configurations()
                 for config in configs:
                     try:
-                        snapshot = camera.take_webcam_snapshot(config)[0]
+                        snapshot_iter = camera.take_webcam_snapshot(config)
+                        snapshot = b''
+                        for b in snapshot_iter:
+                            snapshot += b
+
                         must_flip_h = config.flipH
                         must_flip_v = config.flipV
                         must_rotate = config.rotate90
 
                         snapshot = self.transform_image(snapshot, must_flip_h, must_flip_v, must_rotate)
                         logging.info(config)
-                        return ProtoFile(filename="snapshot.jpg", data=snapshot)
+                        return ProtoFile(filename="snapshot.png", data=snapshot)
                     except:
                         pass
 
