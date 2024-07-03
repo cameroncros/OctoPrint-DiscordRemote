@@ -324,11 +324,16 @@ class Command:
         if current_data.get('currentZ'):
             builder.textfield.append(TextField(title='Current Z', text=str(current_data['currentZ']), inline=True))
         if operational:
+            reported_tools = self.plugin.get_settings().get(["reported_tools"]).split(',')
+            if '' in reported_tools:
+                reported_tools.remove('')
             temperatures = self.plugin.get_printer().get_current_temperatures()
             for heater in temperatures.keys():
                 if heater == 'bed':
                     continue
                 if temperatures[heater]['actual'] is None or len(str(temperatures[heater]['actual'])) == 0:
+                    continue
+                if len(reported_tools) and heater not in reported_tools:
                     continue
                 builder.textfield.append(TextField(title='Extruder Temp (%s)' % heater,
                                                    text=str(temperatures[heater]['actual']),
