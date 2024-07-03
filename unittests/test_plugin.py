@@ -37,12 +37,20 @@ class TestPlugin(MockDiscordTestCase):
         self.plugin._plugin_manager = mock.MagicMock()
         self.plugin._plugin_manager.get_implementations.return_value = [camera_mock]
 
-        camera_mock.get_webcam_configurations.return_value = ["Camera"]
+        self.plugin._settings = mock.MagicMock()
+        self.plugin._settings.global_get.return_value = None
+
+        configuration = mock.MagicMock()
+        configuration.flipH = False
+        configuration.flipV = False
+        configuration.rotate90 = False
+
+        camera_mock.get_webcam_configurations.return_value = [configuration]
         camera_mock.take_webcam_snapshot.return_value = [file_data]
 
         file = self.plugin.get_snapshot()
 
-        self.assertEqual("snapshot.jpg", file.filename)
+        self.assertEqual("snapshot.png", file.filename)
         self.assertEqual(len(file_data), len(file.data))
         self.assertEqual([file_data], [file.data])
 

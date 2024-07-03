@@ -72,6 +72,8 @@ class TestCommand(MockDiscordTestCase):
             return True
         elif args[0] == ['baseurl']:
             return None
+        elif args[0] == ['reported_tools']:
+            return ""
         else:
             self.assertFalse(True, "Not mocked: %s" % args[0])
 
@@ -380,7 +382,7 @@ class TestCommand(MockDiscordTestCase):
                           self.plugin.get_ip_address.return_value, self.plugin.get_external_ip_address.return_value]
         expected_terms += expected_throttled_terms
 
-        self.assertEqual(3, self.plugin.get_settings().get.call_count)
+        self.assertEqual(4, self.plugin.get_settings().get.call_count)
 
         calls = [mock.call(["show_local_ip"], merged=True),
                  mock.call(["show_external_ip"], merged=True)]

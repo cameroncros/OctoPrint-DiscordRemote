@@ -556,20 +556,23 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                         must_flip_h: bool,
                         must_flip_v: bool,
                         must_rotate: bool) -> bytes:
+        if not must_flip_v and not must_flip_h and not must_rotate:
+            # Only call Pillow if we need to transpose anything
+            return snapshot
+
         img = Image.open(BytesIO(snapshot))
-        # Only call Pillow if we need to transpose anything
-        if must_flip_h or must_flip_v or must_rotate:
-            self._logger.info(
-                "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
 
-            if must_flip_h:
-                img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        self._logger.info(
+            "Transformations : FlipH={}, FlipV={} Rotate={}".format(must_flip_h, must_flip_v, must_rotate))
 
-            if must_flip_v:
-                img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        if must_flip_h:
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-            if must_rotate:
-                img = img.transpose(Image.ROTATE_90)
+        if must_flip_v:
+            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+        if must_rotate:
+            img = img.transpose(Image.ROTATE_90)
 
         tmp = BytesIO()
         img.save(tmp, 'png')
@@ -597,15 +600,15 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                         snapshot = self.transform_image(snapshot, must_flip_h, must_flip_v, must_rotate)
                         logging.info(config)
                         return ProtoFile(filename="snapshot.png", data=snapshot)
-                    except:
+                    except Exception as e:
                         pass
 
         logging.info("Falling back to old method")
         snapshot = None
-        snapshot_url = self._settings.global_get(["webcam", "snapshot"])
+        snapshot_url = self.get_settings().global_get(["webcam", "snapshot"])
         if snapshot_url is None:
             return None
-        if "http" in snapshot_url:
+        if snapshot_url.startswith("http"):
             try:
                 snapshot = requests.get(snapshot_url).content
             except ConnectionError:
