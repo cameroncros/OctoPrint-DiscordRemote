@@ -175,6 +175,15 @@
 
             </div>
         </div>
+        <div class="control-group">
+            <label class="control-label">{{ _('Reported hotends') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.discordremote.reported_tools"/>
+            </div>
+        </div>
+        <div style="clear:both">
+            <small>{{ _("A list of hot-ends/tools to report. Default is to report all. Comma separated values.") }}</small>
+        </div>
     </form>
 
     <h3>{{ _('Messages settings') }}</h3>
