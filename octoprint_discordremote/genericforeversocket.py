@@ -5,6 +5,14 @@ import threading
 import time
 from typing import List, Tuple, Callable, Optional
 
+if sys.platform == "linux" or sys.platform == "linux2":
+    RECV_OPTS = socket.MSG_PEEK + socket.MSG_DONTWAIT
+elif sys.platform == "darwin":
+    RECV_OPTS = socket.MSG_PEEK + socket.MSG_DONTWAIT
+elif sys.platform == "win32":
+    RECV_OPTS = socket.MSG_PEEK
+
+
 
 class GenericForeverSocket:
     thread: threading.Thread = None
@@ -30,7 +38,7 @@ class GenericForeverSocket:
         def peek(self, length: int) -> bytes:
             try:
                 self.socket.settimeout(0.1)
-                tmp = self.socket.recv(length, socket.MSG_PEEK + socket.MSG_DONTWAIT)
+                tmp = self.socket.recv(length, RECV_OPTS)
                 if len(tmp) == 0:
                     raise GenericForeverSocket.ConnectionClosed()
                 if len(tmp) < length:
