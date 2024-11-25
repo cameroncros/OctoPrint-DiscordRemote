@@ -162,6 +162,7 @@ class GenericForeverSocket:
                 s.close()
             except:
                 pass
+            time.sleep(5)
 
     def run(self):
         self.thread.start()
