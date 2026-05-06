@@ -2,24 +2,28 @@ from __future__ import unicode_literals
 
 import collections
 import os
-import urllib
-import humanfriendly
 import re
-import time
-import zipfile
 import subprocess
-
-from octoprint.printer import InvalidFileLocation, InvalidFileType
-
+import time
+import urllib
+import zipfile
 from typing import TYPE_CHECKING, List, Optional
 
-from .proto.messages_pb2 import EmbedContent, TextField, ProtoFile, Response
+import humanfriendly
+from octoprint.printer import InvalidFileLocation, InvalidFileType
+
+from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, TextField
 
 if TYPE_CHECKING:
     from octoprint_discordremote import DiscordRemotePlugin
 
 from octoprint_discordremote.command_plugins import plugin_list
-from octoprint_discordremote.responsebuilder import success_embed, error_embed, info_embed, COLOR_INFO
+from octoprint_discordremote.responsebuilder import (
+    COLOR_INFO,
+    error_embed,
+    info_embed,
+    success_embed,
+)
 
 
 class Command:

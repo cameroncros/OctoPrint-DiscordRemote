@@ -1,13 +1,16 @@
 
-import humanfriendly
-import mock
 import os
 
+import humanfriendly
+import mock
+from octoprint.printer import InvalidFileLocation, InvalidFileType
 
-from octoprint.printer import InvalidFileType, InvalidFileLocation
-
-from octoprint_discordremote import Command, DiscordRemotePlugin, Response, ProtoFile
-from octoprint_discordremote.responsebuilder import COLOR_INFO, COLOR_ERROR, COLOR_SUCCESS
+from octoprint_discordremote import Command, DiscordRemotePlugin, ProtoFile, Response
+from octoprint_discordremote.responsebuilder import (
+    COLOR_ERROR,
+    COLOR_INFO,
+    COLOR_SUCCESS,
+)
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 file_list = {'local': {

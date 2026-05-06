@@ -3,7 +3,7 @@ import socket
 import sys
 import threading
 import time
-from typing import List, Tuple, Callable, Optional
+from typing import Callable, List, Optional, Tuple
 
 if sys.platform == "linux" or sys.platform == "linux2":
     RECV_OPTS = socket.MSG_PEEK + socket.MSG_DONTWAIT

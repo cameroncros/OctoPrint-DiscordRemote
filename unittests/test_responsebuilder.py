@@ -1,5 +1,11 @@
-from octoprint_discordremote.responsebuilder import success_embed, COLOR_SUCCESS, error_embed, COLOR_ERROR, info_embed, \
-    COLOR_INFO
+from octoprint_discordremote.responsebuilder import (
+    COLOR_ERROR,
+    COLOR_INFO,
+    COLOR_SUCCESS,
+    error_embed,
+    info_embed,
+    success_embed,
+)
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 

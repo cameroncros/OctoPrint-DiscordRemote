@@ -4,10 +4,16 @@ from typing import Tuple
 
 try:
     from .genericforeversocket import GenericForeverSocket
-    from .proto.messages_pb2 import Response, Settings, Request, EmbedContent, ProtoFile
+    from .proto.messages_pb2 import EmbedContent, ProtoFile, Request, Response, Settings
 except:
     from octoprint_discordremote.genericforeversocket import GenericForeverSocket
-    from octoprint_discordremote.proto.messages_pb2 import Response, Settings, Request, EmbedContent, ProtoFile
+    from octoprint_discordremote.proto.messages_pb2 import (
+        EmbedContent,
+        ProtoFile,
+        Request,
+        Response,
+        Settings,
+    )
 
 channelid = 0
 

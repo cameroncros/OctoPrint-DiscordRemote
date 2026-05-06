@@ -1,9 +1,10 @@
 import json
 from collections import OrderedDict
+
 from mock import mock
 
 from octoprint_discordremote.command_plugins.system_commands import SystemCommands
-from octoprint_discordremote.responsebuilder import COLOR_SUCCESS, COLOR_ERROR
+from octoprint_discordremote.responsebuilder import COLOR_ERROR, COLOR_SUCCESS
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 
 

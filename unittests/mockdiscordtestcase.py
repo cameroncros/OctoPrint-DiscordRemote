@@ -7,8 +7,8 @@ from unittest.mock import Mock
 
 from discord.embeds import Embed
 
-from octoprint_discordremote import DiscordLink, Command
-from octoprint_discordremote.proto.messages_pb2 import Response, ProtoFile
+from octoprint_discordremote import Command, DiscordLink
+from octoprint_discordremote.proto.messages_pb2 import ProtoFile, Response
 
 
 class TestLogger(logging.Logger):

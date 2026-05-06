@@ -7,24 +7,25 @@ import socket
 import subprocess
 import time
 from base64 import b64decode
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from io import BytesIO
-from threading import Thread, Event
+from threading import Event, Thread
 from typing import Optional
 
 import humanfriendly
 import octoprint.plugin
 import requests
-from PIL import Image
 from flask import make_response
-from requests import ConnectionError
 from octoprint.access import ADMIN_GROUP, USER_GROUP
 from octoprint.access.permissions import Permissions
+from PIL import Image
+from requests import ConnectionError
 
 from octoprint_discordremote.command import Command
+
 from .discordlink import DiscordLink
 from .libs import ipgetter
-from .proto.messages_pb2 import EmbedContent, ProtoFile, Response, Presence
+from .proto.messages_pb2 import EmbedContent, Presence, ProtoFile, Response
 
 
 class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,

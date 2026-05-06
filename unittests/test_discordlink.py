@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-
 from octoprint_discordremote import EmbedContent, Response
 from unittests.mockdiscordtestcase import MockDiscordTestCase
 

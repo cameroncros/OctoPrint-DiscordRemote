@@ -2,9 +2,9 @@ import socket
 import threading
 from typing import Optional, Tuple
 
-from .genericforeversocket import GenericForeverSocket
 from . import Command
-from .proto.messages_pb2 import Response, Request, Settings
+from .genericforeversocket import GenericForeverSocket
+from .proto.messages_pb2 import Request, Response, Settings
 
 
 class DiscordLink:
