@@ -525,7 +525,8 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             out = err
         finally:
             self._logger.info("{}:{} > Output: '{}'".format(event_name, which, out))
-            return out
+
+        return out
 
     def send_message(self, event_id, message, with_snapshot=False):
         # exec "before" script if any
