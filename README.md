@@ -71,7 +71,16 @@ or manually using this URL:
 There are currently 2 API's available for interacting with the bot.
 These can be used by sending a POST request to `[octoprint_url]/api/plugin/discordremote`, with JSON in the body of the request.
 
+All requests must be authenticated. Pass your OctoPrint API key via the `X-Api-Key` header:
+
+    X-Api-Key: YOUR_API_KEY_HERE
+
+See the [OctoPrint authorization documentation](https://docs.octoprint.org/en/dev/api/general.html#authorization) for details on how to obtain and use API keys.
+
 ### Send command
+
+**Required permission:** `PLUGIN_DISCORDREMOTE_EXECUTE` (granted to Admins and Users by default)
+
 This API lets you send a command as if you typed it in discord.
 The response will be sent to discord.
 The JSON format is:
@@ -82,6 +91,9 @@ The JSON format is:
     }
 
 ### Send message
+
+**Required permission:** `PLUGIN_DISCORDREMOTE_NOTIFY` (granted to Admins and Users by default)
+
 This API lets you send a message directly to discord.
 The JSON format is:
 

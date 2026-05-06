@@ -8,9 +8,9 @@ $(function() {
     function DiscordRemoteViewModel(parameters) {
         var self = this;
 
-        // assign the injected parameters, e.g.:
-        // self.loginStateViewModel = parameters[0];
-        // self.settingsViewModel = parameters[1];
+        self.loginState = parameters[0];
+        self.access = parameters[1];
+
         self.isConnected = ko.observable(undefined);
         self.discordremote = $("#discordremote_indicator")
 
@@ -50,7 +50,7 @@ $(function() {
         DiscordRemoteViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ "loginStateViewModel", "settingsViewModel" ],
+        [ "loginStateViewModel", "accessViewModel" ],
 
         // e.g. #settings_plugin_discordremote, #tab_plugin_octorant, ...
         [ "#navbar_plugin_discordremote" ]

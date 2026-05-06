@@ -17,8 +17,9 @@ import octoprint.plugin
 import requests
 from PIL import Image
 from flask import make_response
-from octoprint.server import user_permission
 from requests import ConnectionError
+from octoprint.access import ADMIN_GROUP, USER_GROUP
+from octoprint.access.permissions import Permissions
 
 from octoprint_discordremote.command import Command
 from .discordlink import DiscordLink
@@ -278,6 +279,27 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
     def is_template_autoescaped(self):
         return True
 
+    # Custom permissions hook
+    def get_additional_permissions(self):
+        return [
+            {
+                "key": "EXECUTE",
+                "name": "Execute command",
+                "description": "Allows executing Discord bot commands.",
+                "roles": ["execute"],
+                "dangerous": False,
+                "default_groups": [ADMIN_GROUP, USER_GROUP],
+            },
+            {
+                "key": "MESSAGE",
+                "name": "Send messages",
+                "description": "Allows sending messages to Discord via the API.",
+                "roles": ["message"],
+                "dangerous": False,
+                "default_groups": [ADMIN_GROUP, USER_GROUP],
+            },
+        ]
+
     # Softwareupdate hook
     def get_update_information(self):
         # Define the configuration for your plugin to use with the Software Update
@@ -372,13 +394,14 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         )
 
     def on_api_command(self, comm, data):
-        if not user_permission.can():
-            return make_response("Insufficient rights", 403)
-
         if comm == 'executeCommand':
+            if not Permissions.PLUGIN_DISCORDREMOTE_EXECUTE.can():
+                return make_response("Insufficient rights", 403)
             return self.execute_command(data)
 
         if comm == 'sendMessage':
+            if not Permissions.PLUGIN_DISCORDREMOTE_MESSAGE.can():
+                return make_response("Insufficient rights", 403)
             return self.unpack_message(data)
 
     def execute_command(self, data):
@@ -747,6 +770,7 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
+        "octoprint.access.permissions": __plugin_implementation__.get_additional_permissions,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.filemanager.extension_tree": __plugin_implementation__.get_extension_tree,
         "octoprint.comm.protocol.gcode.sent": __plugin_implementation__.parse_gcode_sent
