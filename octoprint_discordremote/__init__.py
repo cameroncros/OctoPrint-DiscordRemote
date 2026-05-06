@@ -276,6 +276,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
             dict(type="settings", custom_bindings=False)
         ]
 
+    def is_template_autoescaped(self):
+        return True
+
     # Softwareupdate hook
     def get_update_information(self):
         # Define the configuration for your plugin to use with the Software Update
