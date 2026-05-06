@@ -363,6 +363,9 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         self.configure_discord()
 
     # SimpleApiPlugin mixin
+    def is_api_protected(self):
+        return True
+
     def get_api_commands(self):
         return dict(
             executeCommand=['args'],
