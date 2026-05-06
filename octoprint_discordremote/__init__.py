@@ -14,7 +14,6 @@ from typing import Optional
 
 import humanfriendly
 import octoprint.plugin
-import octoprint.settings
 import requests
 from PIL import Image
 from flask import make_response

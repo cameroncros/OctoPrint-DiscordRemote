@@ -1,12 +1,8 @@
-import os
-import time
 from base64 import b64encode
 from unittest import skipIf
-from unittest.mock import Mock
 
 import mock
 import octoprint
-import yaml
 
 from octoprint_discordremote import DiscordRemotePlugin
 from unittests.mockdiscordtestcase import MockDiscordTestCase

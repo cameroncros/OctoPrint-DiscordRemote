@@ -1,7 +1,6 @@
 import logging
 import os
 import socket
-from random import randint
 from typing import Optional
 from unittest import TestCase
 from unittest.mock import Mock

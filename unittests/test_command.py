@@ -1,12 +1,8 @@
-import io
-from typing import List, Tuple, Optional
 
 import humanfriendly
 import mock
 import os
 
-from discord import Embed, File
-from zipfile import ZipFile
 
 from octoprint.printer import InvalidFileType, InvalidFileLocation
 

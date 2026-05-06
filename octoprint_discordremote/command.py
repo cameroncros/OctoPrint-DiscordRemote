@@ -6,7 +6,6 @@ import urllib
 import humanfriendly
 import re
 import time
-import requests
 import zipfile
 import subprocess
 
