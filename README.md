@@ -48,6 +48,8 @@ License : MIT
 
 [MrFrickinFixit](https://github.com/MrFrickinFixit) for assisting with debugging the network issues in v5.0
 
+[Jacopo Tediosi](https://github.com/jacopotediosi) for the OctoPrint 2.0 fixes.
+
 ## Changelog
 
 See [the release history](https://github.com/cameroncros/OctoPrint-DiscordRemote/releases) to get a quick summary of what's new in the latest versions.
