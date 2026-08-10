@@ -100,7 +100,10 @@ class EnclosureControl(AbstractPlugin):
         return Response(embed=builder)
 
     def api_command(self, command, id):
-        api_key = self.plugin.get_settings().global_get(["api", "key"])
+        if hasattr(self, "plugin_apikey"):
+            api_key = self.plugin_apikey
+        else:  # Fallback for OctoPrint versions < 1.12.0
+            api_key = self.plugin.get_settings().global_get(["api", "key"])
         port = int(self.plugin.get_settings().global_get(["server", "port"]))
 
         id = int(id)
