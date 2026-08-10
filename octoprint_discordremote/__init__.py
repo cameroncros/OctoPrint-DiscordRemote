@@ -178,7 +178,7 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
                                    logger=self._logger,
                                    presence_enabled=self._settings.get(['presence'], merged=True),
                                    cycle_time=self._settings.get(['presence_cycle_time'], merged=True),
-                                   command_prefix=self._settings.get(['prefix'], merged=True))
+                                   command_prefix="/")
         self.discord.start_discord()
 
         self.notify_event("startup")
