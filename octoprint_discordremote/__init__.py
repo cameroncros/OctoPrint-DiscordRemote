@@ -167,18 +167,21 @@ class DiscordRemotePlugin(octoprint.plugin.EventHandlerPlugin,
         if self.discord:
             self.discord.shutdown_discord()
 
+        prefix = self._settings.get(['prefix'], merged=True)
         shimaddress = self._settings.get(['shimaddress'], merged=True)
         if shimaddress is None or len(shimaddress) == 0:
             shimaddress = 'opdrshim.uk:23416'
+            prefix = "/"
         parts = shimaddress.split(':')
         shimaddress = (parts[0], int(parts[1]))
+
         self.discord = DiscordLink(shimaddress,
                                    channel_id=self._settings.get(['channelid'], merged=True),
                                    command=self.command,
                                    logger=self._logger,
                                    presence_enabled=self._settings.get(['presence'], merged=True),
                                    cycle_time=self._settings.get(['presence_cycle_time'], merged=True),
-                                   command_prefix="/")
+                                   command_prefix=prefix)
         self.discord.start_discord()
 
         self.notify_event("startup")
